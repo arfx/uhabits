@@ -94,10 +94,16 @@ open class EntryList {
     open fun recomputeFrom(
         originalEntries: EntryList,
         frequency: Frequency,
-        isNumerical: Boolean
+        isNumerical: Boolean,
+        hasGoal: Boolean = true
     ) {
         clear()
         val original = originalEntries.getKnown()
+        if (!hasGoal) {
+            original.forEach { add(it) }
+            densifyWithUnknownPlaceholders(original)
+            return
+        }
         if (isNumerical) {
             original.forEach { add(it) }
             densifyWithUnknownPlaceholders(original)
@@ -136,8 +142,20 @@ open class EntryList {
         frequency: Frequency,
         isNumerical: Boolean,
         targetType: NumericalHabitType,
-        targetValue: Double
+        targetValue: Double,
+        hasGoal: Boolean = true
     ) {
+        if (!hasGoal) {
+            for (entry in getKnown()) {
+                val completed = if (isNumerical) {
+                    entry.value > 0
+                } else {
+                    entry.value == YES_MANUAL
+                }
+                if (entry.completed != completed) add(entry.copy(completed = completed))
+            }
+            return
+        }
         if (isNumerical) {
             val firstWeekday = getFirstWeekday()
             val denominator = frequency.denominator
