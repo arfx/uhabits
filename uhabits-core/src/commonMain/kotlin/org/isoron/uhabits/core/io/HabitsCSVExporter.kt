@@ -67,6 +67,7 @@ class HabitsCSVExporter(
         val known = habit.computedEntries.getKnown()
         if (known.isNotEmpty()) oldest = known[known.size - 1].date
         sb.append(csvLine(arrayOf("Date", "Score")))
+        if (!habit.hasGoal) return sb.toString()
         for (s in habit.scores.getByInterval(oldest, today)) {
             sb.append(csvLine(arrayOf(s.date.toCSVString(), format("%.4f", s.value))))
         }
@@ -88,13 +89,19 @@ class HabitsCSVExporter(
         val timeframe = getTimeframe()
         val oldest = timeframe[0]
         val newest = getToday()
-        val scores = selectedHabits.map { ArrayList(it.scores.getByInterval(oldest, newest)) }
+        val scores = selectedHabits.map { habit ->
+            if (habit.hasGoal) ArrayList(habit.scores.getByInterval(oldest, newest)) else arrayListOf()
+        }
         val days = oldest.daysUntil(newest)
         for (i in 0..days) {
             val date = newest.minus(i).toCSVString()
             sb.append(date).append(delimiter)
             for (j in selectedHabits.indices) {
-                val score = format("%.4f", scores[j][i].value)
+                val score = if (selectedHabits[j].hasGoal) {
+                    format("%.4f", scores[j][i].value)
+                } else {
+                    ""
+                }
                 sb.append(score).append(delimiter)
             }
             sb.append("\n")
