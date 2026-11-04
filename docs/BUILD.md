@@ -100,3 +100,5 @@ The repository includes a manual-only workflow named **Android Debug APK**. It d
 5. Download the `uhabits-debug-apk` artifact from the completed workflow run.
 
 Artifacts are retained for 14 days. Each run is tied to the selected branch and commit.
+
+The development APK is installed as **Habit Tracker** with application ID `org.arfx.habittracker`. It is a separate app with its own Android app data and database; it can be installed alongside the official Loop Habit Tracker without replacing it.
