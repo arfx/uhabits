@@ -188,7 +188,8 @@ abstract class HabitList : Iterable<Habit> {
             "Target Type",
             "Target Value",
             "Archived?",
-            "Category"
+            "Category",
+            "Has Goal?"
         )
         sb.append(csvLine(header))
         for (habit in this) {
@@ -206,7 +207,8 @@ abstract class HabitList : Iterable<Habit> {
                 if (habit.isNumerical) habit.targetType.name else "",
                 if (habit.isNumerical) format("%.1f", habit.targetValue) else "",
                 habit.isArchived.toString(),
-                habit.category
+                habit.category,
+                habit.hasGoal.toString()
             )
             sb.append(csvLine(cols))
         }
