@@ -116,7 +116,8 @@ data class Habit(
             to,
             isNumerical,
             targetValue,
-            targetType
+            targetType,
+            hasGoal
         )
     }
 
