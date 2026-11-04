@@ -21,6 +21,7 @@ package org.isoron.uhabits.activities.habits.show.views
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.LinearLayout
 import org.isoron.platform.gui.toInt
 import org.isoron.uhabits.R
@@ -57,6 +58,11 @@ class OverviewCardView(context: Context, attrs: AttributeSet) : LinearLayout(con
         binding.totalCountLabel.text = state.totalCount.toString()
         binding.yearDiffLabel.setTextColor(if (state.scoreYearDiff >= 0) androidColor else inactiveColor)
         binding.yearDiffLabel.text = formatPercentageDiff(state.scoreYearDiff)
+        val scoreVisibility = if (state.hasGoal) View.VISIBLE else View.GONE
+        binding.scoreRingColumn.visibility = scoreVisibility
+        binding.scoreColumn.visibility = scoreVisibility
+        binding.monthColumn.visibility = scoreVisibility
+        binding.yearColumn.visibility = scoreVisibility
         postInvalidate()
     }
 }
