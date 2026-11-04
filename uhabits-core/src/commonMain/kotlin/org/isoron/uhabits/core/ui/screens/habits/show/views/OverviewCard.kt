@@ -47,7 +47,7 @@ class OverviewCardPresenter {
             val scoreLastYear = scores[lastYear].value.toFloat()
             val totalCount = if (!habit.hasGoal && habit.isNumerical) {
                 habit.originalEntries.getKnown()
-                    .count { it.value != Entry.SKIP }
+                    .count { it.value != Entry.SKIP && it.value != Entry.UNKNOWN }
                     .toLong()
             } else {
                 habit.originalEntries.getKnown()
