@@ -160,12 +160,21 @@ class HistoryCardPresenter(
             val entries = habit.computedEntries.getByInterval(oldest, today)
             val series = if (habit.isNumerical) {
                 entries.map {
-                    when {
-                        it.value == SKIP -> HATCHED
-                        (it.completed && it.value > 0) -> ON
-                        it.completed -> DIMMED
-                        it.value > 0 -> GREY
-                        else -> OFF
+                    if (!habit.hasGoal) {
+                        when {
+                            it.value == SKIP -> HATCHED
+                            it.value == Entry.UNKNOWN -> OFF
+                            it.value > 0 -> ON
+                            else -> GREY
+                        }
+                    } else {
+                        when {
+                            it.value == SKIP -> HATCHED
+                            (it.completed && it.value > 0) -> ON
+                            it.completed -> DIMMED
+                            it.value > 0 -> GREY
+                            else -> OFF
+                        }
                     }
                 }
             } else {
@@ -174,6 +183,7 @@ class HistoryCardPresenter(
                         YES_MANUAL -> ON
                         YES_AUTO -> DIMMED
                         SKIP -> HATCHED
+                        Entry.NO -> if (!habit.hasGoal) GREY else OFF
                         else -> OFF
                     }
                 }
