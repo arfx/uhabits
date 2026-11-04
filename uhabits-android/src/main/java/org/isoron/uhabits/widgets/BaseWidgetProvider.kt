@@ -23,6 +23,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.os.Bundle
 import android.os.Looper
+import android.util.Log
 import android.widget.RemoteViews
 import org.isoron.uhabits.HabitsApplication
 import org.isoron.uhabits.R
@@ -77,7 +78,6 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
             updateAppWidget(manager, widget)
         } catch (e: RuntimeException) {
             drawErrorWidget(context, manager, widgetId, e)
-            e.printStackTrace()
         }
     }
 
@@ -129,14 +129,22 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
         widgetId: Int,
         e: RuntimeException
     ) {
+        Log.e(TAG, "Failed to draw widget $widgetId (${javaClass.simpleName})", e)
         val errorView = RemoteViews(context.packageName, R.layout.widget_error)
-        if (e is HabitNotFoundException) {
-            errorView.setCharSequence(
-                R.id.label,
-                "setText",
-                context.getString(R.string.habit_not_found)
-            )
+        val message = if (e is HabitNotFoundException) {
+            context.getString(R.string.habit_not_found)
+        } else {
+            buildString {
+                append("Error drawing widget")
+                append("\\n")
+                append(e.javaClass.simpleName)
+                e.message?.takeIf { it.isNotBlank() }?.let {
+                    append(": ")
+                    append(it.take(180))
+                }
+            }
         }
+        errorView.setCharSequence(R.id.label, "setText", message)
         manager.updateAppWidget(widgetId, errorView)
     }
 
@@ -164,6 +172,8 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        private const val TAG = "BaseWidgetProvider"
+
         fun updateAppWidget(
             manager: AppWidgetManager,
             widget: BaseWidget
