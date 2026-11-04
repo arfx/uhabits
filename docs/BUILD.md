@@ -6,6 +6,7 @@ This page describes how to download and build the app from the source code. If y
 
 * [Build using Android Studio](#build-using-android-studio)
 * [Build from the command line](#build-from-the-command-line)
+* [Build using GitHub Actions](#build-using-github-actions)
 
 ## Build using Android Studio
 
@@ -86,3 +87,16 @@ The repository will be downloaded to the directory `uhabits`.
 If the compilation is successful, a debug APK will be generated somewhere inside the folder `uhabits-android/build/`. Currently, the full path is `./uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk`, but it may change in the future.
 
 The APK can be installed using the tool `adb`, which should have been automatically installed at `/opt/android-sdk/platform-tools/adb` during compilation of the project.
+
+
+## Build using GitHub Actions
+
+The repository includes a manual-only workflow named **Android Debug APK**. It does not build on every push or pull request. Start a build when a feature is ready for testing:
+
+1. Open the repository's **Actions** tab.
+2. Select **Android Debug APK**.
+3. Click **Run workflow**, choose the branch to test, then confirm.
+4. Wait for the workflow to finish. It runs the core JVM unit tests before building the debug APK.
+5. Download the `uhabits-debug-apk` artifact from the completed workflow run.
+
+Artifacts are retained for 14 days. Each run is tied to the selected branch and commit.
