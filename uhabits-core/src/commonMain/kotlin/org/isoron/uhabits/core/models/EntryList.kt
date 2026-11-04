@@ -248,7 +248,9 @@ open class EntryList {
             }
 
             if (isNumerical) {
-                list[weekday] += entry.value
+                if (entry.value != SKIP && entry.value != UNKNOWN) {
+                    list[weekday] += max(0, entry.value)
+                }
             } else if (entry.value == YES_MANUAL) {
                 list[weekday] += 1
             }

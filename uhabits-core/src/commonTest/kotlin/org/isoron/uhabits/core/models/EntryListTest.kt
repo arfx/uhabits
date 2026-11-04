@@ -405,6 +405,24 @@ class EntryListTest : BaseUnitTest() {
         assertEquals(expected, actual)
     }
 
+
+    @Test
+    fun testWeekdayFrequencyIgnoresSkippedAndUnknownNumericalEntries() {
+        val entries = EntryList()
+        val janFirst = LocalDate(2015, 1, 1)
+        entries.add(Entry(janFirst, 1000))
+        entries.add(Entry(janFirst.plus(1), SKIP))
+        entries.add(Entry(janFirst.plus(2), UNKNOWN))
+        entries.add(Entry(janFirst.plus(3), 0))
+
+        val frequency = entries.computeWeekdayFrequency(isNumerical = true)
+        val values = frequency[LocalDate(2015, 1, 1)]!!
+        val expected = Array(7) { 0 }
+        expected[(janFirst.dayOfWeek.daysSinceSunday + 1) % 7] = 1000
+
+        assertContentEquals(expected, values)
+    }
+
     @Test
     fun testWeekdayFrequency() {
         val entries = EntryList()
