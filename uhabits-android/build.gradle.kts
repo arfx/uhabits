@@ -52,7 +52,7 @@ android {
 
     defaultConfig {
         versionCode = 20302
-        versionName = "2.3.2"
+        versionName = "2.3.2-dev"
         minSdk = 28
         targetSdk = 36
         applicationId = "org.arfx.habittracker"
