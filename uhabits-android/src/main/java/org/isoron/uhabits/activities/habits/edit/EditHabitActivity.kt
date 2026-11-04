@@ -431,12 +431,13 @@ class EditHabitActivity : AppCompatActivity() {
     }
 
     private fun updateGoalControls() {
-        if (habitType == HabitType.YES_NO) {
-            binding.frequencyOuterBox.visibility = if (hasGoal) View.VISIBLE else View.GONE
-        } else {
-            binding.targetOuterBox.visibility = if (hasGoal) View.VISIBLE else View.GONE
-            binding.targetTypeOuterBox.visibility = if (hasGoal) View.VISIBLE else View.GONE
-        }
+        val isNumerical = habitType == HabitType.NUMERICAL
+        binding.frequencyOuterBox.visibility =
+            if (!isNumerical && hasGoal) View.VISIBLE else View.GONE
+        binding.targetOuterBox.visibility =
+            if (isNumerical && hasGoal) View.VISIBLE else View.GONE
+        binding.targetTypeOuterBox.visibility =
+            if (isNumerical && hasGoal) View.VISIBLE else View.GONE
     }
 
     private fun showHabitTypePicker() {
