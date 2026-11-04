@@ -234,7 +234,7 @@
                 <action android:name="org.isoron.uhabits.ACTION_TOGGLE_REPETITION" />
 
                 <data
-                    android:host="org.isoron.uhabits"
+                    android:host="org.arfx.habittracker"
                     android:scheme="content" />
             </intent-filter>
             <intent-filter>
@@ -243,7 +243,7 @@
                 <action android:name="org.isoron.uhabits.ACTION_ADD_REPETITION" />
 
                 <data
-                    android:host="org.isoron.uhabits"
+                    android:host="org.arfx.habittracker"
                     android:scheme="content" />
             </intent-filter>
             <intent-filter>
@@ -252,7 +252,7 @@
                 <action android:name="org.isoron.uhabits.ACTION_REMOVE_REPETITION" />
 
                 <data
-                    android:host="org.isoron.uhabits"
+                    android:host="org.arfx.habittracker"
                     android:scheme="content" />
             </intent-filter>
         </receiver>
