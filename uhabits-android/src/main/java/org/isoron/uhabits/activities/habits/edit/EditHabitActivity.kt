@@ -295,8 +295,10 @@ class EditHabitActivity : AppCompatActivity() {
         habit.frequency = Frequency(freqNum, freqDen)
         habit.hasGoal = hasGoal
         if (habitType == HabitType.NUMERICAL) {
-            habit.targetValue = binding.targetInput.text.toString().toDouble()
-            habit.targetType = targetType
+            if (hasGoal) {
+                habit.targetValue = binding.targetInput.text.toString().toDouble()
+                habit.targetType = targetType
+            }
             habit.unit = binding.unitInput.text.trim().toString()
         }
         habit.type = habitType
