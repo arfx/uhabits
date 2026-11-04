@@ -72,7 +72,7 @@ class SQLiteEntryList(val repository: EntryRepository) : EntryList() {
         return super.getKnown()
     }
 
-    override fun recomputeFrom(originalEntries: EntryList, frequency: Frequency, isNumerical: Boolean) {
+    override fun recomputeFrom(originalEntries: EntryList, frequency: Frequency, isNumerical: Boolean, hasGoal: Boolean) {
         throw UnsupportedOperationException()
     }
 
