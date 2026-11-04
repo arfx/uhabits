@@ -250,6 +250,6 @@
     <string name="conversion_boolean_to_numerical_message">Existing YES entries will become the value you enter below. NO entries become 0. Skipped and unknown entries and all notes are preserved.</string>
     <string name="conversion_numerical_to_boolean_message">Values above 0 become YES. Zero and negative values become NO. Skipped and unknown entries and all notes are preserved.</string>
     <string name="conversion_yes_value_hint">Value for previous YES entries</string>
-    <string name="validation_conversion_value_required">Enter a value greater than 0 within the supported range.</string>
+    <string name="validation_conversion_value_required">Enter a value from 0.001 to 2,147,483.647.</string>
 
 </resources>
