@@ -167,6 +167,6 @@ class HabitTest : BaseUnitTest() {
         val h = modelFactory.buildHabit()
         habitList.add(h)
         assertEquals(0L, h.id)
-        assertEquals("content://org.isoron.uhabits/habit/0", h.uriString)
+        assertEquals("content://org.arfx.habittracker/habit/0", h.uriString)
     }
 }
