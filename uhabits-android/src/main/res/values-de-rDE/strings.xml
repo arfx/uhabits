@@ -220,4 +220,13 @@
     <string name="pref_midnight_delay_description">Bis 3:00 Uhr warten, bevor ein neuer Tag angezeigt wird. Nützlich, wenn du normalerweise nach Mitternacht schlafen gehst. Benötigt einen Neustart der App.</string>
     <string name="select_public_backup_folder">Öffentlichen Backup-Ordner auswählen</string>
     <string name="no_public_backup_folder_selected">Kein Ordner ausgewählt</string>
+    <string name="habit_type">Habittype</string>
+    <string name="convert">Umwandeln</string>
+    <string name="convert_to_numerical">In numerischen Habit umwandeln</string>
+    <string name="convert_to_yes_no">In Ja/Nein-Habit umwandeln</string>
+    <string name="conversion_boolean_to_numerical_message">Bisherige JA-Einträge werden in den unten eingegebenen Wert umgewandelt. NEIN-Einträge werden zu 0. Übersprungene und unbekannte Einträge sowie alle Notizen bleiben erhalten.</string>
+    <string name="conversion_numerical_to_boolean_message">Werte über 0 werden zu JA. 0 und negative Werte werden zu NEIN. Übersprungene und unbekannte Einträge sowie alle Notizen bleiben erhalten.</string>
+    <string name="conversion_yes_value_hint">Wert für bisherige JA-Einträge</string>
+    <string name="validation_conversion_value_required">Bitte gib einen gültigen Wert ab 0 ein.</string>
+    <string name="validation_goal_frequency_required">Bitte wähle eine Frequenz für den umgewandelten Habit aus.</string>
 </resources>

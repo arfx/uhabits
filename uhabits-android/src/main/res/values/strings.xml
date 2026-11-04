@@ -240,4 +240,13 @@
     <string name="pref_midnight_delay_description">Wait until 3:00 AM to show a new day. Useful if you typically go to sleep after midnight. Requires app restart.</string>
     <string name="pref_animations_title">Disable animations</string>
     <string name="pref_animations_description">Disable confetti animation after adding a checkmark.</string>
+    <string name="habit_type">Habit type</string>
+    <string name="convert">Convert</string>
+    <string name="convert_to_numerical">Convert to numerical</string>
+    <string name="convert_to_yes_no">Convert to yes/no</string>
+    <string name="conversion_boolean_to_numerical_message">Existing YES entries will become the value you enter below. NO entries become 0. Skipped and unknown entries and all notes are preserved.</string>
+    <string name="conversion_numerical_to_boolean_message">Values above 0 become YES. Zero and negative values become NO. Skipped and unknown entries and all notes are preserved.</string>
+    <string name="conversion_yes_value_hint">Value for previous YES entries</string>
+    <string name="validation_conversion_value_required">Enter a valid value of 0 or greater.</string>
+    <string name="validation_goal_frequency_required">Please select a frequency for the converted habit.</string>
 </resources>
