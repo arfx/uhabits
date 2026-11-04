@@ -98,13 +98,13 @@ data class Habit(
 
         if (hasGoal) {
             scores.recompute(
-            frequency = frequency,
-            isNumerical = isNumerical,
-            numericalHabitType = targetType,
-            targetValue = targetValue,
-            computedEntries = computedEntries,
-            from = from,
-            to = to
+                frequency = frequency,
+                isNumerical = isNumerical,
+                numericalHabitType = targetType,
+                targetValue = targetValue,
+                computedEntries = computedEntries,
+                from = from,
+                to = to
             )
         } else {
             scores.clear()
