@@ -53,9 +53,13 @@ class ShowHabitView(context: Context) : FrameLayout(context) {
         binding.frequencyCard.setState(data.frequency)
         binding.historyCard.setState(data.history)
         binding.barCard.setState(data.bar)
-        if (data.isNumerical) {
+        if (data.isNumerical || !data.hasGoal) {
             binding.overviewCard.visibility = GONE
-        } else {
+        }
+        if (!data.hasGoal) {
+            binding.targetCard.visibility = GONE
+            binding.scoreCard.visibility = GONE
+        } else if (!data.isNumerical) {
             binding.targetCard.visibility = GONE
         }
         binding.linearLayout.applyBottomInset()
