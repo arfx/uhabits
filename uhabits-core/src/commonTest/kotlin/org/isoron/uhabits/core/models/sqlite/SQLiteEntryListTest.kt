@@ -75,6 +75,28 @@ class SQLiteEntryListTest {
         )
     }
 
+
+    @Test
+    fun testReplaceAllUpdatesDatabaseAndCache() = runTest {
+        initTest()
+        entries.add(Entry(today, 2500, "old yes"))
+        entries.add(Entry(today.minus(1), 0, "old no"))
+
+        val converted = listOf(
+            Entry(today, 1000, "converted yes"),
+            Entry(today.minus(2), Entry.SKIP, "skip")
+        )
+        entries.replaceAll(converted)
+
+        assertEquals(converted, entries.getKnown())
+        val stored = factory.entryRepository.findAllByHabitId(entries.habitId!!)
+        assertEquals(2, stored.size)
+        assertEquals(1000, stored[0].value)
+        assertEquals("converted yes", stored[0].notes)
+        assertEquals(Entry.SKIP, stored[1].value)
+        assertEquals("skip", stored[1].notes)
+    }
+
     @Test
     fun testAdd() = runTest {
         initTest()
