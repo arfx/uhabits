@@ -114,6 +114,16 @@ class SQLiteHabitListTest : BaseUnitTest() {
     }
 
     @Test
+    fun testNoGoalSettingSurvivesReload() = dbTest {
+        val habit = habitList.getById(1L)!!
+        habit.hasGoal = false
+        habitList.update(listOf(habit))
+        (habitList as SQLiteHabitList).reload()
+
+        assertEquals(false, habitList.getById(1L)!!.hasGoal)
+    }
+
+    @Test
     fun testSize() = dbTest {
         assertEquals(10, habitList.size())
     }
