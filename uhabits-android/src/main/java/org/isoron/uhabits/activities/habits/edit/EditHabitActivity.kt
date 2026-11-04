@@ -86,6 +86,7 @@ class EditHabitActivity : AppCompatActivity() {
     var reminderMin = -1
     var reminderDays: WeekdayList = WeekdayList.EVERY_DAY
     var targetType = NumericalHabitType.AT_LEAST
+    var hasGoal = true
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
@@ -105,6 +106,7 @@ class EditHabitActivity : AppCompatActivity() {
             habitId = intent.getLongExtra("habitId", -1)
             val habit = component.habitList.getById(habitId)!!
             habitType = habit.type
+            hasGoal = habit.hasGoal
             color = habit.color
             freqNum = habit.frequency.numerator
             freqDen = habit.frequency.denominator
@@ -133,6 +135,7 @@ class EditHabitActivity : AppCompatActivity() {
             reminderHour = state.getInt("reminderHour")
             reminderMin = state.getInt("reminderMin")
             reminderDays = WeekdayList(state.getInt("reminderDays"))
+            hasGoal = state.getBoolean("hasGoal", true)
         }
 
         updateColors()
@@ -149,6 +152,13 @@ class EditHabitActivity : AppCompatActivity() {
                 binding.frequencyOuterBox.visibility = View.GONE
             }
         }
+
+        binding.goalEnabledSwitch.isChecked = hasGoal
+        binding.goalEnabledSwitch.setOnCheckedChangeListener { _, checked ->
+            hasGoal = checked
+            updateGoalControls()
+        }
+        updateGoalControls()
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -283,6 +293,7 @@ class EditHabitActivity : AppCompatActivity() {
         }
 
         habit.frequency = Frequency(freqNum, freqDen)
+        habit.hasGoal = hasGoal
         if (habitType == HabitType.NUMERICAL) {
             habit.targetValue = binding.targetInput.text.toString().toDouble()
             habit.targetType = targetType
@@ -313,13 +324,22 @@ class EditHabitActivity : AppCompatActivity() {
             binding.nameInput.error = getFormattedValidationError(R.string.validation_cannot_be_blank)
             isValid = false
         }
-        if (habitType == HabitType.NUMERICAL) {
+        if (habitType == HabitType.NUMERICAL && hasGoal) {
             if (binding.targetInput.text.isEmpty()) {
                 binding.targetInput.error = getString(R.string.validation_cannot_be_blank)
                 isValid = false
             }
         }
         return isValid
+    }
+
+    private fun updateGoalControls() {
+        if (habitType == HabitType.YES_NO) {
+            binding.frequencyOuterBox.visibility = if (hasGoal) View.VISIBLE else View.GONE
+        } else {
+            binding.targetOuterBox.visibility = if (hasGoal) View.VISIBLE else View.GONE
+            binding.targetTypeOuterBox.visibility = if (hasGoal) View.VISIBLE else View.GONE
+        }
     }
 
     private fun populateReminder() {
@@ -380,6 +400,7 @@ class EditHabitActivity : AppCompatActivity() {
             putInt("reminderHour", reminderHour)
             putInt("reminderMin", reminderMin)
             putInt("reminderDays", reminderDays.toInteger())
+            putBoolean("hasGoal", hasGoal)
         }
     }
 }
