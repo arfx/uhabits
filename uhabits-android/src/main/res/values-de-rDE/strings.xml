@@ -18,7 +18,7 @@
   ~ with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name">Loop - Gewohnheiten Tracking</string>
+    <string name="app_name">Habit Tracker</string>
     <string name="main_activity_title">Gewohnheiten</string>
     <string name="action_settings">Einstellungen</string>
     <string name="edit">Bearbeiten</string>
@@ -104,7 +104,7 @@
     <string name="clear_label">Löschen</string>
     <string name="select_hours">Stunden auswählen</string>
     <string name="select_minutes">Minuten auswählen</string>
-    <string name="about">Über Loop</string>
+    <string name="about">Über Habit Tracker</string>
     <string name="translators">Übersetzer</string>
     <string name="developers">Entwickler</string>
     <string name="version_n">Version %s</string>
