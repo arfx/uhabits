@@ -140,6 +140,20 @@
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- Habit type -->
+            <FrameLayout
+                android:id="@+id/habitTypeOuterBox"
+                style="@style/FormOuterBox">
+                <LinearLayout style="@style/FormInnerBox">
+                    <TextView
+                        style="@style/FormLabel"
+                        android:text="@string/habit_type" />
+                    <TextView
+                        style="@style/FormDropdown"
+                        android:id="@+id/habitTypePicker" />
+                </LinearLayout>
+            </FrameLayout>
+
             <!-- Goal setting -->
             <FrameLayout style="@style/FormOuterBox">
                 <LinearLayout style="@style/FormInnerBox">
