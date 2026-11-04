@@ -76,5 +76,26 @@ class EntryRepository(private val db: Database) {
         deleteByHabitStmt.step()
     }
 
+    fun replaceAllForHabit(habitId: Long, entries: List<Entry>) {
+        db.run("BEGIN")
+        try {
+            deleteByHabitId(habitId)
+            entries.forEach { entry ->
+                insert(
+                    EntryData(
+                        habitId = habitId,
+                        timestamp = entry.date.unixTime,
+                        value = entry.value,
+                        notes = entry.notes
+                    )
+                )
+            }
+            db.run("COMMIT")
+        } catch (error: Throwable) {
+            db.run("ROLLBACK")
+            throw error
+        }
+    }
+
     fun execSQL(sql: String) = db.run(sql)
 }
