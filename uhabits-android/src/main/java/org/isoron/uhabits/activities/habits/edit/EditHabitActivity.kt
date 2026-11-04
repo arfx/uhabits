@@ -290,7 +290,7 @@ class EditHabitActivity : AppCompatActivity() {
 
         habit.frequency = Frequency(freqNum, freqDen)
         if (habitType == HabitType.NUMERICAL) {
-            habit.targetValue = binding.targetInput.text.toString().toDouble()
+            habit.targetValue = binding.targetInput.text.toString().replace(',', '.').toDouble()
             habit.targetType = targetType
             habit.unit = binding.unitInput.text.trim().toString()
         } else {
@@ -453,7 +453,7 @@ class EditHabitActivity : AppCompatActivity() {
             .create()
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val value = valueInput.text.toString().toDoubleOrNull()
+                val value = valueInput.text.toString().replace(',', '.').toDoubleOrNull()
                 if (value == null || value < 0.0) {
                     valueInput.error = getString(R.string.validation_conversion_value_required)
                 } else {
