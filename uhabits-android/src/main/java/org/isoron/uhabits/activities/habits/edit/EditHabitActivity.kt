@@ -25,7 +25,6 @@ import android.content.res.Resources
 import android.os.Bundle
 import android.text.Html
 import android.text.InputType
-import android.text.InputType
 import android.text.Spanned
 import android.text.format.DateFormat
 import android.view.View
@@ -49,7 +48,6 @@ import org.isoron.uhabits.core.commands.EditHabitCommand
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitType
-import org.isoron.uhabits.core.models.HabitEntryConverter
 import org.isoron.uhabits.core.models.HabitEntryConverter
 import org.isoron.uhabits.core.models.NumericalHabitType
 import org.isoron.uhabits.core.models.PaletteColor
