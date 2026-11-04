@@ -262,6 +262,27 @@ class HabitListTest : BaseUnitTest() {
         assertEquals(filteredList.primaryOrder, HabitList.Order.BY_COLOR_ASC)
     }
 
+
+    @Test
+    fun testStatusOrderingTreatsNoGoalZeroAsRecordedActivity() {
+        val recordedZero = fixtures.createEmptyNumericalHabit(NumericalHabitType.AT_LEAST)
+        recordedZero.hasGoal = false
+        recordedZero.originalEntries.add(Entry(org.isoron.platform.time.getToday(), 0))
+        recordedZero.recompute()
+        habitList.add(recordedZero)
+
+        val skipped = fixtures.createEmptyNumericalHabit(NumericalHabitType.AT_LEAST)
+        skipped.hasGoal = false
+        skipped.originalEntries.add(Entry(org.isoron.platform.time.getToday(), Entry.SKIP))
+        skipped.recompute()
+        habitList.add(skipped)
+
+        habitList.primaryOrder = HabitList.Order.BY_STATUS_DESC
+
+        assertEquals(recordedZero, habitList.getByPosition(0))
+        assertEquals(skipped, habitList.getByPosition(1))
+    }
+
     @Test
     fun testWriteCSV() {
         val list = modelFactory.buildHabitList()

@@ -68,6 +68,18 @@ data class Habit(
         return isCompletedOn(getToday())
     }
 
+    fun isActiveOn(date: LocalDate): Boolean {
+        if (hasGoal) return isCompletedOn(date)
+        val value = computedEntries.get(date).value
+        return if (isNumerical) {
+            value != Entry.UNKNOWN && value != Entry.SKIP
+        } else {
+            value == Entry.YES_MANUAL
+        }
+    }
+
+    fun isActiveToday(): Boolean = isActiveOn(getToday())
+
     fun isEnteredToday(): Boolean {
         val today = getToday()
         val value = computedEntries.get(today).value
