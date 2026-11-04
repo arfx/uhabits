@@ -76,6 +76,14 @@ class SQLiteEntryList(val repository: EntryRepository) : EntryList() {
         throw UnsupportedOperationException()
     }
 
+    override fun replaceAll(entries: List<Entry>) {
+        loadRecords()
+        val id = habitId ?: throw IllegalStateException("habitId must be set")
+        repository.replaceAllForHabit(id, entries)
+        super.clear()
+        entries.forEach { super.add(it) }
+    }
+
     override fun clear() {
         super.clear()
         repository.deleteByHabitId(habitId!!)

@@ -214,6 +214,16 @@ open class EntryList {
     }
 
     /**
+     * Replaces all stored entries with the supplied historical entries.
+     * Used when converting a habit type; dates and notes are retained by the caller.
+     */
+    @Synchronized
+    open fun replaceAll(entries: List<Entry>) {
+        clear()
+        entries.forEach { add(it) }
+    }
+
+    /**
      * Removes all known entries.
      */
     @Synchronized

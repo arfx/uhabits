@@ -49,6 +49,30 @@ class EditHabitCommandTest : BaseUnitTest() {
     }
 
     @Test
+    fun testExecuteWithConvertedEntriesPreservesHistoricalNotes() {
+        habit.originalEntries.clear()
+        habit.originalEntries.add(org.isoron.uhabits.core.models.Entry(today, org.isoron.uhabits.core.models.Entry.YES_MANUAL, "morning run"))
+        habit.originalEntries.add(org.isoron.uhabits.core.models.Entry(today.minus(1), org.isoron.uhabits.core.models.Entry.NO, "rest day"))
+        modified.type = org.isoron.uhabits.core.models.HabitType.NUMERICAL
+
+        val converted = org.isoron.uhabits.core.models.HabitEntryConverter.booleanToNumerical(
+            habit.originalEntries.getKnown(),
+            yesValue = 2500
+        )
+        EditHabitCommand(
+            habitList,
+            habit.id!!,
+            modified,
+            convertedEntries = converted
+        ).run()
+
+        assertEquals(2500, habit.originalEntries.get(today).value)
+        assertEquals("morning run", habit.originalEntries.get(today).notes)
+        assertEquals(0, habit.originalEntries.get(today.minus(1)).value)
+        assertEquals("rest day", habit.originalEntries.get(today.minus(1)).notes)
+    }
+
+    @Test
     fun testExecute() {
         command = EditHabitCommand(habitList, habit.id!!, modified)
         val originalScore = habit.scores[today].value
