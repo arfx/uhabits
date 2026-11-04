@@ -59,6 +59,11 @@ class ScoreList {
         return result
     }
 
+    @Synchronized
+    fun clear() {
+        map.clear()
+    }
+
     /**
      * Recomputes all scores between the provided [from] and [to] dates.
      */
