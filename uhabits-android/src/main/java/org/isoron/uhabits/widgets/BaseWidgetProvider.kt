@@ -136,7 +136,7 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
         } else {
             buildString {
                 append("Error drawing widget")
-                append("\\n")
+                append("\n")
                 append(e.javaClass.simpleName)
                 e.message?.takeIf { it.isNotBlank() }?.let {
                     append(": ")
@@ -160,7 +160,6 @@ abstract class BaseWidgetProvider : AppWidgetProvider() {
             updateAppWidget(manager, widget)
         } catch (e: RuntimeException) {
             drawErrorWidget(context, manager, widgetId, e)
-            e.printStackTrace()
         }
     }
 
