@@ -29,6 +29,7 @@ data class Habit(
     var color: PaletteColor = PaletteColor(8),
     var description: String = "",
     var frequency: Frequency = Frequency.DAILY,
+    var hasGoal: Boolean = true,
     var id: Long? = null,
     var isArchived: Boolean = false,
     var name: String = "",
@@ -77,14 +78,16 @@ data class Habit(
         computedEntries.recomputeFrom(
             originalEntries = originalEntries,
             frequency = frequency,
-            isNumerical = isNumerical
+            isNumerical = isNumerical,
+            hasGoal = hasGoal
         )
 
         computedEntries.recomputeCompletion(
             frequency = frequency,
             isNumerical = isNumerical,
             targetType = targetType,
-            targetValue = targetValue
+            targetValue = targetValue,
+            hasGoal = hasGoal
         )
 
         val today = getToday()
@@ -93,7 +96,8 @@ data class Habit(
         var from = entries.lastOrNull()?.date ?: today
         if (from.isNewerThan(to)) from = to
 
-        scores.recompute(
+        if (hasGoal) {
+            scores.recompute(
             frequency = frequency,
             isNumerical = isNumerical,
             numericalHabitType = targetType,
@@ -101,7 +105,10 @@ data class Habit(
             computedEntries = computedEntries,
             from = from,
             to = to
-        )
+            )
+        } else {
+            scores.clear()
+        }
 
         streaks.recompute(
             computedEntries,
@@ -118,6 +125,7 @@ data class Habit(
         this.color = other.color
         this.description = other.description
         this.frequency = other.frequency
+        this.hasGoal = other.hasGoal
         // this.id should not be copied
         this.isArchived = other.isArchived
         this.name = other.name
@@ -139,6 +147,7 @@ data class Habit(
         if (color != other.color) return false
         if (description != other.description) return false
         if (frequency != other.frequency) return false
+        if (hasGoal != other.hasGoal) return false
         if (id != other.id) return false
         if (isArchived != other.isArchived) return false
         if (name != other.name) return false
@@ -159,6 +168,7 @@ data class Habit(
         result = 31 * result + color.hashCode()
         result = 31 * result + description.hashCode()
         result = 31 * result + frequency.hashCode()
+        result = 31 * result + hasGoal.hashCode()
         result = 31 * result + (id?.hashCode() ?: 0)
         result = 31 * result + isArchived.hashCode()
         result = 31 * result + name.hashCode()
