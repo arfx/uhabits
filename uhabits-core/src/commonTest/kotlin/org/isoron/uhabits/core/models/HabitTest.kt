@@ -112,6 +112,41 @@ class HabitTest : BaseUnitTest() {
     }
 
     @Test
+    fun test_noGoalPreservesBooleanEntriesAndLeavesMissingDaysUnknown() {
+        val h = modelFactory.buildHabit()
+        h.hasGoal = false
+        val yesterday = getToday().minus(1)
+        h.originalEntries.add(Entry(yesterday, Entry.YES_MANUAL))
+        h.originalEntries.add(Entry(getToday().minus(2), Entry.NO))
+
+        h.recompute()
+
+        assertEquals(Entry.UNKNOWN, h.computedEntries.get(getToday()).value)
+        assertEquals(Entry.YES_MANUAL, h.computedEntries.get(yesterday).value)
+        assertEquals(Entry.NO, h.computedEntries.get(getToday().minus(2)).value)
+        assertTrue(h.isCompletedOn(yesterday))
+        assertFalse(h.isCompletedOn(getToday().minus(2)))
+    }
+
+    @Test
+    fun test_noGoalPreservesNumericalZeroAsRecordedValue() {
+        val h = modelFactory.buildHabit()
+        h.type = HabitType.NUMERICAL
+        h.hasGoal = false
+        val yesterday = getToday().minus(1)
+        h.originalEntries.add(Entry(getToday(), 0))
+        h.originalEntries.add(Entry(yesterday, 2500))
+
+        h.recompute()
+
+        assertTrue(h.isEnteredToday())
+        assertEquals(0, h.computedEntries.get(getToday()).value)
+        assertFalse(h.isCompletedToday())
+        assertEquals(2500, h.computedEntries.get(yesterday).value)
+        assertTrue(h.isCompletedOn(yesterday))
+    }
+
+    @Test
     fun testURI() {
         assertTrue(habitList.isEmpty)
         val h = modelFactory.buildHabit()
