@@ -199,6 +199,12 @@ open class EntryList {
      * Removes all known entries.
      */
     @Synchronized
+    open fun replaceAll(entries: List<Entry>) {
+        clear()
+        entries.forEach { add(it) }
+    }
+
+    @Synchronized
     open fun clear() {
         entriesByDate.clear()
     }

@@ -18,6 +18,7 @@
  */
 package org.isoron.uhabits.core.commands
 
+import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.HabitNotFoundException
@@ -25,10 +26,12 @@ import org.isoron.uhabits.core.models.HabitNotFoundException
 data class EditHabitCommand(
     val habitList: HabitList,
     val habitId: Long,
-    val modified: Habit
+    val modified: Habit,
+    val convertedEntries: List<Entry>? = null
 ) : Command {
     override fun run() {
         val habit = habitList.getById(habitId) ?: throw HabitNotFoundException()
+        convertedEntries?.let { habit.originalEntries.replaceAll(it) }
         habit.copyFrom(modified)
         habitList.update(habit)
         habit.observable.notifyListeners()

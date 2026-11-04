@@ -4,6 +4,7 @@ import org.isoron.platform.io.Database
 import org.isoron.platform.io.StepResult
 import org.isoron.platform.io.queryLong
 import org.isoron.platform.io.run
+import org.isoron.uhabits.core.models.Entry
 
 data class EntryData(
     var id: Long? = null,
