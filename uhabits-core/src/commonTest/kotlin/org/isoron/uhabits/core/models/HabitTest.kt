@@ -112,6 +112,21 @@ class HabitTest : BaseUnitTest() {
     }
 
     @Test
+    fun test_noGoalClearsPreviouslyComputedScores() {
+        val h = modelFactory.buildHabit()
+        for (i in 0..20) {
+            h.originalEntries.add(Entry(getToday().minus(i), Entry.YES_MANUAL))
+        }
+        h.recompute()
+        assertTrue(h.scores[getToday()].value > 0.0)
+
+        h.hasGoal = false
+        h.recompute()
+
+        assertEquals(0.0, h.scores[getToday()].value)
+    }
+
+    @Test
     fun test_noGoalPreservesBooleanEntriesAndLeavesMissingDaysUnknown() {
         val h = modelFactory.buildHabit()
         h.hasGoal = false
