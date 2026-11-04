@@ -47,7 +47,6 @@ import org.isoron.uhabits.core.ui.views.Theme
 data class ShowHabitState(
     val title: String = "",
     val isNumerical: Boolean = false,
-    val hasGoal: Boolean = true,
     val color: PaletteColor = PaletteColor(1),
     val subtitle: SubtitleCardState,
     val overview: OverviewCardState,
@@ -58,7 +57,8 @@ data class ShowHabitState(
     val frequency: FrequencyCardState,
     val history: HistoryCardState,
     val bar: BarCardState,
-    val theme: Theme
+    val theme: Theme,
+    val hasGoal: Boolean = true
 )
 
 class ShowHabitPresenter(
