@@ -31,7 +31,8 @@ data class OverviewCardState(
     val scoreYearDiff: Float,
     val scoreToday: Float,
     val totalCount: Long,
-    val theme: Theme
+    val theme: Theme,
+    val hasGoal: Boolean = true
 )
 
 class OverviewCardPresenter {
@@ -44,17 +45,24 @@ class OverviewCardPresenter {
             val scoreToday = scores[today].value.toFloat()
             val scoreLastMonth = scores[lastMonth].value.toFloat()
             val scoreLastYear = scores[lastYear].value.toFloat()
-            val totalCount = habit.originalEntries.getKnown()
-                .filter { it.value == Entry.YES_MANUAL }
-                .count()
-                .toLong()
+            val totalCount = if (!habit.hasGoal && habit.isNumerical) {
+                habit.originalEntries.getKnown()
+                    .count { it.value != Entry.SKIP }
+                    .toLong()
+            } else {
+                habit.originalEntries.getKnown()
+                    .filter { it.value == Entry.YES_MANUAL }
+                    .count()
+                    .toLong()
+            }
             return OverviewCardState(
                 color = habit.color,
                 scoreToday = scoreToday,
                 scoreMonthDiff = scoreToday - scoreLastMonth,
                 scoreYearDiff = scoreToday - scoreLastYear,
                 totalCount = totalCount,
-                theme = theme
+                theme = theme,
+                hasGoal = habit.hasGoal
             )
         }
     }
