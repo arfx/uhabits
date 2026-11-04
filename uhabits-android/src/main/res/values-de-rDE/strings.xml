@@ -231,5 +231,6 @@
     <string name="conversion_numerical_to_boolean_message">Werte über 0 werden zu JA. 0 und negative Werte werden zu NEIN. Übersprungene und unbekannte Einträge sowie alle Notizen bleiben erhalten.</string>
     <string name="conversion_yes_value_hint">Wert für bisherige JA-Einträge</string>
     <string name="validation_conversion_value_required">Bitte gib einen Wert zwischen 0,001 und 2.147.483,647 ein.</string>
+    <string name="validation_invalid_number">Bitte gib eine gültige Zahl ein.</string>
 
 </resources>
