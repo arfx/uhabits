@@ -42,6 +42,7 @@ class HabitsCSVExporterTest : BaseUnitTest() {
 
         val meditate = fixtures.createEmptyHabit()
         meditate.position = 1
+        meditate.hasGoal = false
 
         val short = fixtures.createShortHabit()
         short.position = 2
