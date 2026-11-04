@@ -109,6 +109,8 @@
     <string name="developers">Entwickler</string>
     <string name="version_n">Version %s</string>
     <string name="frequency">Häufigkeit</string>
+    <string name="goal_enabled">Ein Ziel festlegen</string>
+    <string name="no_goal">Ohne Ziel</string>
     <string name="checkmark">Häkchen</string>
     <string name="best_streaks">Beste Serien</string>
     <string name="every_day">Jeden Tag</string>
