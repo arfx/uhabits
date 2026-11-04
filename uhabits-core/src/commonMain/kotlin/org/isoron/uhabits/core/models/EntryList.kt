@@ -148,7 +148,7 @@ open class EntryList {
         if (!hasGoal) {
             for (entry in getKnown()) {
                 val completed = if (isNumerical) {
-                    entry.value > 0
+                    entry.value > 0 && entry.value != Entry.SKIP
                 } else {
                     entry.value == YES_MANUAL
                 }
