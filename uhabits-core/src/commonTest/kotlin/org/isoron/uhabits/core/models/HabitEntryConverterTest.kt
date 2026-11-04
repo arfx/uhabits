@@ -9,9 +9,10 @@ class HabitEntryConverterTest {
     fun booleanToNumericalMapsValuesAndPreservesNotes() {
         val entries = listOf(
             Entry(LocalDate(2026, 1, 1), Entry.YES_MANUAL, "done"),
-            Entry(LocalDate(2026, 1, 2), Entry.NO, "missed"),
-            Entry(LocalDate(2026, 1, 3), Entry.SKIP, "skip"),
-            Entry(LocalDate(2026, 1, 4), Entry.UNKNOWN, "unknown")
+            Entry(LocalDate(2026, 1, 2), Entry.YES_AUTO, "scheduled"),
+            Entry(LocalDate(2026, 1, 3), Entry.NO, "missed"),
+            Entry(LocalDate(2026, 1, 4), Entry.SKIP, "skip"),
+            Entry(LocalDate(2026, 1, 5), Entry.UNKNOWN, "unknown")
         )
 
         val converted = HabitEntryConverter.booleanToNumerical(entries, 2500)
@@ -19,9 +20,10 @@ class HabitEntryConverterTest {
         assertEquals(
             listOf(
                 Entry(LocalDate(2026, 1, 1), 2500, "done"),
-                Entry(LocalDate(2026, 1, 2), 0, "missed"),
-                Entry(LocalDate(2026, 1, 3), Entry.SKIP, "skip"),
-                Entry(LocalDate(2026, 1, 4), Entry.UNKNOWN, "unknown")
+                Entry(LocalDate(2026, 1, 2), 2500, "scheduled"),
+                Entry(LocalDate(2026, 1, 3), 0, "missed"),
+                Entry(LocalDate(2026, 1, 4), Entry.SKIP, "skip"),
+                Entry(LocalDate(2026, 1, 5), Entry.UNKNOWN, "unknown")
             ),
             converted
         )
