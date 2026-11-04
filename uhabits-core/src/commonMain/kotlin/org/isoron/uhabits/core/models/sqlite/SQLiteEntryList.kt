@@ -81,7 +81,7 @@ class SQLiteEntryList(val repository: EntryRepository) : EntryList() {
         val id = habitId ?: throw IllegalStateException("habitId must be set")
         repository.replaceAllForHabit(id, entries)
         super.clear()
-        entries.forEach { super.add(it) }
+        for (entry in entries) super.add(entry)
     }
 
     override fun clear() {
