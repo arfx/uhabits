@@ -481,10 +481,16 @@ class EditHabitActivity : AppCompatActivity() {
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val value = valueInput.text.toString().replace(',', '.').toDoubleOrNull()
-                if (value == null || value < 0.0) {
+                val scaledValue = value?.times(1000.0)
+                if (
+                    scaledValue == null ||
+                    !scaledValue.isFinite() ||
+                    scaledValue < 0.0 ||
+                    scaledValue > Int.MAX_VALUE.toDouble() - 0.5
+                ) {
                     valueInput.error = getString(R.string.validation_conversion_value_required)
                 } else {
-                    conversionYesValue = (value * 1000.0).roundToInt()
+                    conversionYesValue = scaledValue.roundToInt()
                     changeHabitType(HabitType.NUMERICAL)
                     dialog.dismiss()
                 }
