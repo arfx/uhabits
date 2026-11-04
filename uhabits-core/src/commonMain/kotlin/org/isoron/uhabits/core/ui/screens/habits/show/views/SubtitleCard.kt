@@ -30,14 +30,14 @@ data class SubtitleCardState(
     val color: PaletteColor,
     val frequency: Frequency,
     val isNumerical: Boolean,
-    val hasGoal: Boolean = true,
     val question: String,
     val reminder: Reminder?,
     val targetValue: Double = 0.0,
     val targetType: NumericalHabitType = NumericalHabitType.AT_LEAST,
     val unit: String = "",
     val category: String = "",
-    val theme: Theme
+    val theme: Theme,
+    val hasGoal: Boolean = true
 )
 
 class SubtitleCardPresenter {
