@@ -22,7 +22,10 @@ import org.isoron.platform.time.LocalDate
 import org.isoron.platform.time.getToday
 import org.isoron.uhabits.core.BaseUnitTest
 import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.models.HabitEntryConverter
+import org.isoron.uhabits.core.models.HabitType
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -46,6 +49,32 @@ class EditHabitCommandTest : BaseUnitTest() {
         modified.name = "modified"
         habitList.add(modified)
         today = getToday()
+    }
+
+
+    @Test
+    fun testExecuteWithConvertedEntriesPreservesHistoricalNotes() {
+        habit.originalEntries.clear()
+        habit.originalEntries.add(Entry(today, Entry.YES_MANUAL, "morning run"))
+        habit.originalEntries.add(Entry(today.minus(1), Entry.NO, "rest day"))
+        modified.type = HabitType.NUMERICAL
+        modified.targetValue = 2.5
+
+        val converted = HabitEntryConverter.booleanToNumerical(
+            habit.originalEntries.getKnown(),
+            yesValue = 2500
+        )
+        EditHabitCommand(
+            habitList,
+            habit.id!!,
+            modified,
+            convertedEntries = converted
+        ).run()
+
+        assertEquals(2500, habit.originalEntries.get(today).value)
+        assertEquals("morning run", habit.originalEntries.get(today).notes)
+        assertEquals(0, habit.originalEntries.get(today.minus(1)).value)
+        assertEquals("rest day", habit.originalEntries.get(today.minus(1)).notes)
     }
 
     @Test
