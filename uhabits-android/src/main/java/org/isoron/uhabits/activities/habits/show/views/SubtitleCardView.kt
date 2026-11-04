@@ -72,7 +72,7 @@ class SubtitleCardView(context: Context, attrs: AttributeSet) : LinearLayout(con
         binding.questionLabel.visibility = View.VISIBLE
         binding.targetIcon.visibility = View.VISIBLE
         binding.targetText.visibility = View.VISIBLE
-        if (state.isNumerical) {
+        if (state.isNumerical && state.hasGoal) {
             binding.targetIcon.text = when (state.targetType) {
                 NumericalHabitType.AT_LEAST -> resources.getString(R.string.fa_arrow_circle_up)
                 else -> resources.getString(R.string.fa_arrow_circle_down)
