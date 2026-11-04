@@ -30,6 +30,35 @@ class HabitEntryConverterTest {
     }
 
     @Test
+    fun booleanToNumericalIncludesComputedAutomaticSuccessesOnly() {
+        val originalEntries = listOf(
+            Entry(LocalDate(2026, 1, 3), Entry.NO, "explicit no"),
+            Entry(LocalDate(2026, 1, 1), Entry.YES_MANUAL, "manual yes")
+        )
+        val computedEntries = listOf(
+            Entry(LocalDate(2026, 1, 4), Entry.UNKNOWN),
+            Entry(LocalDate(2026, 1, 3), Entry.NO, "explicit no"),
+            Entry(LocalDate(2026, 1, 2), Entry.YES_AUTO),
+            Entry(LocalDate(2026, 1, 1), Entry.YES_MANUAL, "manual yes")
+        )
+
+        val converted = HabitEntryConverter.booleanToNumerical(
+            originalEntries,
+            computedEntries,
+            1500
+        )
+
+        assertEquals(
+            listOf(
+                Entry(LocalDate(2026, 1, 3), 0, "explicit no"),
+                Entry(LocalDate(2026, 1, 2), 1500),
+                Entry(LocalDate(2026, 1, 1), 1500, "manual yes")
+            ),
+            converted
+        )
+    }
+
+    @Test
     fun numericalToBooleanMapsValuesAndPreservesNotes() {
         val entries = listOf(
             Entry(LocalDate(2026, 1, 1), 2500, "positive"),
