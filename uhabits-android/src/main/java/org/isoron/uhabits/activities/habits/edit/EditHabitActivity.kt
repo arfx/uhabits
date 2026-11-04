@@ -416,7 +416,6 @@ class EditHabitActivity : AppCompatActivity() {
     private fun updateHabitTypeControls() {
         val isNumerical = habitType == HabitType.NUMERICAL
         binding.unitOuterBox.visibility = if (isNumerical) View.VISIBLE else View.GONE
-        binding.frequencyOuterBox.visibility = if (isNumerical) View.GONE else View.VISIBLE
         binding.nameInput.hint = if (isNumerical) {
             getString(R.string.measurable_short_example)
         } else {
