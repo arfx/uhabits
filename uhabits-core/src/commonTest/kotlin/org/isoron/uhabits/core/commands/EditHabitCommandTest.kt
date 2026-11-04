@@ -72,6 +72,31 @@ class EditHabitCommandTest : BaseUnitTest() {
         assertEquals("rest day", habit.originalEntries.get(today.minus(1)).notes)
     }
 
+
+    @Test
+    fun testTypeConversionPreservesNoGoalConfiguration() {
+        habit.hasGoal = false
+        habit.originalEntries.clear()
+        habit.originalEntries.add(org.isoron.uhabits.core.models.Entry(today, org.isoron.uhabits.core.models.Entry.YES_MANUAL, "activity"))
+        modified.copyFrom(habit)
+        modified.type = org.isoron.uhabits.core.models.HabitType.NUMERICAL
+
+        val converted = org.isoron.uhabits.core.models.HabitEntryConverter.booleanToNumerical(
+            habit.originalEntries.getKnown(),
+            yesValue = 1000
+        )
+        EditHabitCommand(
+            habitList,
+            habit.id!!,
+            modified,
+            convertedEntries = converted
+        ).run()
+
+        assertEquals(false, habit.hasGoal)
+        assertEquals(1000, habit.originalEntries.get(today).value)
+        assertEquals("activity", habit.originalEntries.get(today).notes)
+    }
+
     @Test
     fun testExecute() {
         command = EditHabitCommand(habitList, habit.id!!, modified)
