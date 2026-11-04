@@ -283,6 +283,16 @@ class EditHabitActivity : AppCompatActivity() {
         }
     }
 
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun save() {
         val component = (application as HabitsApplication).component
         val habit = component.modelFactory.buildHabit()

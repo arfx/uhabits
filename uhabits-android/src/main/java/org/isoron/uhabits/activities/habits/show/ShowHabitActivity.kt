@@ -120,7 +120,13 @@ class ShowHabitActivity : AppCompatActivity(), CommandRunner.Listener {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return menu.onOptionsItemSelected(item)
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            else -> menu.onOptionsItemSelected(item) || super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onResume() {

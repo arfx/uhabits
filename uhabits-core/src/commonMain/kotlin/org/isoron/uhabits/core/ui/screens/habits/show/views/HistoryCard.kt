@@ -67,11 +67,7 @@ class HistoryCardPresenter(
         if (habit.isNumerical) {
             showNumberPopup(date)
         } else {
-            if (preferences.isShortToggleEnabled) {
-                showCheckmarkPopup(date)
-            } else {
-                toggle(date)
-            }
+            showCheckmarkPopup(date)
         }
     }
 
@@ -80,11 +76,7 @@ class HistoryCardPresenter(
         if (habit.isNumerical) {
             showNumberPopup(date)
         } else {
-            if (preferences.isShortToggleEnabled) {
-                toggle(date)
-            } else {
-                showCheckmarkPopup(date)
-            }
+            toggle(date)
         }
     }
 

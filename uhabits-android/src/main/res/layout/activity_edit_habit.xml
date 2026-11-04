@@ -161,6 +161,9 @@
                         android:id="@+id/goalEnabledSwitch"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:minHeight="56dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
                         android:text="@string/goal_enabled"
                         android:textColor="?attr/contrast100" />
                 </LinearLayout>
