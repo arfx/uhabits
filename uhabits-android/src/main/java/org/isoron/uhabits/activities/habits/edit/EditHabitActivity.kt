@@ -486,8 +486,8 @@ class EditHabitActivity : AppCompatActivity() {
                 if (
                     scaledValue == null ||
                     !scaledValue.isFinite() ||
-                    scaledValue <= 0.0 ||
-                    scaledValue > Int.MAX_VALUE.toDouble() - 0.5
+                    scaledValue < 1.0 ||
+                    scaledValue > Int.MAX_VALUE.toDouble()
                 ) {
                     valueInput.error = getString(R.string.validation_conversion_value_required)
                 } else {
