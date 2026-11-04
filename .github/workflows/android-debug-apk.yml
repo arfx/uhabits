@@ -46,7 +46,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: uhabits-debug-apk
+          name: habit-tracker-debug-apk
           path: uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk
           if-no-files-found: error
           retention-days: 14
