@@ -28,6 +28,7 @@ import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.ui.views.LightTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 class ListHabitsPresenterTest : BaseUnitTest() {
     private val theme = LightTheme()
@@ -156,6 +157,26 @@ class ListHabitsPresenterTest : BaseUnitTest() {
         )
 
         assertEquals(expected, state)
+    }
+
+
+    @Test
+    fun testBuildStatePreservesNoGoalStatus() {
+        val habit = addHabit("Free tracking", PaletteColor(1), position = 0)
+        habit.hasGoal = false
+        habit.recompute()
+        habitList.update(habit)
+
+        val state = ListHabitsPresenter.buildState(
+            allHabits = habitList,
+            filter = null,
+            primaryOrder = Order.BY_POSITION,
+            secondaryOrder = Order.BY_NAME_ASC,
+            checkmarkCount = checkmarkCount,
+            theme = theme
+        )
+
+        assertFalse(state.items.single().hasGoal)
     }
 
     private fun addHabit(

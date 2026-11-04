@@ -79,6 +79,7 @@ class HabitCardView(
             text = r.name
             setTextColor(c)
         }
+        scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE
         scoreRing.apply {
             setPercentage(r.score.toFloat())
             setPrecision(1.0f / 16)
