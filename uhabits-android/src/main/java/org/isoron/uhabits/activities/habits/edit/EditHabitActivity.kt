@@ -472,6 +472,9 @@ class EditHabitActivity : AppCompatActivity() {
         freqNum = 1
         freqDen = 1
         frequencyConfigured = false
+        binding.booleanFrequencyPicker.error = null
+        binding.numericalFrequencyPicker.error = null
+        binding.targetInput.error = null
         if (newType == HabitType.NUMERICAL) {
             targetType = NumericalHabitType.AT_LEAST
             binding.targetInput.text.clear()
