@@ -87,6 +87,7 @@ class EditHabitActivity : AppCompatActivity() {
     var reminderDays: WeekdayList = WeekdayList.EVERY_DAY
     var targetType = NumericalHabitType.AT_LEAST
     var hasGoal = true
+    var goalFrequencyConfigured = true
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
@@ -107,6 +108,7 @@ class EditHabitActivity : AppCompatActivity() {
             val habit = component.habitList.getById(habitId)!!
             habitType = habit.type
             hasGoal = habit.hasGoal
+            goalFrequencyConfigured = habit.hasGoal
             color = habit.color
             freqNum = habit.frequency.numerator
             freqDen = habit.frequency.denominator
@@ -136,6 +138,7 @@ class EditHabitActivity : AppCompatActivity() {
             reminderMin = state.getInt("reminderMin")
             reminderDays = WeekdayList(state.getInt("reminderDays"))
             hasGoal = state.getBoolean("hasGoal", true)
+            goalFrequencyConfigured = state.getBoolean("goalFrequencyConfigured", hasGoal)
         }
 
         updateColors()
@@ -155,6 +158,15 @@ class EditHabitActivity : AppCompatActivity() {
 
         binding.goalEnabledSwitch.isChecked = hasGoal
         binding.goalEnabledSwitch.setOnCheckedChangeListener { _, checked ->
+            if (checked && !hasGoal) {
+                goalFrequencyConfigured = false
+                freqNum = 1
+                freqDen = 1
+                if (habitType == HabitType.NUMERICAL) {
+                    binding.targetInput.text.clear()
+                }
+                populateFrequency()
+            }
             hasGoal = checked
             updateGoalControls()
         }
@@ -181,6 +193,7 @@ class EditHabitActivity : AppCompatActivity() {
             picker.onFrequencyPicked = { num, den ->
                 freqNum = num
                 freqDen = den
+                goalFrequencyConfigured = true
                 populateFrequency()
             }
             picker.dismissCurrentAndShow(supportFragmentManager, "frequencyPicker")
@@ -216,6 +229,7 @@ class EditHabitActivity : AppCompatActivity() {
                     2 -> 30
                     else -> 1
                 }
+                goalFrequencyConfigured = true
                 populateFrequency()
                 dialog.dismiss()
             }
@@ -326,6 +340,15 @@ class EditHabitActivity : AppCompatActivity() {
             binding.nameInput.error = getFormattedValidationError(R.string.validation_cannot_be_blank)
             isValid = false
         }
+        if (hasGoal && !goalFrequencyConfigured) {
+            val frequencyPicker = if (habitType == HabitType.NUMERICAL) {
+                binding.numericalFrequencyPicker
+            } else {
+                binding.booleanFrequencyPicker
+            }
+            frequencyPicker.error = getString(R.string.validation_goal_frequency_required)
+            isValid = false
+        }
         if (habitType == HabitType.NUMERICAL && hasGoal) {
             if (binding.targetInput.text.isEmpty()) {
                 binding.targetInput.error = getString(R.string.validation_cannot_be_blank)
@@ -403,6 +426,7 @@ class EditHabitActivity : AppCompatActivity() {
             putInt("reminderMin", reminderMin)
             putInt("reminderDays", reminderDays.toInteger())
             putBoolean("hasGoal", hasGoal)
+            putBoolean("goalFrequencyConfigured", goalFrequencyConfigured)
         }
     }
 }

@@ -222,4 +222,5 @@
     <string name="pref_midnight_delay_description">Bis 3:00 Uhr warten, bevor ein neuer Tag angezeigt wird. Nützlich, wenn du normalerweise nach Mitternacht schlafen gehst. Benötigt einen Neustart der App.</string>
     <string name="select_public_backup_folder">Öffentlichen Backup-Ordner auswählen</string>
     <string name="no_public_backup_folder_selected">Kein Ordner ausgewählt</string>
+    <string name="validation_goal_frequency_required">Bitte wähle eine Zielfrequenz aus.</string>
 </resources>
