@@ -55,7 +55,7 @@ android {
         versionName = "2.3.2"
         minSdk = 28
         targetSdk = 36
-        applicationId = "org.isoron.uhabits"
+        applicationId = "org.arfx.habittracker"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
