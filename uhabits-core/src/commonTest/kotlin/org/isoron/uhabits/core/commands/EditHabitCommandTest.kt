@@ -98,6 +98,46 @@ class EditHabitCommandTest : BaseUnitTest() {
     }
 
     @Test
+    fun testTypeConversionPersistsComputedAutomaticSuccesses() {
+        habit.originalEntries.clear()
+        habit.frequency = Frequency(1, 3)
+        habit.originalEntries.add(
+            org.isoron.uhabits.core.models.Entry(today, org.isoron.uhabits.core.models.Entry.YES_MANUAL, "latest")
+        )
+        habit.originalEntries.add(
+            org.isoron.uhabits.core.models.Entry(today.minus(3), org.isoron.uhabits.core.models.Entry.YES_MANUAL, "earlier")
+        )
+        habit.recompute()
+
+        val automaticDate = today.minus(1)
+        assertEquals(
+            org.isoron.uhabits.core.models.Entry.YES_AUTO,
+            habit.computedEntries.get(automaticDate).value
+        )
+
+        modified.copyFrom(habit)
+        modified.type = org.isoron.uhabits.core.models.HabitType.NUMERICAL
+        val converted = org.isoron.uhabits.core.models.HabitEntryConverter.booleanToNumerical(
+            habit.originalEntries.getKnown(),
+            habit.computedEntries.getKnown(),
+            1750
+        )
+
+        EditHabitCommand(
+            habitList,
+            habit.id!!,
+            modified,
+            convertedEntries = converted
+        ).run()
+
+        assertEquals(1750, habit.originalEntries.get(automaticDate).value)
+        assertEquals(1750, habit.originalEntries.get(today).value)
+        assertEquals("latest", habit.originalEntries.get(today).notes)
+        assertEquals(1750, habit.originalEntries.get(today.minus(3)).value)
+        assertEquals("earlier", habit.originalEntries.get(today.minus(3)).notes)
+    }
+
+    @Test
     fun testExecute() {
         command = EditHabitCommand(habitList, habit.id!!, modified)
         val originalScore = habit.scores[today].value
