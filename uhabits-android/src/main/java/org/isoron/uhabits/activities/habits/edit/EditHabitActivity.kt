@@ -144,6 +144,7 @@ class EditHabitActivity : AppCompatActivity() {
             hasGoal = state.getBoolean("hasGoal", true)
             goalFrequencyConfigured = state.getBoolean("goalFrequencyConfigured", hasGoal)
             conversionYesValue = state.getInt("conversionYesValue", Int.MIN_VALUE).takeIf { it != Int.MIN_VALUE }
+            targetType = NumericalHabitType.fromInt(state.getInt("targetType", NumericalHabitType.AT_LEAST.value))
         }
 
         updateColors()
@@ -307,7 +308,7 @@ class EditHabitActivity : AppCompatActivity() {
         habit.hasGoal = hasGoal
         if (habitType == HabitType.NUMERICAL) {
             if (hasGoal) {
-                habit.targetValue = binding.targetInput.text.toString().replace(',', '.').toDouble()
+                habit.targetValue = requireNotNull(parseTargetValue())
                 habit.targetType = targetType
             }
             habit.unit = binding.unitInput.text.trim().toString()
@@ -367,13 +368,23 @@ class EditHabitActivity : AppCompatActivity() {
             isValid = false
         }
         if (habitType == HabitType.NUMERICAL && hasGoal) {
-            if (binding.targetInput.text.isEmpty()) {
+            val targetValue = parseTargetValue()
+            if (binding.targetInput.text.isBlank()) {
                 binding.targetInput.error = getString(R.string.validation_cannot_be_blank)
+                isValid = false
+            } else if (targetValue == null) {
+                binding.targetInput.error = getString(R.string.validation_invalid_number)
                 isValid = false
             }
         }
         return isValid
     }
+
+    private fun parseTargetValue(): Double? = binding.targetInput.text.toString()
+        .trim()
+        .replace(',', '.')
+        .toDoubleOrNull()
+        ?.takeIf { it.isFinite() }
 
     private fun populateReminder() {
         if (reminderHour < 0) {
@@ -552,6 +563,7 @@ class EditHabitActivity : AppCompatActivity() {
             putBoolean("hasGoal", hasGoal)
             putBoolean("goalFrequencyConfigured", goalFrequencyConfigured)
             putInt("conversionYesValue", conversionYesValue ?: Int.MIN_VALUE)
+            putInt("targetType", targetType.value)
         }
     }
 }
