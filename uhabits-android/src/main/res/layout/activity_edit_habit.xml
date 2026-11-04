@@ -140,6 +140,18 @@
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- Goal setting -->
+            <FrameLayout style="@style/FormOuterBox">
+                <LinearLayout style="@style/FormInnerBox">
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/goalEnabledSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/goal_enabled"
+                        android:textColor="?attr/contrast100" />
+                </LinearLayout>
+            </FrameLayout>
+
             <!-- Frequency -->
             <FrameLayout
                 android:id="@+id/frequencyOuterBox"
