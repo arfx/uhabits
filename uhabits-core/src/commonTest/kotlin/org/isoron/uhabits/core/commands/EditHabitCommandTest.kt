@@ -21,7 +21,10 @@ package org.isoron.uhabits.core.commands
 import org.isoron.platform.time.LocalDate
 import org.isoron.platform.time.getToday
 import org.isoron.uhabits.core.BaseUnitTest
+import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.HabitEntryConverter
+import org.isoron.uhabits.core.models.HabitType
 import org.isoron.uhabits.core.models.Habit
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -53,9 +56,9 @@ class EditHabitCommandTest : BaseUnitTest() {
         habit.originalEntries.clear()
         habit.originalEntries.add(org.isoron.uhabits.core.models.Entry(today, org.isoron.uhabits.core.models.Entry.YES_MANUAL, "morning run"))
         habit.originalEntries.add(org.isoron.uhabits.core.models.Entry(today.minus(1), org.isoron.uhabits.core.models.Entry.NO, "rest day"))
-        modified.type = org.isoron.uhabits.core.models.HabitType.NUMERICAL
+        modified.type = HabitType.NUMERICAL
 
-        val converted = org.isoron.uhabits.core.models.HabitEntryConverter.booleanToNumerical(
+        val converted = HabitEntryConverter.booleanToNumerical(
             habit.originalEntries.getKnown(),
             yesValue = 2500
         )
@@ -102,16 +105,16 @@ class EditHabitCommandTest : BaseUnitTest() {
         habit.originalEntries.clear()
         habit.frequency = Frequency(1, 3)
         habit.originalEntries.add(
-            org.isoron.uhabits.core.models.Entry(today, org.isoron.uhabits.core.models.Entry.YES_MANUAL, "latest")
+            Entry(today, Entry.YES_MANUAL, "latest")
         )
         habit.originalEntries.add(
-            org.isoron.uhabits.core.models.Entry(today.minus(3), org.isoron.uhabits.core.models.Entry.YES_MANUAL, "earlier")
+            Entry(today.minus(3), Entry.YES_MANUAL, "earlier")
         )
         habit.recompute()
 
         val automaticDate = today.minus(1)
         assertEquals(
-            org.isoron.uhabits.core.models.Entry.YES_AUTO,
+            Entry.YES_AUTO,
             habit.computedEntries.get(automaticDate).value
         )
 
