@@ -49,6 +49,10 @@ class ScoreWidget(
             theme = WidgetTheme()
         )
         val widgetView = view as GraphWidgetView
+        widgetView.dataView.visibility = if (habit.hasGoal) View.VISIBLE else View.GONE
+        widgetView.setTitle(
+            if (habit.hasGoal) habit.name else "${habit.name} (${context.getString(R.string.no_goal)})"
+        )
         widgetView.setBackgroundAlpha(preferedBackgroundAlpha)
         if (preferedBackgroundAlpha >= 255) widgetView.setShadowAlpha(0x4f)
         (widgetView.dataView as ScoreChart).apply {

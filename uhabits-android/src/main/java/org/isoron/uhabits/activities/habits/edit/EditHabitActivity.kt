@@ -194,6 +194,7 @@ class EditHabitActivity : AppCompatActivity() {
                 freqNum = num
                 freqDen = den
                 goalFrequencyConfigured = true
+                binding.booleanFrequencyPicker.error = null
                 populateFrequency()
             }
             picker.dismissCurrentAndShow(supportFragmentManager, "frequencyPicker")
@@ -230,6 +231,7 @@ class EditHabitActivity : AppCompatActivity() {
                     else -> 1
                 }
                 goalFrequencyConfigured = true
+                binding.numericalFrequencyPicker.error = null
                 populateFrequency()
                 dialog.dismiss()
             }
