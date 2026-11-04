@@ -26,6 +26,7 @@ import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import kotlinx.coroutines.runBlocking
 import org.isoron.platform.gui.toInt
+import org.isoron.uhabits.R
 import org.isoron.uhabits.activities.common.views.TargetChart
 import org.isoron.uhabits.activities.habits.show.views.TargetCardView.Companion.intervalToLabel
 import org.isoron.uhabits.core.models.Habit
