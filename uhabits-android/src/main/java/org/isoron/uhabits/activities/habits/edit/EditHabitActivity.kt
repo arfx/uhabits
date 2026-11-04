@@ -420,18 +420,19 @@ class EditHabitActivity : AppCompatActivity() {
             .setItems(options) { dialog, which ->
                 dialog.dismiss()
                 val selectedType = if (which == 0) HabitType.YES_NO else HabitType.NUMERICAL
-                if (selectedType == habitType) return@setItems
-                if (selectedType == HabitType.NUMERICAL) {
-                    showBooleanToNumericalDialog()
-                } else {
-                    AlertDialog.Builder(this)
-                        .setTitle(R.string.convert_to_yes_no)
-                        .setMessage(R.string.conversion_numerical_to_boolean_message)
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .setPositiveButton(R.string.convert) { _, _ ->
-                            changeHabitType(HabitType.YES_NO)
-                        }
-                        .show()
+                if (selectedType != habitType) {
+                    if (selectedType == HabitType.NUMERICAL) {
+                        showBooleanToNumericalDialog()
+                    } else {
+                        AlertDialog.Builder(this)
+                            .setTitle(R.string.convert_to_yes_no)
+                            .setMessage(R.string.conversion_numerical_to_boolean_message)
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .setPositiveButton(R.string.convert) { _, _ ->
+                                changeHabitType(HabitType.YES_NO)
+                            }
+                            .show()
+                    }
                 }
             }
             .show()
