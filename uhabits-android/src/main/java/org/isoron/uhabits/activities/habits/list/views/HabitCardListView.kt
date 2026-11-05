@@ -123,6 +123,12 @@ class HabitCardListView(
 
     fun bindCategoryView(holder: CategoryViewHolder) {
         val categoryView = holder.itemView as CategoryView
+        categoryView.setOnClickListener {
+            val position = holder.adapterPosition
+            if (position != RecyclerView.NO_POSITION) {
+                controller.value.onItemClick(position)
+            }
+        }
         categoryView.setOnLongClickListener {
             val position = holder.adapterPosition
             if (position != RecyclerView.NO_POSITION) {
