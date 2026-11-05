@@ -9,15 +9,13 @@ class OverallStreakListTest : BaseUnitTest() {
     @Test
     fun testAnyCompletedHabitKeepsCategoryStreakAlive() {
         val today = getToday()
-        val first = fixtures.createLongHabit().apply {
+        val first = fixtures.createEmptyHabit().apply {
             category = "Health"
-            originalEntries.clear()
             originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
             recompute()
         }
-        val second = fixtures.createLongHabit().apply {
+        val second = fixtures.createEmptyHabit().apply {
             category = "Health"
-            originalEntries.clear()
             originalEntries.add(Entry(today, Entry.YES_MANUAL))
             recompute()
         }
@@ -34,9 +32,8 @@ class OverallStreakListTest : BaseUnitTest() {
     @Test
     fun testHabitsFromOtherCategoriesAreIgnored() {
         val today = getToday()
-        val habit = fixtures.createLongHabit().apply {
+        val habit = fixtures.createEmptyHabit().apply {
             category = "Fitness"
-            originalEntries.clear()
             originalEntries.add(Entry(today, Entry.YES_MANUAL))
             recompute()
         }
@@ -50,9 +47,8 @@ class OverallStreakListTest : BaseUnitTest() {
     @Test
     fun testBlankCategoryHasNoOverallStreak() {
         val today = getToday()
-        val habit = fixtures.createLongHabit().apply {
+        val habit = fixtures.createEmptyHabit().apply {
             category = ""
-            originalEntries.clear()
             originalEntries.add(Entry(today, Entry.YES_MANUAL))
             recompute()
         }
