@@ -95,8 +95,8 @@ class OverallStreakList {
     }
 
     fun getBest(limit: Int): List<Streak> {
-        list.sortWith { first, second -> second.compareLonger(first) }
-        return list.take(min(list.size, limit))
+        val best = list.sortedWith { first, second -> second.compareLonger(first) }
+        return best.take(min(best.size, limit))
             .sortedWith { first, second -> second.compareNewer(first) }
     }
 }
