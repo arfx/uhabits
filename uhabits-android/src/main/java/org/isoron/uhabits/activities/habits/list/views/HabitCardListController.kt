@@ -47,7 +47,12 @@ class HabitCardListController(
     }
 
     override fun onItemClick(position: Int) {
-        activeMode.onItemClick(position)
+        val category = adapter.categoryAt(position)
+        if (category != null) {
+            behavior.onClickCategory(category)
+        } else {
+            activeMode.onItemClick(position)
+        }
     }
 
     override fun onItemLongClick(position: Int) {

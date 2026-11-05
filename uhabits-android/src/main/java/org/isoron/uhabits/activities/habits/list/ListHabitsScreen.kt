@@ -33,6 +33,7 @@ import org.isoron.platform.gui.toInt
 import org.isoron.platform.io.JavaUserFile
 import org.isoron.uhabits.R
 import org.isoron.uhabits.activities.common.dialogs.CategoryDialog
+import org.isoron.uhabits.activities.common.dialogs.CategoryInsightsDialog
 import org.isoron.uhabits.activities.common.dialogs.CheckmarkDialog
 import org.isoron.uhabits.activities.common.dialogs.ColorPickerDialogFactory
 import org.isoron.uhabits.activities.common.dialogs.ConfirmDeleteDialog
@@ -294,6 +295,10 @@ class ListHabitsScreen(
         val picker = colorPickerFactory.create(defaultColor, themeSwitcher.currentTheme!!)
         picker.setListener(callback)
         picker.dismissCurrentAndShow(activity.supportFragmentManager, "picker")
+    }
+
+    override fun showCategoryInsights(category: String) {
+        CategoryInsightsDialog.show(activity, category, allHabits, preferences) { refresh() }
     }
 
     override fun showCategoryInput(current: String, onConfirmed: (String) -> Unit) {

@@ -31,7 +31,7 @@ import org.isoron.uhabits.utils.dp
 import org.isoron.uhabits.utils.sres
 import org.isoron.uhabits.utils.toMeasureSpec
 
-data class CategoryViewState(val text: String)
+data class CategoryViewState(val text: String, val overallGoalEnabled: Boolean = false)
 
 class CategoryView(context: Context) : LinearLayout(context) {
 
@@ -54,7 +54,7 @@ class CategoryView(context: Context) : LinearLayout(context) {
 
     fun setState(newState: CategoryViewState) {
         state = newState
-        label.text = newState.text
+        label.text = if (newState.overallGoalEnabled) "${newState.text}  ★" else newState.text
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

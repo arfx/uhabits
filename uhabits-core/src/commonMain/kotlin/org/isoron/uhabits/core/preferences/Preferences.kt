@@ -91,6 +91,14 @@ open class Preferences(private val storage: Storage) {
             return if (unixTime < 0) null else LocalDate.fromUnixTime(unixTime)
         }
 
+    open fun isCategoryOverallGoalEnabled(category: String): Boolean {
+        return storage.getBoolean("pref_category_overall_goal:$category", false)
+    }
+
+    open fun setCategoryOverallGoalEnabled(category: String, enabled: Boolean) {
+        storage.putBoolean("pref_category_overall_goal:$category", enabled)
+    }
+
     open var showArchived: Boolean
         get() = storage.getBoolean("pref_show_archived", false)
         set(showArchived) {

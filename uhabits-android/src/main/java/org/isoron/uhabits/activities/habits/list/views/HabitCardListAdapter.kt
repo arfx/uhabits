@@ -201,7 +201,7 @@ class HabitCardListAdapter(
             }
             is Row.Category -> {
                 val categoryView = (holder as CategoryViewHolder).itemView as CategoryView
-                categoryView.setState(CategoryViewState(row.title))
+                categoryView.setState(CategoryViewState(row.title, preferences.isCategoryOverallGoalEnabled(row.title)))
                 listView!!.bindCategoryView(holder as CategoryViewHolder)
             }
         }

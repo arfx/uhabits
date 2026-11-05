@@ -54,6 +54,10 @@ open class ListHabitsBehavior(
         screen.showHabitScreen(habitId)
     }
 
+    open fun onClickCategory(category: String) {
+        if (category.isNotBlank()) screen.showCategoryInsights(category)
+    }
+
     open fun onEdit(habitId: Long, date: LocalDate, x: Float, y: Float) {
         val habit = habitList.getById(habitId) ?: return
         val entry = habit.computedEntries.get(date)
@@ -112,6 +116,10 @@ open class ListHabitsBehavior(
     open fun onRenameCategory(category: String) {
         screen.showCategoryInput(category) { newCategory ->
             commandRunner.run(RenameCategoryCommand(habitList, category, newCategory))
+            if (category != newCategory && prefs.isCategoryOverallGoalEnabled(category)) {
+                prefs.setCategoryOverallGoalEnabled(newCategory, true)
+                prefs.setCategoryOverallGoalEnabled(category, false)
+            }
         }
     }
 
@@ -171,6 +179,7 @@ open class ListHabitsBehavior(
 
     interface Screen {
         fun showCategoryInput(current: String, onConfirmed: (String) -> Unit)
+        fun showCategoryInsights(category: String) {}
         fun showHabitScreen(habitId: Long)
         fun showIntroScreen()
         fun showMessage(m: Message)

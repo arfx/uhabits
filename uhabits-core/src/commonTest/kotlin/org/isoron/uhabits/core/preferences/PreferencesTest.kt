@@ -137,6 +137,16 @@ class PreferencesTest : BaseUnitTest() {
     }
 
     @Test
+    fun testCategoryOverallGoalPreference() {
+        assertFalse(prefs.isCategoryOverallGoalEnabled("Health"))
+        prefs.setCategoryOverallGoalEnabled("Health", true)
+        assertTrue(prefs.isCategoryOverallGoalEnabled("Health"))
+        assertFalse(prefs.isCategoryOverallGoalEnabled("Fitness"))
+        prefs.setCategoryOverallGoalEnabled("Health", false)
+        assertFalse(prefs.isCategoryOverallGoalEnabled("Health"))
+    }
+
+    @Test
     fun testFiltering() {
         assertFalse(prefs.showArchived)
         assertTrue(prefs.showCompleted)
