@@ -95,24 +95,14 @@ object GroupHabitCalculator {
             successfulDates.map { date -> Entry(date, Entry.YES_MANUAL) }
         )
         group.type = HabitType.YES_NO
-        group.hasGoal = false
         group.unit = ""
         group.targetValue = 0.0
+
+        // A group with an enabled goal must use the same computed entries,
+        // score history and streak calculation as an ordinary boolean habit.
+        // Keep the persisted hasGoal flag false: group goals are stored separately.
+        group.hasGoal = group.groupGoalEnabled
         group.recompute()
-        if (group.groupGoalEnabled) {
-            val today = getToday()
-            val to = today.plus(30)
-            var from = group.computedEntries.getKnown().lastOrNull()?.date ?: today
-            if (from.isNewerThan(to)) from = to
-            group.scores.recompute(
-                frequency = group.frequency,
-                isNumerical = false,
-                numericalHabitType = group.targetType,
-                targetValue = group.targetValue,
-                computedEntries = group.computedEntries,
-                from = from,
-                to = to
-            )
-        }
+        group.hasGoal = false
     }
 }
