@@ -21,6 +21,7 @@ package org.isoron.uhabits.activities.habits.list.views
 
 import android.content.Context
 import android.graphics.PointF
+import android.graphics.Typeface
 import android.graphics.text.LineBreaker.BREAK_STRATEGY_BALANCED
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
@@ -131,7 +132,7 @@ class HabitCardView(
         }
         noGoalIcon = TextView(context).apply {
             text = "\\uf06e" // Font Awesome eye: habits without a goal still get a clear marker
-            typeface = org.isoron.uhabits.utils.getFontAwesome()
+            typeface = Typeface.createFromAsset(context.assets, "fontawesome-webfont.ttf")
             textSize = 11f
             gravity = Gravity.CENTER
             setTextColor(sres.getColor(R.attr.contrast60))
