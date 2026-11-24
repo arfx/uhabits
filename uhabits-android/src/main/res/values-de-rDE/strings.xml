@@ -235,9 +235,9 @@
 
     <string name="group_habit_create_title">Gruppe erstellen</string>
     <string name="group_habit_name_hint">Gruppenname</string>
-    <string name="group_habit_goal_enabled">Wöchentliches Gruppenziel festlegen</string>
+    <string name="group_habit_goal_enabled">Gruppenziel festlegen</string>
     <string name="group_habit_weekly_goal">%1$d Tage pro Woche</string>
-    <string name="group_habit_choose_frequency">Wochenziel ändern</string>
+    <string name="group_habit_choose_frequency">Zielfrequenz ändern</string>
     <string name="group_habit_name_required">Bitte einen Gruppennamen eingeben</string>
     <string name="group_habit_edit_title">Gruppe bearbeiten</string>
     <string name="group_habit_insights">Gruppen-Auswertung</string>
