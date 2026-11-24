@@ -141,6 +141,40 @@ class EditHabitCommandTest : BaseUnitTest() {
     }
 
     @Test
+    fun testEditingGroupGoalRecomputesScoreHistory() {
+        val group = modelFactory.buildHabit().apply {
+            isGroup = true
+            hasGoal = false
+            groupGoalEnabled = true
+            frequency = Frequency(2, 7)
+            name = "Sport"
+        }
+        habitList.add(group)
+
+        val child = modelFactory.buildHabit().apply {
+            groupId = group.id
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
+            recompute()
+        }
+        habitList.add(child)
+
+        val modifiedGroup = modelFactory.buildHabit().apply {
+            copyFrom(group)
+            frequency = Frequency(3, 7)
+            groupGoalEnabled = true
+            hasGoal = false
+        }
+
+        EditHabitCommand(habitList, group.id!!, modifiedGroup).run()
+
+        assertEquals(Frequency(3, 7), group.frequency)
+        assertEquals(true, group.groupGoalEnabled)
+        assertEquals(false, group.hasGoal)
+        assertEquals(true, group.scores[today].value > 0.0)
+    }
+
+    @Test
     fun testExecute() {
         command = EditHabitCommand(habitList, habit.id!!, modified)
         val originalScore = habit.scores[today].value
