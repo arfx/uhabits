@@ -109,12 +109,12 @@ class ListHabitsSelectionMenu(
         val selectedGroup = selectedGroups.singleOrNull()
 
         itemColor.isVisible = selectedGroups.isEmpty()
-        itemEdit.isVisible = behavior.canEdit() && selectedGroups.isEmpty()
+        itemEdit.isVisible = behavior.canEdit() && selectedHabits.size == 1
         itemArchive.isVisible = behavior.canArchive() && selectedGroups.isEmpty()
         itemUnarchive.isVisible = behavior.canUnarchive() && selectedGroups.isEmpty()
         itemNotify.isVisible = prefs.isDeveloper && selectedGroups.isEmpty()
         itemGroup.isVisible = selectedHabits.size >= 2 && selectedGroups.isEmpty()
-        itemEditGroup.isVisible = selectedGroup != null && selectedHabits.size == 1
+        itemEditGroup.isVisible = false
         itemGroupInsights.isVisible = selectedGroup != null && selectedHabits.size == 1
         itemAddToGroup.isVisible = selectedGroup != null && selectedChildren.isNotEmpty()
         itemRemoveFromGroup.isVisible = selectedChildren.any { it.groupId != null }
