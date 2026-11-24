@@ -111,6 +111,31 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
     }
 
     @Test
+    fun testIndependentWeeklyGoalDoesNotCreateDailyStreakDays() {
+        val today = getToday()
+        val group = modelFactory.buildHabit().apply {
+            id = 104L
+            isGroup = true
+            hasGoal = false
+            groupGoalEnabled = true
+            frequency = Frequency(3, 7)
+        }
+        val child = modelFactory.buildHabit().apply {
+            groupId = group.id
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
+            recompute()
+        }
+
+        GroupHabitCalculator.recompute(group, listOf(child))
+
+        assertTrue(group.isActiveOn(today))
+        assertTrue(group.isActiveOn(today.minus(1)))
+        assertFalse(group.isActiveOn(today.minus(2)))
+        assertEquals(2 to 3, GroupHabitCalculator.goalProgress(group, today))
+    }
+
+    @Test
     fun testRejectsChildrenFromAnotherGroup() {
         val group = modelFactory.buildHabit().apply {
             id = 103L

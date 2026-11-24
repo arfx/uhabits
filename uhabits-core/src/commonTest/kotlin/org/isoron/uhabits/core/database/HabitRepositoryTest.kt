@@ -66,6 +66,17 @@ class HabitRepositoryTest {
     }
 
     @Test
+    fun testInsertWithExplicitIdIncludesGroupGoalFlag() = runTest {
+        val db = TestDatabaseHelper.createEmptyDatabase()
+        val repo = HabitRepository(db)
+        val data = HabitData(id = 123L, name = "Group", isGroup = 1, groupGoalEnabled = 1)
+        assertEquals(123L, repo.insert(data))
+        val loaded = repo.findAll().single()
+        assertEquals(1, loaded.groupGoalEnabled)
+        db.close()
+    }
+
+    @Test
     fun testDelete() = runTest {
         val db = TestDatabaseHelper.createEmptyDatabase()
         val repo = HabitRepository(db)
