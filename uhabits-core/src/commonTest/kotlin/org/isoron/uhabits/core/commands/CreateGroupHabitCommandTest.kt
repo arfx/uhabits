@@ -67,10 +67,11 @@ class CreateGroupHabitCommandTest : BaseUnitTest() {
             listOf(movingChild.id!!, newSibling.id!!)
         ).run()
 
+        val createdGroup = habitList.filter { it.isGroup && it.name == "New group" }.single()
         assertEquals(Entry.UNKNOWN, oldGroup.originalEntries.get(today).value)
         assertEquals(Entry.YES_MANUAL, oldGroup.originalEntries.get(today.minus(2)).value)
-        assertEquals(Entry.YES_MANUAL, newGroup.originalEntries.get(today).value)
-        assertEquals(newGroup.id, movingChild.groupId)
+        assertEquals(Entry.YES_MANUAL, createdGroup.originalEntries.get(today).value)
+        assertEquals(createdGroup.id, movingChild.groupId)
         assertEquals(oldGroup.id, remainingChild.groupId)
     }
 
