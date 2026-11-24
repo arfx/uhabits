@@ -337,7 +337,7 @@ class EditHabitActivity : AppCompatActivity() {
                         conversionYesValue ?: 1000
                     )
                 original.type == HabitType.NUMERICAL && habitType == HabitType.YES_NO ->
-                    HabitEntryConverter.numericalToBoolean(original.originalEntries.getKnown())
+                    HabitEntryConverter.numericalToBoolean(original.originalEntries.getKnown(), original.unit)
                 else -> null
             }
         } else {
