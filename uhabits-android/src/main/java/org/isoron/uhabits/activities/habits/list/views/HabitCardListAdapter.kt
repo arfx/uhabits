@@ -376,6 +376,13 @@ class HabitCardListAdapter(
 
         val above = rows.getOrNull(k - 1)
         val below = rows.getOrNull(k + 1)
+        // Dropping directly onto a collapsed group places the dragged row
+        // immediately before its header; treat that as a drop into the group.
+        if (!draggedCard.isGroup && targetGroupId == null &&
+            below is Row.Habit && below.card.isGroup
+        ) {
+            targetGroupId = below.card.id
+        }
         val reorder = when {
             above is Row.Habit -> ReorderDragResult(id, above.card.id, false, targetCategory, targetGroupId)
             below is Row.Habit -> ReorderDragResult(id, below.card.id, true, targetCategory, targetGroupId)
