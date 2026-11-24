@@ -65,14 +65,13 @@ object GroupHabitCalculator {
 
         val successfulDates = children
             .flatMap { child ->
-                child.computedEntries.getKnown()
-                    .filter { entry ->
-                        if (child.hasGoal) {
-                            entry.completed
-                        } else if (child.isNumerical) {
-                            entry.value != Entry.UNKNOWN && entry.value != Entry.SKIP
-                        } else {
-                            entry.value == Entry.YES_MANUAL
+                child.originalEntries.getKnown()
+                    .filter { original ->
+                        when {
+                            child.hasGoal -> child.computedEntries.get(original.date).completed
+                            child.isNumerical ->
+                                original.value != Entry.UNKNOWN && original.value != Entry.SKIP
+                            else -> original.value == Entry.YES_MANUAL
                         }
                     }
                     .map { it.date }

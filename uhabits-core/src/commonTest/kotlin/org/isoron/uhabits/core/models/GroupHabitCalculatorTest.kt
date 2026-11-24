@@ -62,6 +62,29 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
     }
 
     @Test
+    fun testWeeklyBooleanGoalOnlyContributesActualCompletionDates() {
+        val today = getToday()
+        val group = modelFactory.buildHabit().apply {
+            id = 105L
+            isGroup = true
+            hasGoal = false
+        }
+        val child = modelFactory.buildHabit().apply {
+            groupId = group.id
+            hasGoal = true
+            frequency = Frequency(3, 7)
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            recompute()
+        }
+
+        GroupHabitCalculator.recompute(group, listOf(child))
+
+        assertEquals(listOf(today), group.originalEntries.getKnown().map { it.date })
+        assertTrue(group.isActiveToday())
+        assertFalse(group.isActiveOn(today.minus(1)))
+    }
+
+    @Test
     fun testNoGoalNumericalZeroCountsAsRecordedGroupDay() {
         val today = getToday()
         val group = modelFactory.buildHabit().apply {
