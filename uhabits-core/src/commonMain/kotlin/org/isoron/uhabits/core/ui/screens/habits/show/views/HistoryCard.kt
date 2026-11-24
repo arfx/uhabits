@@ -53,7 +53,8 @@ data class HistoryCardState(
     val notesIndicators: List<Boolean>,
     val theme: Theme,
     val today: LocalDate,
-    val seriesColors: List<List<PaletteColor>> = emptyList()
+    val seriesColors: List<List<PaletteColor>> = emptyList(),
+    val isEditable: Boolean = true
 )
 
 class HistoryCardPresenter(
@@ -65,6 +66,7 @@ class HistoryCardPresenter(
 ) : OnDateClickedListener {
 
     override fun onDateLongPress(date: LocalDate) {
+        if (habit.isGroup) return
         screen.showFeedback()
         if (habit.isNumerical) {
             showNumberPopup(date)
@@ -74,6 +76,7 @@ class HistoryCardPresenter(
     }
 
     override fun onDateShortPress(date: LocalDate) {
+        if (habit.isGroup) return
         screen.showFeedback()
         if (habit.isNumerical) {
             showNumberPopup(date)
@@ -140,6 +143,7 @@ class HistoryCardPresenter(
     }
 
     fun onClickEditButton() {
+        if (habit.isGroup) return
         screen.showHistoryEditorDialog(this)
     }
 
@@ -214,7 +218,8 @@ class HistoryCardPresenter(
                 series = series,
                 defaultSquare = OFF,
                 notesIndicators = notesIndicators,
-                seriesColors = seriesColors
+                seriesColors = seriesColors,
+                isEditable = !habit.isGroup
             )
         }
     }

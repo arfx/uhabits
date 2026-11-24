@@ -21,6 +21,7 @@ package org.isoron.uhabits.activities.habits.show.views
 import android.content.Context
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.LinearLayout
 import org.isoron.platform.gui.toInt
 import org.isoron.platform.time.JavaLocalDateFormatter
@@ -37,6 +38,7 @@ class HistoryCardView(context: Context, attrs: AttributeSet) : LinearLayout(cont
     fun setState(state: HistoryCardState) {
         val androidColor = state.theme.color(state.color).toInt()
         binding.title.setTextColor(androidColor)
+        binding.edit.visibility = if (state.isEditable) View.VISIBLE else View.GONE
         binding.chart.view = HistoryChart(
             today = state.today,
             paletteColor = state.color,
