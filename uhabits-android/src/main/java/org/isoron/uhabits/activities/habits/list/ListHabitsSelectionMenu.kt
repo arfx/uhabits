@@ -48,6 +48,7 @@ import org.isoron.uhabits.core.ui.NotificationTray
 import org.isoron.uhabits.core.ui.screens.habits.list.ListHabitsSelectionMenuBehavior
 import org.isoron.uhabits.inject.ActivityContext
 import org.isoron.uhabits.inject.ActivityScope
+import org.isoron.uhabits.utils.showMessage
 
 @Inject
 @ActivityScope
@@ -162,7 +163,7 @@ class ListHabitsSelectionMenu(
             .setTitle(R.string.group_habit_create_title)
             .setView(content)
             .setNegativeButton(android.R.string.cancel, null)
-            .setPositiveButton(R.string.create) { _, _ ->
+            .setPositiveButton(android.R.string.ok) { _, _ ->
                 val name = nameInput.text.toString().trim()
                 if (name.isEmpty()) {
                     activity.showMessage(activity.getString(R.string.group_habit_name_required))
