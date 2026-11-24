@@ -97,8 +97,8 @@ object DatabaseUtils {
     /**
      * Creates an export-only copy that can be imported by the Play Store version
      * Loop 2.3.1 (DATABASE_VERSION 25). The live database remains at
-     * DATABASE_VERSION (27); only the copy's user_version is lowered to 25.
-     * Newer columns such as category and has_goal remain in the file and are
+     * DATABASE_VERSION (28); only the copy's user_version is lowered to 25.
+     * Newer columns such as category, has_goal, is_group and group_id remain in the file and are
      * ignored by the older importer's known-field query.
      */
     private fun createMainCompatibleDatabaseCopy(context: Context): File {
