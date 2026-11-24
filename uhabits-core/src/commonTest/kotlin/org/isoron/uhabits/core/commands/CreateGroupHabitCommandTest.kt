@@ -21,6 +21,7 @@ package org.isoron.uhabits.core.commands
 import org.isoron.platform.time.getToday
 import org.isoron.uhabits.core.BaseUnitTest
 import org.isoron.uhabits.core.models.Entry
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
