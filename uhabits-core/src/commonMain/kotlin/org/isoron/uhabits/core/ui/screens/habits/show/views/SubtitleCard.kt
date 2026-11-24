@@ -44,12 +44,13 @@ class SubtitleCardPresenter {
     companion object {
         fun buildState(
             habit: Habit,
-            theme: Theme
+            theme: Theme,
+            hasGoal: Boolean = habit.hasGoal
         ): SubtitleCardState = SubtitleCardState(
             color = habit.color,
             frequency = habit.frequency,
             isNumerical = habit.isNumerical,
-            hasGoal = habit.hasGoal,
+            hasGoal = hasGoal,
             question = habit.question,
             reminder = habit.reminder,
             targetValue = habit.targetValue,
