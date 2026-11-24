@@ -42,13 +42,13 @@ class HistoryChart(
     var firstWeekday: DayOfWeek,
     var paletteColor: PaletteColor,
     var series: List<Square>,
-    var seriesColors: List<List<PaletteColor>> = emptyList(),
     var defaultSquare: Square,
     var notesIndicators: List<Boolean>,
     var theme: Theme,
     var today: LocalDate,
     var onDateClickedListener: OnDateClickedListener = object : OnDateClickedListener {},
-    var padding: Double = 0.0
+    var padding: Double = 0.0,
+    var seriesColors: List<List<PaletteColor>> = emptyList()
 ) : DataView {
 
     enum class Square {

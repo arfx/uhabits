@@ -147,7 +147,7 @@ class HistoryCardPresenter(
             habit: Habit,
             firstWeekday: DayOfWeek,
             theme: Theme,
-            habitList: HabitList
+            habitList: HabitList? = null
         ): HistoryCardState {
             val today = getToday()
             val oldest = habit.computedEntries.getKnown().lastOrNull()?.date ?: today
@@ -182,7 +182,7 @@ class HistoryCardPresenter(
                     }
                 }
             }
-            val children = if (habit.isGroup) habitList.filter { it.groupId == habit.id && !it.isGroup } else emptyList()
+            val children = if (habit.isGroup) habitList?.filter { it.groupId == habit.id && !it.isGroup } ?: emptyList() else emptyList()
             val seriesColors = if (habit.isGroup) {
                 entries.map { entry ->
                     if (entry.value == YES_MANUAL) {
