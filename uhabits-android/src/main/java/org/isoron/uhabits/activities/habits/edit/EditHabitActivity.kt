@@ -91,6 +91,7 @@ class EditHabitActivity : AppCompatActivity() {
     var targetType = NumericalHabitType.AT_LEAST
     var hasGoal = true
     var goalFrequencyConfigured = true
+    private var isEditingGroup = false
     private var conversionYesValue: Int? = null
 
     override fun onCreate(state: Bundle?) {
@@ -111,8 +112,9 @@ class EditHabitActivity : AppCompatActivity() {
             habitId = intent.getLongExtra("habitId", -1)
             val habit = component.habitList.getById(habitId)!!
             habitType = habit.type
-            hasGoal = habit.hasGoal
-            goalFrequencyConfigured = habit.hasGoal
+            isEditingGroup = habit.isGroup
+            hasGoal = if (isEditingGroup) habit.groupGoalEnabled else habit.hasGoal
+            goalFrequencyConfigured = hasGoal
             color = habit.color
             freqNum = habit.frequency.numerator
             freqDen = habit.frequency.denominator
@@ -154,6 +156,9 @@ class EditHabitActivity : AppCompatActivity() {
         populateHabitType()
         binding.habitTypePicker.setOnClickListener { showHabitTypePicker() }
 
+        if (isEditingGroup) {
+            binding.goalEnabledSwitch.text = getString(R.string.group_habit_goal_enabled)
+        }
         binding.goalEnabledSwitch.isChecked = hasGoal
         binding.goalEnabledSwitch.setOnCheckedChangeListener { _, checked ->
             if (checked && !hasGoal) {
@@ -315,7 +320,13 @@ class EditHabitActivity : AppCompatActivity() {
         }
 
         habit.frequency = Frequency(freqNum, freqDen)
-        habit.hasGoal = hasGoal
+        if (isEditingGroup) {
+            habit.isGroup = true
+            habit.hasGoal = false
+            habit.groupGoalEnabled = hasGoal
+        } else {
+            habit.hasGoal = hasGoal
+        }
         if (habitType == HabitType.NUMERICAL) {
             if (hasGoal) {
                 habit.targetValue = requireNotNull(parseTargetValue())
