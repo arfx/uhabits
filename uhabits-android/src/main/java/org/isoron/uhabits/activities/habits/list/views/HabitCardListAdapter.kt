@@ -123,9 +123,10 @@ class HabitCardListAdapter(
             built.add(Row.Habit(card.copy(isExpanded = card.isGroup && card.id in expandedGroupIds)))
         }
 
+        val groupIds = habits.filter { it.isGroup }.mapTo(mutableSetOf()) { it.id }
         val groupsById = habits.filter { it.groupId != null }.groupBy { it.groupId }
         habits.forEach { card ->
-            if (card.groupId != null) return@forEach
+            if (card.groupId != null && card.groupId in groupIds) return@forEach
             addHabit(card)
             if (card.isGroup && card.id in expandedGroupIds) {
                 groupsById[card.id].orEmpty().forEach { child ->
