@@ -199,6 +199,32 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
     }
 
     @Test
+    fun testEnabledGroupGoalComputesScoreHistory() {
+        val today = getToday()
+        val weekStart = today.startOfWeek(getFirstWeekday())
+        val group = modelFactory.buildHabit().apply {
+            id = 108L
+            isGroup = true
+            hasGoal = false
+            groupGoalEnabled = true
+            frequency = Frequency(3, 7)
+        }
+        val child = modelFactory.buildHabit().apply {
+            groupId = group.id
+            originalEntries.add(Entry(weekStart, Entry.YES_MANUAL))
+            originalEntries.add(Entry(weekStart.plus(1), Entry.YES_MANUAL))
+            originalEntries.add(Entry(weekStart.plus(2), Entry.YES_MANUAL))
+            recompute()
+        }
+
+        GroupHabitCalculator.recompute(group, listOf(child))
+
+        assertTrue(group.scores.get(today).value > 0.0)
+        assertEquals(false, group.hasGoal)
+        assertTrue(group.groupGoalEnabled)
+    }
+
+    @Test
     fun testContributingColorsOnlyIncludesSuccessfulChildren() {
         val today = getToday()
         val group = modelFactory.buildHabit().apply {
