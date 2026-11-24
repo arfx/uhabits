@@ -220,6 +220,8 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
         GroupHabitCalculator.recompute(group, listOf(child))
 
         assertTrue(group.scores.get(today).value > 0.0)
+        assertTrue(group.computedEntries.getKnown().any { it.value == Entry.YES_AUTO })
+        assertTrue(group.streaks.getBest(5).isNotEmpty())
         assertEquals(false, group.hasGoal)
         assertTrue(group.groupGoalEnabled)
     }
