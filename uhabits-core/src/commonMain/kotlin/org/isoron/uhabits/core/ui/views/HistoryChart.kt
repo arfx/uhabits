@@ -281,11 +281,16 @@ class HistoryChart(
             }
         }
 
+        val textBackgroundColor = if (segmentColors.isNotEmpty()) {
+            theme.color(segmentColors[segmentColors.size / 2].paletteIndex)
+        } else {
+            squareColor
+        }
         val textColor = if (theme.cardBackgroundColor == Color.TRANSPARENT) {
             theme.highContrastTextColor
         } else {
-            val c1 = squareColor.contrast(theme.cardBackgroundColor)
-            val c2 = squareColor.contrast(theme.mediumContrastTextColor)
+            val c1 = textBackgroundColor.contrast(theme.cardBackgroundColor)
+            val c2 = textBackgroundColor.contrast(theme.mediumContrastTextColor)
             if (c1 > c2) theme.cardBackgroundColor else theme.mediumContrastTextColor
         }
 
