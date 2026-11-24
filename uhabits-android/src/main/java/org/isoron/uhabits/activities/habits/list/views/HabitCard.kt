@@ -21,7 +21,6 @@ package org.isoron.uhabits.activities.habits.list.views
 
 import android.content.Context
 import android.graphics.PointF
-import android.graphics.Typeface
 import android.graphics.text.LineBreaker.BREAK_STRATEGY_BALANCED
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
@@ -67,7 +66,6 @@ class HabitCardView(
     private var label: TextView
     private var scoreRing: RingView
     private var scoreRingContainer: FrameLayout
-    private var noGoalIcon: TextView
 
     private var dataOffset = 0
     private var state: HabitCardViewState? = null
@@ -82,11 +80,10 @@ class HabitCardView(
             text = r.name
             setTextColor(c)
         }
-        scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE
-        noGoalIcon.visibility = if (r.hasGoal) View.GONE else View.VISIBLE
-        noGoalIcon.setTextColor(c)
+        scoreRing.visibility = View.VISIBLE
         scoreRing.apply {
-            setPercentage(r.score.toFloat())
+            // Habits without a goal use a neutral 50% ring as their fixed marker.
+            setPercentage(if (r.hasGoal) r.score.toFloat() else 0.5f)
             setPrecision(1.0f / 16)
             setColor(c)
         }
@@ -144,7 +141,6 @@ class HabitCardView(
                 gravity = Gravity.CENTER
             }
             addView(scoreRing, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
-            addView(noGoalIcon, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         }
 
         label = TextView(context).apply {
