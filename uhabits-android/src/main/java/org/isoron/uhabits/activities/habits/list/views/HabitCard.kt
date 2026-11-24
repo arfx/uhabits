@@ -100,6 +100,10 @@ class HabitCardView(
         checkmarkPanel.visibility = if (r.isGroup || r.isNumerical) View.GONE else View.VISIBLE
         numberPanel.visibility = if (!r.isGroup && r.isNumerical) View.VISIBLE else View.GONE
         groupInsightsButton.visibility = if (r.isGroup) View.VISIBLE else View.GONE
+        groupInsightsButton.layoutParams = LinearLayout.LayoutParams(
+            resources.getDimensionPixelSize(R.dimen.checkmarkWidth) * newState.buttonCount,
+            MATCH_PARENT
+        )
         checkmarkPanel.setState(CheckmarkPanelState(r.checkmarks, c, r.notes, newState.buttonCount))
         numberPanel.setState(
             NumberPanelState(
