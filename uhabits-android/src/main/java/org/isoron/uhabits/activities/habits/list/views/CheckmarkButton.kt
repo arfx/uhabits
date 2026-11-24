@@ -61,6 +61,9 @@ class CheckmarkButtonView(
 
     var onToggle: (Int, String) -> Unit = { _, _ -> }
 
+    // When present, tapping this button is read-only and must not change its visual state.
+    var onReadOnlyClick: (() -> Unit)? = null
+
     var onEdit: () -> Unit = { }
 
     private var drawer = Drawer()
@@ -78,6 +81,10 @@ class CheckmarkButtonView(
     }
 
     fun performToggle() {
+        onReadOnlyClick?.let {
+            it()
+            return
+        }
         val v = Entry.nextToggleValue(
             value = state.value,
             isSkipEnabled = preferences.isSkipEnabled,
