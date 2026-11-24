@@ -131,7 +131,7 @@ class HabitCardView(
             setThickness(dp(3f))
         }
         noGoalIcon = TextView(context).apply {
-            text = "\\uf06e" // Font Awesome eye: habits without a goal still get a clear marker
+            text = "\uf06e" // Font Awesome eye: habits without a goal still get a clear marker
             typeface = Typeface.createFromAsset(context.assets, "fontawesome-webfont.ttf")
             textSize = 11f
             gravity = Gravity.CENTER
