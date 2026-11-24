@@ -56,7 +56,7 @@ class CheckmarkPanelView(
             setupButtons()
         }
 
-    var onReadOnlyClick: (LocalDate) -> Unit = { _ -> }
+    var onReadOnlyClick: ((LocalDate) -> Unit)? = null
         set(value) {
             field = value
             setupButtons()
@@ -98,7 +98,7 @@ class CheckmarkPanelView(
                 )
             )
             button.onToggle = { value, notes -> onToggle(date, value, notes) }
-            button.onReadOnlyClick = { onReadOnlyClick(date) }
+            button.onReadOnlyClick = onReadOnlyClick?.let { callback -> { callback(date) } }
             button.onEdit = { onEdit(date) }
         }
     }
