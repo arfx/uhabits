@@ -130,7 +130,7 @@ class HabitCardView(
             setThickness(dp(3f))
         }
         noGoalIcon = TextView(context).apply {
-            text = context.getString(R.string.fa_eye)
+            text = "\\uf06e" // Font Awesome eye: habits without a goal still get a clear marker
             typeface = org.isoron.uhabits.utils.getFontAwesome()
             textSize = 11f
             gravity = Gravity.CENTER
