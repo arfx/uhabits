@@ -4,11 +4,11 @@
  * This file is part of Loop Habit Tracker.
  *
  * Loop Habit Tracker is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
  *
- * Loop Habit Tracker is distributed in the hope that it will be useful, but
+ * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
@@ -93,11 +93,12 @@ class ShowHabitPresenter(
             theme: Theme,
             habitList: HabitList
         ): ShowHabitState {
+            val hasGoal = habit.hasGoal || (habit.isGroup && habit.groupGoalEnabled)
             return ShowHabitState(
                 title = habit.name,
                 color = habit.color,
                 isNumerical = habit.isNumerical,
-                hasGoal = habit.hasGoal || (habit.isGroup && habit.groupGoalEnabled),
+                hasGoal = hasGoal,
                 theme = theme,
                 subtitle = SubtitleCardPresenter.buildState(
                     habit = habit,
@@ -105,7 +106,8 @@ class ShowHabitPresenter(
                 ),
                 overview = OverviewCardPresenter.buildState(
                     habit = habit,
-                    theme = theme
+                    theme = theme,
+                    hasGoal = hasGoal
                 ),
                 notes = NotesCardPresenter.buildState(
                     habit = habit
