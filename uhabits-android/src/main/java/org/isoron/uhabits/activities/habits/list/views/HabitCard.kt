@@ -84,6 +84,7 @@ class HabitCardView(
         }
         scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE
         noGoalIcon.visibility = if (r.hasGoal) View.GONE else View.VISIBLE
+        noGoalIcon.setTextColor(c)
         scoreRing.apply {
             setPercentage(r.score.toFloat())
             setPrecision(1.0f / 16)
@@ -131,11 +132,10 @@ class HabitCardView(
             setThickness(dp(3f))
         }
         noGoalIcon = TextView(context).apply {
-            text = "\uf06e" // Font Awesome eye: habits without a goal still get a clear marker
+            text = "\uf042" // Font Awesome adjust: half-filled circle for habits without a goal
             typeface = Typeface.createFromAsset(context.assets, "fontawesome-webfont.ttf")
             textSize = 11f
             gravity = Gravity.CENTER
-            setTextColor(sres.getColor(R.attr.contrast60))
             visibility = View.GONE
         }
         scoreRingContainer = FrameLayout(context).apply {
