@@ -271,7 +271,8 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
                 category = habit.category,
                 hasGoal = if (habit.hasGoal) 1 else 0,
                 isGroup = if (habit.isGroup) 1 else 0,
-                groupId = habit.groupId
+                groupId = habit.groupId,
+                groupGoalEnabled = if (habit.groupGoalEnabled) 1 else 0
             )
         }
 
@@ -293,6 +294,7 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
             habit.hasGoal = data.hasGoal != 0
             habit.isGroup = data.isGroup != 0
             habit.groupId = data.groupId
+            habit.groupGoalEnabled = data.groupGoalEnabled != 0
             if (data.reminderHour != null && data.reminderMin != null) {
                 habit.reminder = Reminder(
                     data.reminderHour!!,

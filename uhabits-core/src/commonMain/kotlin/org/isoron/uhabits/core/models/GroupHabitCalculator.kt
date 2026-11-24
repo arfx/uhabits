@@ -65,6 +65,7 @@ object GroupHabitCalculator {
             successfulDates.map { date -> Entry(date, Entry.YES_MANUAL) }
         )
         group.type = HabitType.YES_NO
+        group.hasGoal = false
         group.unit = ""
         group.targetValue = 0.0
         group.recompute()
