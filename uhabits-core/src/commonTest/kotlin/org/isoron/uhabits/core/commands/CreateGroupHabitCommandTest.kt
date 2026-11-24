@@ -27,6 +27,51 @@ import kotlin.test.assertTrue
 
 class CreateGroupHabitCommandTest : BaseUnitTest() {
     @Test
+    fun testMovingChildRecomputesPreviousGroup() {
+        val today = getToday()
+        val remainingChild = fixtures.createShortHabit().apply {
+            originalEntries.add(Entry(today.minus(2), Entry.YES_MANUAL))
+            recompute()
+        }
+        val movingChild = fixtures.createShortHabit().apply {
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            recompute()
+        }
+        val newSibling = fixtures.createShortHabit()
+        val oldGroup = modelFactory.buildHabit().apply {
+            name = "Old group"
+            isGroup = true
+            hasGoal = false
+        }
+        habitList.add(oldGroup)
+        listOf(remainingChild, movingChild).forEach {
+            it.groupId = oldGroup.id
+            habitList.add(it)
+        }
+        GroupHabitCalculator.recompute(oldGroup, listOf(remainingChild, movingChild))
+        habitList.update(oldGroup)
+        habitList.add(newSibling)
+
+        val newGroup = modelFactory.buildHabit().apply {
+            name = "New group"
+            isGroup = true
+            hasGoal = false
+        }
+        CreateGroupHabitCommand(
+            modelFactory,
+            habitList,
+            newGroup,
+            listOf(movingChild.id!!, newSibling.id!!)
+        ).run()
+
+        assertEquals(Entry.UNKNOWN, oldGroup.originalEntries.get(today).value)
+        assertEquals(Entry.YES_MANUAL, oldGroup.originalEntries.get(today.minus(2)).value)
+        assertEquals(Entry.YES_MANUAL, newGroup.originalEntries.get(today).value)
+        assertEquals(newGroup.id, movingChild.groupId)
+        assertEquals(oldGroup.id, remainingChild.groupId)
+    }
+
+    @Test
     fun testCreatesGroupAndPreservesChildHistory() {
         val today = getToday()
         val first = fixtures.createShortHabit().apply {
