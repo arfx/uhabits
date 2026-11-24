@@ -48,6 +48,25 @@ class DeleteHabitsCommandTest : BaseUnitTest() {
     }
 
     @Test
+    fun testDeletingGroupDetachesItsChildren() {
+        val child = fixtures.createShortHabit()
+        habitList.add(child)
+        val group = modelFactory.buildHabit().apply {
+            name = "Group"
+            isGroup = true
+            hasGoal = false
+        }
+        habitList.add(group)
+        child.groupId = group.id
+        habitList.update(child)
+
+        DeleteHabitsCommand(habitList, listOf(group)).run()
+
+        assertEquals(null, child.groupId)
+        assertEquals(child, habitList.getById(child.id!!))
+    }
+
+    @Test
     fun testExecute() {
         assertEquals(4, habitList.size())
         command.run()
