@@ -23,9 +23,13 @@ import org.isoron.platform.time.getToday
 import org.isoron.uhabits.core.BaseUnitTest
 import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.NumericalHabitType
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CreateRepetitionCommandTest : BaseUnitTest() {
     private lateinit var command: CreateRepetitionCommand
@@ -39,6 +43,40 @@ class CreateRepetitionCommandTest : BaseUnitTest() {
         habitList.add(habit)
         today = getToday()
         command = CreateRepetitionCommand(habitList, habit, today, 100, "")
+    }
+
+    @Test
+    fun testNumericalGoalCompletionUpdatesGroupThroughRepetitionCommand() {
+        val group = modelFactory.buildHabit().apply {
+            name = "Group"
+            isGroup = true
+            hasGoal = false
+        }
+        habitList.add(group)
+
+        val numericalHabit = fixtures.createShortHabit().apply {
+            name = "Distance"
+            type = HabitType.NUMERICAL
+            hasGoal = true
+            frequency = Frequency.DAILY
+            targetType = NumericalHabitType.AT_LEAST
+            targetValue = 100.0
+            groupId = group.id
+            originalEntries.clear()
+            recompute()
+        }
+        habitList.add(numericalHabit)
+
+        CreateRepetitionCommand(
+            habitList,
+            numericalHabit,
+            today,
+            150000,
+            ""
+        ).run()
+
+        assertTrue(numericalHabit.computedEntries.get(today).completed)
+        assertTrue(group.isActiveOn(today))
     }
 
     @Test
