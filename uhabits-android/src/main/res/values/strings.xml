@@ -259,4 +259,6 @@
     <string name="validation_conversion_value_required">Enter a value from 0.001 to 2,147,483.647.</string>
     <string name="validation_invalid_number">Enter a valid finite number.</string>
 
+    <string name="group_habit_edit_title">Edit Group Habit</string>
+    <string name="group_habit_insights">Group insights</string>
 </resources>

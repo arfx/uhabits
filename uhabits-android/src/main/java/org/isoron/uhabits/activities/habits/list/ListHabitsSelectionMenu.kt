@@ -29,11 +29,13 @@ import androidx.appcompat.widget.SwitchCompat
 import org.isoron.uhabits.activities.common.dialogs.FrequencyPickerDialog
 import org.isoron.uhabits.activities.habits.edit.formatFrequency
 import org.isoron.uhabits.core.commands.CreateGroupHabitCommand
+import org.isoron.uhabits.core.commands.EditHabitCommand
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.HabitType
 import org.isoron.uhabits.core.models.ModelFactory
+import org.isoron.uhabits.intents.IntentFactory
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -62,7 +64,8 @@ class ListHabitsSelectionMenu(
     private val listController: Lazy<HabitCardListController>,
     private val notificationTray: NotificationTray,
     private val habitList: HabitList,
-    private val modelFactory: ModelFactory
+    private val modelFactory: ModelFactory,
+    private val intentFactory: IntentFactory
 ) : ActionMode.Callback {
 
     val activity = (context as AppCompatActivity)
@@ -94,16 +97,90 @@ class ListHabitsSelectionMenu(
         val itemUnarchive = menu.findItem(R.id.action_unarchive_habit)
         val itemNotify = menu.findItem(R.id.action_notify)
         val itemGroup = menu.findItem(R.id.action_create_group)
+        val itemEditGroup = menu.findItem(R.id.action_edit_group)
+        val itemGroupInsights = menu.findItem(R.id.action_group_insights)
+        val selectedHabits = listAdapter.getSelected()
+        val selectedGroup = selectedHabits.singleOrNull()?.takeIf { it.isGroup }
 
         itemColor.isVisible = true
         itemEdit.isVisible = behavior.canEdit()
         itemArchive.isVisible = behavior.canArchive()
         itemUnarchive.isVisible = behavior.canUnarchive()
         itemNotify.isVisible = prefs.isDeveloper
-        itemGroup.isVisible = listAdapter.selected.size >= 2 &&
-            listAdapter.getSelected().none { it.isGroup }
+        itemGroup.isVisible = selectedHabits.size >= 2 && selectedHabits.none { it.isGroup }
+        itemEditGroup.isVisible = selectedGroup != null
+        itemGroupInsights.isVisible = selectedGroup != null
+        itemEdit.isVisible = itemEdit.isVisible && selectedGroup == null
         activeActionMode?.title = listAdapter.selected.size.toString()
         return true
+    }
+
+
+    private fun showEditGroupDialog(group: Habit) {
+        val nameInput = EditText(activity).apply {
+            setText(group.name)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            setSingleLine(true)
+        }
+        val goalSwitch = SwitchCompat(activity).apply {
+            text = activity.getString(R.string.group_habit_goal_enabled)
+            isChecked = group.groupGoalEnabled
+        }
+        var numerator = group.frequency.numerator
+        var denominator = group.frequency.denominator
+        val frequencyLabel = android.widget.TextView(activity).apply {
+            text = formatFrequency(numerator, denominator, activity.resources)
+            isEnabled = goalSwitch.isChecked
+            setPadding(0, 12, 0, 12)
+        }
+        val frequencyButton = android.widget.Button(activity).apply {
+            text = activity.getString(R.string.group_habit_choose_frequency)
+            isEnabled = goalSwitch.isChecked
+            setOnClickListener {
+                val picker = FrequencyPickerDialog(numerator, denominator)
+                picker.onFrequencyPicked = { num, den ->
+                    numerator = num
+                    denominator = den
+                    frequencyLabel.text = formatFrequency(num, den, activity.resources)
+                }
+                picker.show(activity.supportFragmentManager, "groupFrequency")
+            }
+        }
+        goalSwitch.setOnCheckedChangeListener { _, checked ->
+            frequencyLabel.isEnabled = checked
+            frequencyButton.isEnabled = checked
+        }
+        val content = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            val padding = (20 * activity.resources.displayMetrics.density).toInt()
+            setPadding(padding, padding / 2, padding, 0)
+            addView(nameInput)
+            addView(goalSwitch)
+            addView(frequencyLabel)
+            addView(frequencyButton)
+        }
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.group_habit_edit_title)
+            .setView(content)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val name = nameInput.text.toString().trim()
+                if (name.isEmpty()) {
+                    activity.showMessage(activity.getString(R.string.group_habit_name_required))
+                    return@setPositiveButton
+                }
+                val modified = modelFactory.buildHabit().apply {
+                    copyFrom(group)
+                    this.name = name
+                    this.isGroup = true
+                    this.hasGoal = false
+                    this.groupGoalEnabled = goalSwitch.isChecked
+                    this.frequency = Frequency(numerator, denominator)
+                }
+                commandRunner.run(EditHabitCommand(habitList, group.id!!, modified))
+                activeActionMode?.finish()
+            }
+            .show()
     }
 
     private fun showCreateGroupDialog() {
@@ -233,6 +310,20 @@ class ListHabitsSelectionMenu(
 
             R.id.action_create_group -> {
                 showCreateGroupDialog()
+                return true
+            }
+
+            R.id.action_edit_group -> {
+                listAdapter.getSelected().singleOrNull()?.takeIf { it.isGroup }?.let {
+                    showEditGroupDialog(it)
+                }
+                return true
+            }
+
+            R.id.action_group_insights -> {
+                listAdapter.getSelected().singleOrNull()?.takeIf { it.isGroup }?.id?.let { id ->
+                    activity.startActivity(intentFactory.startShowHabitActivity(activity, id))
+                }
                 return true
             }
 

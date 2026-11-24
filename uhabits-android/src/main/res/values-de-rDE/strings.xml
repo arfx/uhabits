@@ -239,4 +239,6 @@
     <string name="group_habit_weekly_goal">%1$d Tage pro Woche</string>
     <string name="group_habit_choose_frequency">Wochenziel ändern</string>
     <string name="group_habit_name_required">Bitte einen Gruppennamen eingeben</string>
+    <string name="group_habit_edit_title">Gruppe bearbeiten</string>
+    <string name="group_habit_insights">Gruppen-Auswertung</string>
 </resources>

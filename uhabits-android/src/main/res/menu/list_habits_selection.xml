@@ -52,6 +52,16 @@
         app:showAsAction="never"/>
 
     <item
+        android:id="@+id/action_edit_group"
+        android:title="@string/group_habit_edit_title"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_group_insights"
+        android:title="@string/group_habit_insights"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/action_create_group"
         android:title="@string/group_habit_create_title"
         app:showAsAction="never"/>
