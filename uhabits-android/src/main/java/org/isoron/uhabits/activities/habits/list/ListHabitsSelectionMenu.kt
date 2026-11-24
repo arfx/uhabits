@@ -27,6 +27,7 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SwitchCompat
 import org.isoron.uhabits.activities.common.dialogs.FrequencyPickerDialog
+import org.isoron.uhabits.activities.habits.edit.formatFrequency
 import org.isoron.uhabits.core.commands.CreateGroupHabitCommand
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
@@ -119,7 +120,7 @@ class ListHabitsSelectionMenu(
             isChecked = false
         }
         val frequencyLabel = android.widget.TextView(activity).apply {
-            text = activity.getString(R.string.group_habit_weekly_goal, 3)
+            text = formatFrequency(3, 7, activity.resources)
             setPadding(0, 12, 0, 12)
             isEnabled = false
         }
@@ -133,10 +134,7 @@ class ListHabitsSelectionMenu(
                 picker.onFrequencyPicked = { num, den ->
                     numerator = num
                     denominator = den
-                    frequencyLabel.text = activity.getString(
-                        R.string.group_habit_weekly_goal,
-                        numerator
-                    )
+                    frequencyLabel.text = formatFrequency(numerator, denominator, activity.resources)
                 }
                 picker.show(activity.supportFragmentManager, "groupFrequency")
             }
@@ -174,7 +172,8 @@ class ListHabitsSelectionMenu(
                     this.color = children.first().color
                     this.isGroup = true
                     this.type = HabitType.YES_NO
-                    this.hasGoal = goalSwitch.isChecked
+                    this.hasGoal = false
+                    this.groupGoalEnabled = goalSwitch.isChecked
                     this.frequency = Frequency(numerator, denominator)
                 }
                 commandRunner.run(

@@ -18,6 +18,10 @@
  */
 package org.isoron.uhabits.core.models
 
+import org.isoron.platform.time.LocalDate
+import org.isoron.platform.time.getFirstWeekday
+import org.isoron.platform.time.getToday
+
 /**
  * Builds the daily history of a Group Habit from its child habits.
  *
@@ -36,6 +40,20 @@ object GroupHabitCalculator {
             habitList.update(group)
             group.observable.notifyListeners()
         }
+    }
+
+    fun goalProgress(group: Habit, date: LocalDate = getToday()): Pair<Int, Int> {
+        require(group.isGroup)
+        if (!group.groupGoalEnabled) return 0 to 0
+        val periodStart = when {
+            group.frequency.denominator <= 1 -> date
+            group.frequency.denominator <= 7 -> date.startOfWeek(getFirstWeekday())
+            else -> date.startOfMonth()
+        }
+        val completedDays = group.originalEntries.getKnown().count {
+            it.value == Entry.YES_MANUAL && it.date >= periodStart && it.date <= date
+        }
+        return completedDays to group.frequency.numerator
     }
 
     fun recompute(group: Habit, children: List<Habit>) {

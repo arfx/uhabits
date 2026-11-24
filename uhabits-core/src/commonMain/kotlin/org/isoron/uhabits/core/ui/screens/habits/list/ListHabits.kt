@@ -70,7 +70,12 @@ object ListHabitsPresenter {
                     category = habit.category,
                     hasGoal = habit.hasGoal,
                     isGroup = habit.isGroup,
-                    groupId = habit.groupId
+                    groupId = habit.groupId,
+                    groupGoalEnabled = habit.groupGoalEnabled,
+                    groupGoalProgress = if (habit.isGroup && habit.groupGoalEnabled) {
+                        org.isoron.uhabits.core.models.GroupHabitCalculator.goalProgress(habit).first
+                    } else 0,
+                    groupGoalTarget = if (habit.isGroup && habit.groupGoalEnabled) habit.frequency.numerator else 0
                 )
             )
         }
@@ -102,5 +107,8 @@ data class HabitCardState(
     val isGroup: Boolean = false,
     val groupId: Long? = null,
     val isExpanded: Boolean = false,
-    val isGroupChild: Boolean = false
+    val isGroupChild: Boolean = false,
+    val groupGoalEnabled: Boolean = false,
+    val groupGoalProgress: Int = 0,
+    val groupGoalTarget: Int = 0
 )

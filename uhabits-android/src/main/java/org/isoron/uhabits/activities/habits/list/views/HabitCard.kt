@@ -77,6 +77,8 @@ class HabitCardView(
         val c = getActiveColor(r)
         label.apply {
             text = when {
+                r.isGroup && r.groupGoalEnabled && r.isExpanded -> "▾  ${r.name}  (${r.groupGoalProgress}/${r.groupGoalTarget})"
+                r.isGroup && r.groupGoalEnabled -> "▸  ${r.name}  (${r.groupGoalProgress}/${r.groupGoalTarget})"
                 r.isGroup && r.isExpanded -> "▾  ${r.name}"
                 r.isGroup -> "▸  ${r.name}"
                 r.isGroupChild -> "    ${r.name}"
