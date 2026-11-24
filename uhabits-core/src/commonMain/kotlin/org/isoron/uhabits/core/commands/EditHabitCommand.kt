@@ -36,6 +36,10 @@ data class EditHabitCommand(
         convertedEntries?.let { habit.originalEntries.replaceAll(it) }
         habit.copyFrom(modified)
         habit.recompute()
+        if (habit.isGroup) {
+            val children = habitList.filter { it.groupId == habit.id && !it.isGroup }
+            GroupHabitCalculator.recompute(habit, children)
+        }
         habitList.update(habit)
         habit.observable.notifyListeners()
         GroupHabitCalculator.recomputeAffectedGroups(
