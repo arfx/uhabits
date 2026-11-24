@@ -59,26 +59,38 @@ class HabitEntryConverterTest {
     }
 
     @Test
-    fun numericalToBooleanMapsValuesAndPreservesNotes() {
+    fun numericalToBooleanAddsFormerValueAndUnitOnlyForPositiveValues() {
         val entries = listOf(
-            Entry(LocalDate(2026, 1, 1), 2500, "positive"),
-            Entry(LocalDate(2026, 1, 2), 0, "zero"),
-            Entry(LocalDate(2026, 1, 3), -200, "negative"),
-            Entry(LocalDate(2026, 1, 4), Entry.SKIP, "skip"),
-            Entry(LocalDate(2026, 1, 5), Entry.UNKNOWN, "unknown")
+            Entry(LocalDate(2026, 1, 1), 2500, "morning"),
+            Entry(LocalDate(2026, 1, 2), 3000),
+            Entry(LocalDate(2026, 1, 3), 0, "zero note"),
+            Entry(LocalDate(2026, 1, 4), -200, "negative"),
+            Entry(LocalDate(2026, 1, 5), Entry.SKIP, "skip"),
+            Entry(LocalDate(2026, 1, 6), Entry.UNKNOWN, "unknown")
         )
 
-        val converted = HabitEntryConverter.numericalToBoolean(entries)
+        val converted = HabitEntryConverter.numericalToBoolean(entries, "km")
 
         assertEquals(
             listOf(
-                Entry(LocalDate(2026, 1, 1), Entry.YES_MANUAL, "positive"),
-                Entry(LocalDate(2026, 1, 2), Entry.NO, "zero"),
-                Entry(LocalDate(2026, 1, 3), Entry.NO, "negative"),
-                Entry(LocalDate(2026, 1, 4), Entry.SKIP, "skip"),
-                Entry(LocalDate(2026, 1, 5), Entry.UNKNOWN, "unknown")
+                Entry(LocalDate(2026, 1, 1), Entry.YES_MANUAL, "morning\n2,5 km"),
+                Entry(LocalDate(2026, 1, 2), Entry.YES_MANUAL, "3 km"),
+                Entry(LocalDate(2026, 1, 3), Entry.NO, "zero note"),
+                Entry(LocalDate(2026, 1, 4), Entry.NO, "negative"),
+                Entry(LocalDate(2026, 1, 5), Entry.SKIP, "skip"),
+                Entry(LocalDate(2026, 1, 6), Entry.UNKNOWN, "unknown")
             ),
             converted
+        )
+    }
+
+    @Test
+    fun numericalToBooleanOmitsUnitWhenItIsBlank() {
+        val entries = listOf(Entry(LocalDate(2026, 1, 1), 1250))
+
+        assertEquals(
+            listOf(Entry(LocalDate(2026, 1, 1), Entry.YES_MANUAL, "1,25")),
+            HabitEntryConverter.numericalToBoolean(entries, "")
         )
     }
 }
