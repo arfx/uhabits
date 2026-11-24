@@ -42,6 +42,7 @@ class HistoryChart(
     var firstWeekday: DayOfWeek,
     var paletteColor: PaletteColor,
     var series: List<Square>,
+    var seriesColors: List<List<PaletteColor>> = emptyList(),
     var defaultSquare: Square,
     var notesIndicators: List<Boolean>,
     var theme: Theme,
@@ -252,8 +253,17 @@ class HistoryChart(
             }
         }
 
-        canvas.setColor(squareColor)
-        canvas.fillRoundRect(x, y, width, height, width * 0.15)
+        val segmentColors = if (value == Square.ON && offset < seriesColors.size) seriesColors[offset] else emptyList()
+        if (segmentColors.size > 1) {
+            val segmentHeight = height / segmentColors.size
+            segmentColors.forEachIndexed { index, palette ->
+                canvas.setColor(theme.color(palette.paletteIndex))
+                canvas.fillRect(x, y + index * segmentHeight, width, segmentHeight)
+            }
+        } else {
+            canvas.setColor(if (segmentColors.size == 1) theme.color(segmentColors.first().paletteIndex) else squareColor)
+            canvas.fillRoundRect(x, y, width, height, width * 0.15)
+        }
 
         if (value == Square.HATCHED) {
             canvas.setStrokeWidth(0.75)

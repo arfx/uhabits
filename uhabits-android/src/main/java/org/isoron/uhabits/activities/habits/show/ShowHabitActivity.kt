@@ -159,7 +159,8 @@ class ShowHabitActivity : AppCompatActivity(), CommandRunner.Listener {
                     ShowHabitPresenter.buildState(
                         habit = habit,
                         preferences = preferences,
-                        theme = themeSwitcher.currentTheme
+                        theme = themeSwitcher.currentTheme,
+                        habitList = (applicationContext as HabitsApplication).component.habitList
                     )
                 )
             }

@@ -56,6 +56,25 @@ object GroupHabitCalculator {
         return completedDays to group.frequency.numerator
     }
 
+    fun contributingColors(group: Habit, children: List<Habit>, date: LocalDate): List<PaletteColor> {
+        require(group.isGroup)
+        return children
+            .filter { child -> child.groupId == group.id && isSuccessfulOn(child, date) }
+            .map { it.color }
+            .distinctBy { it.paletteIndex }
+            .sortedBy { it.paletteIndex }
+    }
+
+    private fun isSuccessfulOn(child: Habit, date: LocalDate): Boolean {
+        val original = child.originalEntries.get(date)
+        if (original.value == Entry.UNKNOWN || original.value == Entry.SKIP) return false
+        return when {
+            child.hasGoal -> child.computedEntries.get(date).completed
+            child.isNumerical -> true
+            else -> original.value == Entry.YES_MANUAL
+        }
+    }
+
     fun recompute(group: Habit, children: List<Habit>) {
         require(group.isGroup) { "Habit must be a Group Habit" }
         require(children.none { it.isGroup }) { "Group Habits cannot contain other groups" }

@@ -22,6 +22,7 @@ package org.isoron.uhabits.core.ui.screens.habits.show
 import org.isoron.uhabits.core.commands.CommandRunner
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.preferences.Preferences
 import org.isoron.uhabits.core.ui.screens.habits.show.views.BarCardPresenter
@@ -132,7 +133,8 @@ class ShowHabitPresenter(
                 history = HistoryCardPresenter.buildState(
                     habit = habit,
                     firstWeekday = preferences.firstWeekday,
-                    theme = theme
+                    theme = theme,
+                    habitList = habitList
                 ),
                 bar = BarCardPresenter.buildState(
                     habit = habit,

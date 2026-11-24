@@ -50,6 +50,7 @@ data class HistoryCardState(
     val series: List<HistoryChart.Square>,
     val defaultSquare: HistoryChart.Square,
     val notesIndicators: List<Boolean>,
+    val seriesColors: List<List<PaletteColor>> = emptyList(),
     val theme: Theme,
     val today: LocalDate
 )
@@ -145,7 +146,8 @@ class HistoryCardPresenter(
         fun buildState(
             habit: Habit,
             firstWeekday: DayOfWeek,
-            theme: Theme
+            theme: Theme,
+            habitList: HabitList
         ): HistoryCardState {
             val today = getToday()
             val oldest = habit.computedEntries.getKnown().lastOrNull()?.date ?: today
@@ -180,6 +182,18 @@ class HistoryCardPresenter(
                     }
                 }
             }
+            val children = if (habit.isGroup) habitList.filter { it.groupId == habit.id && !it.isGroup } else emptyList()
+            val seriesColors = if (habit.isGroup) {
+                entries.map { entry ->
+                    if (entry.value == YES_MANUAL) {
+                        GroupHabitCalculator.contributingColors(habit, children, entry.date)
+                    } else {
+                        emptyList()
+                    }
+                }
+            } else {
+                emptyList()
+            }
             val notesIndicators = entries.map {
                 when (it.notes) {
                     "" -> false
@@ -194,7 +208,8 @@ class HistoryCardPresenter(
                 theme = theme,
                 series = series,
                 defaultSquare = OFF,
-                notesIndicators = notesIndicators
+                notesIndicators = notesIndicators,
+                seriesColors = seriesColors
             )
         }
     }
