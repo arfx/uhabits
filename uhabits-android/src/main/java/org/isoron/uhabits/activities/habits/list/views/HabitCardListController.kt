@@ -63,7 +63,13 @@ class HabitCardListController(
         val result = adapter.onDragEnd()
         if (result != null) {
             cancelSelection()
-            behavior.reorderHabit(result.habitId, result.refId, result.placeBefore, result.targetCategory)
+            behavior.reorderHabit(
+                result.habitId,
+                result.refId,
+                result.placeBefore,
+                result.targetCategory,
+                result.targetGroupId
+            )
         } else {
             adapter.flushPending()
         }

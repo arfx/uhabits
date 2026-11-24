@@ -205,9 +205,10 @@ class HabitCardListAdapter(
     val isSelectionEmpty: Boolean
         get() = selected.isEmpty()
 
+    // Group rows are part of the same manually ordered list. Dragging remains
+    // enabled; onDragEnd determines whether a dropped habit changes group.
     val isSortable: Boolean
-        get() = state?.isSortable == true &&
-            state?.items?.none { it.isGroup || it.groupId != null } == true
+        get() = state?.isSortable == true
 
     override fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,
@@ -345,6 +346,8 @@ class HabitCardListAdapter(
         if (habitCount < 2) return null
         val k = rows.indexOfFirst { it is Row.Habit && it.card.id == id }
         if (k < 0) return null
+        val draggedCard = (rows[k] as? Row.Habit)?.card ?: return null
+
         var targetCategory = ""
         for (i in (k - 1) downTo 0) {
             val row = rows[i]
@@ -353,13 +356,32 @@ class HabitCardListAdapter(
                 break
             }
         }
+
+        // The row sequence already represents the user's drop location. A group
+        // header starts a group section, its child rows stay in that section,
+        // and the next top-level habit ends it.
+        var targetGroupId: Long? = null
+        if (!draggedCard.isGroup) {
+            for (i in 0 until k) {
+                when (val row = rows[i]) {
+                    is Row.Category -> targetGroupId = null
+                    is Row.Habit -> when {
+                        row.card.isGroup -> targetGroupId = row.card.id
+                        row.card.isGroupChild -> Unit
+                        else -> targetGroupId = null
+                    }
+                }
+            }
+        }
+
         val above = rows.getOrNull(k - 1)
         val below = rows.getOrNull(k + 1)
-        return when {
-            above is Row.Habit -> ReorderDragResult(id, above.card.id, false, targetCategory)
-            below is Row.Habit -> ReorderDragResult(id, below.card.id, true, targetCategory)
-            else -> ReorderDragResult(id, null, false, targetCategory)
+        val reorder = when {
+            above is Row.Habit -> ReorderDragResult(id, above.card.id, false, targetCategory, targetGroupId)
+            below is Row.Habit -> ReorderDragResult(id, below.card.id, true, targetCategory, targetGroupId)
+            else -> ReorderDragResult(id, null, false, targetCategory, targetGroupId)
         }
+        return reorder
     }
 
     fun flushPending() {
@@ -378,7 +400,8 @@ data class ReorderDragResult(
     val habitId: Long,
     val refId: Long?,
     val placeBefore: Boolean,
-    val targetCategory: String
+    val targetCategory: String,
+    val targetGroupId: Long?
 )
 
 class CategoryViewHolder(itemView: CategoryView) : RecyclerView.ViewHolder(itemView)

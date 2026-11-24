@@ -18,6 +18,7 @@
  */
 package org.isoron.uhabits.core.commands
 
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
 
@@ -31,16 +32,35 @@ data class ReorderHabitCommand(
     val habitList: HabitList,
     val habit: Habit,
     val target: ReorderTarget?,
-    val category: String
+    val category: String,
+    val targetGroupId: Long? = habit.groupId
 ) : Command {
     override fun run() {
+        val previousGroupId = habit.groupId
+        val targetGroup = targetGroupId?.let { id ->
+            habitList.getById(id)?.also {
+                require(it.isGroup) { "Target must be a Group Habit" }
+            } ?: throw IllegalArgumentException("Group $id does not exist")
+        }
+
+        require(!habit.isGroup || targetGroupId == null) {
+            "Group Habits cannot be nested"
+        }
+
         habit.category = category
+        habit.groupId = targetGroup?.id
         when (target) {
             is ReorderTarget.Before -> habitList.moveBefore(habit, target.ref)
             is ReorderTarget.After -> habitList.moveAfter(habit, target.ref)
             null -> {}
         }
         habitList.update(listOf(habit))
+        if (previousGroupId != habit.groupId) {
+            GroupHabitCalculator.recomputeAffectedGroups(
+                habitList,
+                setOf(previousGroupId, habit.groupId)
+            )
+        }
         habitList.resort()
     }
 }
