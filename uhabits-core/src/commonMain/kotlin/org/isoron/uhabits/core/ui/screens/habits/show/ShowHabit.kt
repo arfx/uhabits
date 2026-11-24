@@ -97,7 +97,7 @@ class ShowHabitPresenter(
                 title = habit.name,
                 color = habit.color,
                 isNumerical = habit.isNumerical,
-                hasGoal = habit.hasGoal,
+                hasGoal = habit.hasGoal || (habit.isGroup && habit.groupGoalEnabled),
                 theme = theme,
                 subtitle = SubtitleCardPresenter.buildState(
                     habit = habit,
