@@ -69,7 +69,9 @@ object GroupHabitCalculator {
         val original = child.originalEntries.get(date)
         if (original.value == Entry.UNKNOWN || original.value == Entry.SKIP) return false
         return when {
-            child.hasGoal -> child.computedEntries.get(date).completed
+            child.hasGoal && child.isNumerical -> child.computedEntries.get(date).completed
+            child.hasGoal -> original.value == Entry.YES_MANUAL &&
+                child.computedEntries.get(date).completed
             child.isNumerical -> true
             else -> original.value == Entry.YES_MANUAL
         }
@@ -85,14 +87,7 @@ object GroupHabitCalculator {
         val successfulDates = children
             .flatMap { child ->
                 child.originalEntries.getKnown()
-                    .filter { original ->
-                        when {
-                            child.hasGoal -> child.computedEntries.get(original.date).completed
-                            child.isNumerical ->
-                                original.value != Entry.UNKNOWN && original.value != Entry.SKIP
-                            else -> original.value == Entry.YES_MANUAL
-                        }
-                    }
+                    .filter { original -> isSuccessfulOn(child, original.date) }
                     .map { it.date }
             }
             .toSet()
