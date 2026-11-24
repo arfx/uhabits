@@ -41,13 +41,14 @@ class ReorderHabitCommandTest : BaseUnitTest() {
             isGroup = true
             hasGoal = false
         }
-        val child = fixtures.createShortHabit("Child").apply {
+        habitList.add(oldGroup)
+        habitList.add(newGroup)
+        val child = fixtures.createShortHabit().apply {
+            name = "Child"
             originalEntries.add(Entry(today, Entry.YES_MANUAL))
             recompute()
             groupId = oldGroup.id
         }
-        habitList.add(oldGroup)
-        habitList.add(newGroup)
         habitList.add(child)
         GroupHabitCalculator.recompute(oldGroup, listOf(child))
         habitList.update(oldGroup)
