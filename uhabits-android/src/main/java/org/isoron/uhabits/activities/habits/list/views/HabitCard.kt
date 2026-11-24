@@ -65,6 +65,8 @@ class HabitCardView(
     private var innerFrame: LinearLayout
     private var label: TextView
     private var scoreRing: RingView
+    private var scoreRingContainer: FrameLayout
+    private var noGoalIcon: TextView
 
     private var dataOffset = 0
     private var state: HabitCardViewState? = null
@@ -79,7 +81,8 @@ class HabitCardView(
             text = r.name
             setTextColor(c)
         }
-        scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.INVISIBLE
+        scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE
+        noGoalIcon.visibility = if (r.hasGoal) View.GONE else View.VISIBLE
         scoreRing.apply {
             setPercentage(r.score.toFloat())
             setPrecision(1.0f / 16)
@@ -121,15 +124,26 @@ class HabitCardView(
     }
 
     init {
+        val ringSize = dp(15f).toInt()
+        val sideMargin = dp(8f).toInt()
         scoreRing = RingView(context).apply {
-            val thickness = dp(3f)
-            val margin = dp(8f).toInt()
-            val ringSize = dp(15f).toInt()
+            setThickness(dp(3f))
+        }
+        noGoalIcon = TextView(context).apply {
+            text = context.getString(R.string.fa_eye)
+            typeface = org.isoron.uhabits.utils.getFontAwesome()
+            textSize = 11f
+            gravity = Gravity.CENTER
+            setTextColor(sres.getColor(R.attr.contrast60))
+            visibility = View.GONE
+        }
+        scoreRingContainer = FrameLayout(context).apply {
             layoutParams = LinearLayout.LayoutParams(ringSize, ringSize).apply {
-                setMargins(margin, 0, margin, 0)
+                setMargins(sideMargin, 0, sideMargin, 0)
                 gravity = Gravity.CENTER
             }
-            setThickness(thickness)
+            addView(scoreRing, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            addView(noGoalIcon, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         }
 
         label = TextView(context).apply {
@@ -182,7 +196,7 @@ class HabitCardView(
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
             elevation = dp(1f)
 
-            addView(scoreRing)
+            addView(scoreRingContainer)
             addView(label)
             addView(checkmarkPanel)
             addView(numberPanel)
