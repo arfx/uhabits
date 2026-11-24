@@ -100,6 +100,11 @@ class HabitCardView(
         // Keep the original checkmark strip visible for groups, but route its
         // interactions to group insights instead of changing group repetitions.
         checkmarkPanel.visibility = if (r.isNumerical) View.GONE else View.VISIBLE
+        checkmarkPanel.onReadOnlyClick = if (r.isGroup) {
+            { controller.onGroupInsights(r.id) }
+        } else {
+            null
+        }
         numberPanel.visibility = if (!r.isGroup && r.isNumerical) View.VISIBLE else View.GONE
         groupInsightsButton.visibility = View.GONE
         checkmarkPanel.setState(CheckmarkPanelState(r.checkmarks, c, r.notes, newState.buttonCount))
@@ -160,9 +165,6 @@ class HabitCardView(
         }
 
         checkmarkPanel = checkmarkPanelFactory.create().apply {
-            onReadOnlyClick = {
-                state?.record?.takeIf { it.isGroup }?.id?.let(controller::onGroupInsights)
-            }
             onToggle = { date, value, notes ->
                 triggerRipple(date)
                 val location = getAbsoluteButtonLocation(date)
