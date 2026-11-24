@@ -31,10 +31,12 @@ class CreateGroupHabitCommandTest : BaseUnitTest() {
     fun testMovingChildRecomputesPreviousGroup() {
         val today = getToday()
         val remainingChild = fixtures.createShortHabit().apply {
+            originalEntries.clear()
             originalEntries.add(Entry(today.minus(2), Entry.YES_MANUAL))
             recompute()
         }
         val movingChild = fixtures.createShortHabit().apply {
+            originalEntries.clear()
             originalEntries.add(Entry(today, Entry.YES_MANUAL))
             recompute()
         }
