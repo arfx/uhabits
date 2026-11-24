@@ -61,7 +61,6 @@ object GroupHabitCalculator {
         return children
             .filter { child -> child.groupId == group.id && isSuccessfulOn(child, date) }
             .map { it.color }
-            .distinctBy { it.paletteIndex }
             .sortedBy { it.paletteIndex }
     }
 
