@@ -30,6 +30,7 @@ import org.isoron.uhabits.core.models.Entry.Companion.YES_AUTO
 import org.isoron.uhabits.core.models.Entry.Companion.YES_MANUAL
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.preferences.Preferences
 import org.isoron.uhabits.core.ui.callbacks.CheckMarkDialogCallback
@@ -50,9 +51,9 @@ data class HistoryCardState(
     val series: List<HistoryChart.Square>,
     val defaultSquare: HistoryChart.Square,
     val notesIndicators: List<Boolean>,
-    val seriesColors: List<List<PaletteColor>> = emptyList(),
     val theme: Theme,
-    val today: LocalDate
+    val today: LocalDate,
+    val seriesColors: List<List<PaletteColor>> = emptyList()
 )
 
 class HistoryCardPresenter(
@@ -182,7 +183,11 @@ class HistoryCardPresenter(
                     }
                 }
             }
-            val children = if (habit.isGroup) habitList?.filter { it.groupId == habit.id && !it.isGroup } ?: emptyList() else emptyList()
+            val children = if (habit.isGroup) {
+                habitList?.filter { it.groupId == habit.id && !it.isGroup } ?: emptyList()
+            } else {
+                emptyList()
+            }
             val seriesColors = if (habit.isGroup) {
                 entries.map { entry ->
                     if (entry.value == YES_MANUAL) {
