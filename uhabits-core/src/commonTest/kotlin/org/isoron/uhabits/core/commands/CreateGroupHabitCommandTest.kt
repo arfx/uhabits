@@ -76,6 +76,41 @@ class CreateGroupHabitCommandTest : BaseUnitTest() {
     }
 
     @Test
+    fun testAddAndRemoveChildrenFromExistingGroup() {
+        val today = getToday()
+        val group = modelFactory.buildHabit().apply {
+            name = "Existing"
+            isGroup = true
+            hasGoal = false
+        }
+        habitList.add(group)
+        val first = fixtures.createShortHabit().apply {
+            originalEntries.clear()
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            recompute()
+        }
+        val second = fixtures.createShortHabit().apply {
+            originalEntries.clear()
+            originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
+            recompute()
+        }
+        habitList.add(first)
+        habitList.add(second)
+
+        SetGroupMembersCommand(habitList, listOf(first.id!!, second.id!!), group.id).run()
+        assertEquals(group.id, first.groupId)
+        assertEquals(group.id, second.groupId)
+        assertEquals(Entry.YES_MANUAL, group.originalEntries.get(today).value)
+        assertEquals(Entry.YES_MANUAL, group.originalEntries.get(today.minus(1)).value)
+
+        SetGroupMembersCommand(habitList, listOf(first.id!!), null).run()
+        assertEquals(null, first.groupId)
+        assertEquals(group.id, second.groupId)
+        assertEquals(Entry.UNKNOWN, group.originalEntries.get(today).value)
+        assertEquals(Entry.YES_MANUAL, group.originalEntries.get(today.minus(1)).value)
+    }
+
+    @Test
     fun testCreatesGroupAndPreservesChildHistory() {
         val today = getToday()
         val first = fixtures.createShortHabit().apply {

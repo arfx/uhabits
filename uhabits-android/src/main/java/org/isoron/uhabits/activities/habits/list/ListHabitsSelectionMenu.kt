@@ -29,6 +29,7 @@ import androidx.appcompat.widget.SwitchCompat
 import org.isoron.uhabits.activities.common.dialogs.FrequencyPickerDialog
 import org.isoron.uhabits.activities.habits.edit.formatFrequency
 import org.isoron.uhabits.core.commands.CreateGroupHabitCommand
+import org.isoron.uhabits.core.commands.SetGroupMembersCommand
 import org.isoron.uhabits.core.commands.EditHabitCommand
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
@@ -99,18 +100,25 @@ class ListHabitsSelectionMenu(
         val itemGroup = menu.findItem(R.id.action_create_group)
         val itemEditGroup = menu.findItem(R.id.action_edit_group)
         val itemGroupInsights = menu.findItem(R.id.action_group_insights)
+        val itemAddToGroup = menu.findItem(R.id.action_add_to_group)
+        val itemRemoveFromGroup = menu.findItem(R.id.action_remove_from_group)
+        val itemMoveToGroup = menu.findItem(R.id.action_move_to_group)
         val selectedHabits = listAdapter.getSelected()
-        val selectedGroup = selectedHabits.singleOrNull()?.takeIf { it.isGroup }
+        val selectedGroups = selectedHabits.filter { it.isGroup }
+        val selectedChildren = selectedHabits.filterNot { it.isGroup }
+        val selectedGroup = selectedGroups.singleOrNull()
 
-        itemColor.isVisible = true
-        itemEdit.isVisible = behavior.canEdit()
-        itemArchive.isVisible = behavior.canArchive()
-        itemUnarchive.isVisible = behavior.canUnarchive()
-        itemNotify.isVisible = prefs.isDeveloper
-        itemGroup.isVisible = selectedHabits.size >= 2 && selectedHabits.none { it.isGroup }
-        itemEditGroup.isVisible = selectedGroup != null
-        itemGroupInsights.isVisible = selectedGroup != null
-        itemEdit.isVisible = itemEdit.isVisible && selectedGroup == null
+        itemColor.isVisible = selectedGroups.isEmpty()
+        itemEdit.isVisible = behavior.canEdit() && selectedGroups.isEmpty()
+        itemArchive.isVisible = behavior.canArchive() && selectedGroups.isEmpty()
+        itemUnarchive.isVisible = behavior.canUnarchive() && selectedGroups.isEmpty()
+        itemNotify.isVisible = prefs.isDeveloper && selectedGroups.isEmpty()
+        itemGroup.isVisible = selectedHabits.size >= 2 && selectedGroups.isEmpty()
+        itemEditGroup.isVisible = selectedGroup != null && selectedHabits.size == 1
+        itemGroupInsights.isVisible = selectedGroup != null && selectedHabits.size == 1
+        itemAddToGroup.isVisible = selectedGroup != null && selectedChildren.isNotEmpty()
+        itemRemoveFromGroup.isVisible = selectedChildren.any { it.groupId != null }
+        itemMoveToGroup.isVisible = selectedChildren.isNotEmpty() && habitList.any { it.isGroup }
         activeActionMode?.title = listAdapter.selected.size.toString()
         return true
     }
@@ -180,6 +188,37 @@ class ListHabitsSelectionMenu(
                 commandRunner.run(EditHabitCommand(habitList, group.id!!, modified))
                 activeActionMode?.finish()
             }
+            .show()
+    }
+
+    private fun updateSelectedGroupMembership(targetGroupId: Long?) {
+        val children = listAdapter.getSelected().filterNot { it.isGroup }
+        if (children.isEmpty()) return
+        commandRunner.run(
+            SetGroupMembersCommand(
+                habitList = habitList,
+                childIds = children.mapNotNull { it.id },
+                targetGroupId = targetGroupId
+            )
+        )
+        activeActionMode?.finish()
+    }
+
+    private fun showMoveToGroupDialog() {
+        val children = listAdapter.getSelected().filterNot { it.isGroup }
+        if (children.isEmpty()) return
+        val currentGroupIds = children.mapNotNull { it.groupId }.toSet()
+        val groups = habitList.filter { it.isGroup && it.id !in currentGroupIds }
+        if (groups.isEmpty()) {
+            activity.showMessage(activity.getString(R.string.group_habit_no_other_group))
+            return
+        }
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.group_habit_move_members)
+            .setItems(groups.map { it.name }.toTypedArray()) { _, which ->
+                groups[which].id?.let(::updateSelectedGroupMembership)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
 
@@ -305,6 +344,22 @@ class ListHabitsSelectionMenu(
             R.id.action_notify -> {
                 for (h in listAdapter.getSelected())
                     notificationTray.show(h, getToday(), 0)
+                return true
+            }
+
+            R.id.action_add_to_group -> {
+                listAdapter.getSelected().firstOrNull { it.isGroup }?.id
+                    ?.let(::updateSelectedGroupMembership)
+                return true
+            }
+
+            R.id.action_remove_from_group -> {
+                updateSelectedGroupMembership(null)
+                return true
+            }
+
+            R.id.action_move_to_group -> {
+                showMoveToGroupDialog()
                 return true
             }
 

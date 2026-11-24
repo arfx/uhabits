@@ -261,4 +261,8 @@
 
     <string name="group_habit_edit_title">Edit Group Habit</string>
     <string name="group_habit_insights">Group insights</string>
+    <string name="group_habit_add_members">Add selected habits to group</string>
+    <string name="group_habit_remove_members">Remove selected habits from group</string>
+    <string name="group_habit_move_members">Move selected habits to group</string>
+    <string name="group_habit_no_other_group">No other group is available</string>
 </resources>
