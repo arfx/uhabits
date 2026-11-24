@@ -76,7 +76,12 @@ class HabitCardView(
         val r = newState.record
         val c = getActiveColor(r)
         label.apply {
-            text = r.name
+            text = when {
+                r.isGroup && r.isExpanded -> "▾  ${r.name}"
+                r.isGroup -> "▸  ${r.name}"
+                r.isGroupChild -> "    ${r.name}"
+                else -> r.name
+            }
             setTextColor(c)
         }
         scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE

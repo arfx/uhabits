@@ -71,6 +71,7 @@ class HabitCardListAdapter(
     private var rows: MutableList<Row> = mutableListOf()
     private val categoryIds = HashMap<String, Long>()
     private var nextCategoryId = CATEGORY_ID_BASE
+    private val expandedGroupIds = mutableSetOf<Long>()
 
     companion object {
         const val VIEW_TYPE_HABIT = 0
@@ -112,15 +113,36 @@ class HabitCardListAdapter(
         if (habits.isEmpty()) return emptyList()
         val built = mutableListOf<Row>()
         var lastHeader: String? = null
-        habits.forEach { card ->
+
+        fun addHabit(card: HabitCardState, showCategory: Boolean = true) {
             val cat = card.category
-            if (cat.isNotBlank() && cat != lastHeader) {
+            if (showCategory && cat.isNotBlank() && cat != lastHeader) {
                 built.add(Row.Category(categoryIdFor(cat), cat))
                 lastHeader = cat
             }
-            built.add(Row.Habit(card))
+            built.add(Row.Habit(card.copy(isExpanded = card.isGroup && card.id in expandedGroupIds)))
+        }
+
+        val groupsById = habits.filter { it.groupId != null }.groupBy { it.groupId }
+        habits.forEach { card ->
+            if (card.groupId != null) return@forEach
+            addHabit(card)
+            if (card.isGroup && card.id in expandedGroupIds) {
+                groupsById[card.id].orEmpty().forEach { child ->
+                    addHabit(child.copy(isGroupChild = true), showCategory = false)
+                }
+            }
         }
         return built
+    }
+
+    fun toggleGroup(position: Int) {
+        val card = habitAt(position) ?: return
+        if (!card.isGroup) return
+        if (!expandedGroupIds.add(card.id)) expandedGroupIds.remove(card.id)
+        rows = buildRows(items).toMutableList()
+        notifyDataSetChanged()
+        observable.notifyListeners()
     }
 
     private fun categoryIdFor(category: String): Long {
@@ -183,7 +205,8 @@ class HabitCardListAdapter(
         get() = selected.isEmpty()
 
     val isSortable: Boolean
-        get() = state?.isSortable == true
+        get() = state?.isSortable == true &&
+            state?.items?.none { it.isGroup || it.groupId != null } == true
 
     override fun onBindViewHolder(
         holder: RecyclerView.ViewHolder,

@@ -68,7 +68,9 @@ object ListHabitsPresenter {
                     completed = entries.map { it.completed },
                     notes = entries.map { it.notes },
                     category = habit.category,
-                    hasGoal = habit.hasGoal
+                    hasGoal = habit.hasGoal,
+                    isGroup = habit.isGroup,
+                    groupId = habit.groupId
                 )
             )
         }
@@ -96,5 +98,9 @@ data class HabitCardState(
     val completed: List<Boolean>,
     val notes: List<String>,
     val category: String,
-    val hasGoal: Boolean = true
+    val hasGoal: Boolean = true,
+    val isGroup: Boolean = false,
+    val groupId: Long? = null,
+    val isExpanded: Boolean = false,
+    val isGroupChild: Boolean = false
 )
