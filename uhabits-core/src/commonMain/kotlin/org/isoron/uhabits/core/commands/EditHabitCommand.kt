@@ -22,6 +22,7 @@ import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.HabitNotFoundException
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 
 data class EditHabitCommand(
     val habitList: HabitList,
@@ -31,11 +32,16 @@ data class EditHabitCommand(
 ) : Command {
     override fun run() {
         val habit = habitList.getById(habitId) ?: throw HabitNotFoundException()
+        val previousGroupId = habit.groupId
         convertedEntries?.let { habit.originalEntries.replaceAll(it) }
         habit.copyFrom(modified)
+        habit.recompute()
         habitList.update(habit)
         habit.observable.notifyListeners()
-        habit.recompute()
+        GroupHabitCalculator.recomputeAffectedGroups(
+            habitList,
+            setOf(previousGroupId, habit.groupId)
+        )
         habitList.resort()
     }
 }

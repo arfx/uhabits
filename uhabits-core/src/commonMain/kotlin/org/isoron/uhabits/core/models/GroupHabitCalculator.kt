@@ -27,6 +27,17 @@ package org.isoron.uhabits.core.models
  */
 object GroupHabitCalculator {
 
+    fun recomputeAffectedGroups(habitList: HabitList, groupIds: Set<Long?>) {
+        groupIds.filterNotNull().forEach { groupId ->
+            val group = habitList.getById(groupId) ?: return@forEach
+            if (!group.isGroup) return@forEach
+            val children = habitList.filter { it.groupId == groupId && !it.isGroup }
+            recompute(group, children)
+            habitList.update(group)
+            group.observable.notifyListeners()
+        }
+    }
+
     fun recompute(group: Habit, children: List<Habit>) {
         require(group.isGroup) { "Habit must be a Group Habit" }
         require(children.none { it.isGroup }) { "Group Habits cannot contain other groups" }
