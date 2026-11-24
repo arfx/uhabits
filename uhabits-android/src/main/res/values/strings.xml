@@ -31,6 +31,12 @@
     <string name="unarchive">Unarchive</string>
     <string name="categorize">Categorize</string>
     <string name="add_habit">Add habit</string>
+    <string name="group_habit_create_title">Create Group Habit</string>
+    <string name="group_habit_name_hint">Group name</string>
+    <string name="group_habit_goal_enabled">Set a weekly group goal</string>
+    <string name="group_habit_weekly_goal">%1$d days per week</string>
+    <string name="group_habit_choose_frequency">Change weekly goal</string>
+    <string name="group_habit_name_required">Please enter a group name</string>
     <string name="color_picker_default_title">Change color</string>
     <string name="toast_habit_created">Habit created</string>
     <plurals name="toast_habits_changed">

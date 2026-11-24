@@ -20,6 +20,19 @@
 package org.isoron.uhabits.activities.habits.list
 
 import android.content.Context
+import android.text.InputType
+import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SwitchCompat
+import org.isoron.uhabits.activities.common.dialogs.FrequencyPickerDialog
+import org.isoron.uhabits.core.commands.CreateGroupHabitCommand
+import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.ModelFactory
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -45,7 +58,9 @@ class ListHabitsSelectionMenu(
     private val prefs: Preferences,
     private val behavior: ListHabitsSelectionMenuBehavior,
     private val listController: Lazy<HabitCardListController>,
-    private val notificationTray: NotificationTray
+    private val notificationTray: NotificationTray,
+    private val habitList: HabitList,
+    private val modelFactory: ModelFactory
 ) : ActionMode.Callback {
 
     val activity = (context as AppCompatActivity)
@@ -76,15 +91,104 @@ class ListHabitsSelectionMenu(
         val itemArchive = menu.findItem(R.id.action_archive_habit)
         val itemUnarchive = menu.findItem(R.id.action_unarchive_habit)
         val itemNotify = menu.findItem(R.id.action_notify)
+        val itemGroup = menu.findItem(R.id.action_create_group)
 
         itemColor.isVisible = true
         itemEdit.isVisible = behavior.canEdit()
         itemArchive.isVisible = behavior.canArchive()
         itemUnarchive.isVisible = behavior.canUnarchive()
         itemNotify.isVisible = prefs.isDeveloper
+        itemGroup.isVisible = listAdapter.selected.size >= 2 &&
+            listAdapter.getSelected().none { it.isGroup }
         activeActionMode?.title = listAdapter.selected.size.toString()
         return true
     }
+
+    private fun showCreateGroupDialog() {
+        val children = listAdapter.getSelected().filterNot { it.isGroup }
+        if (children.size < 2) return
+
+        val nameInput = EditText(activity).apply {
+            hint = activity.getString(R.string.group_habit_name_hint)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            setSingleLine(true)
+        }
+        val goalSwitch = SwitchCompat(activity).apply {
+            text = activity.getString(R.string.group_habit_goal_enabled)
+            isChecked = false
+        }
+        val frequencyLabel = android.widget.TextView(activity).apply {
+            text = activity.getString(R.string.group_habit_weekly_goal, 3)
+            setPadding(0, 12, 0, 12)
+            isEnabled = false
+        }
+        var numerator = 3
+        var denominator = 7
+        val frequencyButton = android.widget.Button(activity).apply {
+            text = activity.getString(R.string.group_habit_choose_frequency)
+            isEnabled = false
+            setOnClickListener {
+                val picker = FrequencyPickerDialog(numerator, denominator)
+                picker.onFrequencyPicked = { num, den ->
+                    numerator = num
+                    denominator = den
+                    frequencyLabel.text = activity.getString(
+                        R.string.group_habit_weekly_goal,
+                        numerator
+                    )
+                }
+                picker.show(activity.supportFragmentManager, "groupFrequency")
+            }
+        }
+        goalSwitch.setOnCheckedChangeListener { _, checked ->
+            frequencyLabel.isEnabled = checked
+            frequencyButton.isEnabled = checked
+        }
+
+        val content = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            val padding = (20 * activity.resources.displayMetrics.density).toInt()
+            setPadding(padding, padding / 2, padding, 0)
+            addView(nameInput, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ))
+            addView(goalSwitch)
+            addView(frequencyLabel)
+            addView(frequencyButton)
+        }
+
+        AlertDialog.Builder(activity)
+            .setTitle(R.string.group_habit_create_title)
+            .setView(content)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.create) { _, _ ->
+                val name = nameInput.text.toString().trim()
+                if (name.isEmpty()) {
+                    activity.showMessage(activity.getString(R.string.group_habit_name_required))
+                    return@setPositiveButton
+                }
+                val group = modelFactory.buildHabit().apply {
+                    this.name = name
+                    this.color = children.first().color
+                    this.isGroup = true
+                    this.type = HabitType.YES_NO
+                    this.hasGoal = goalSwitch.isChecked
+                    this.frequency = Frequency(numerator, denominator)
+                }
+                commandRunner.run(
+                    CreateGroupHabitCommand(
+                        modelFactory,
+                        habitList,
+                        group,
+                        children.mapNotNull { it.id }
+                    )
+                )
+                activeActionMode?.finish()
+            }
+            .show()
+    }
+
     override fun onDestroyActionMode(mode: ActionMode?) {
         listController.value.onSelectionFinished()
     }
@@ -124,6 +228,11 @@ class ListHabitsSelectionMenu(
             R.id.action_notify -> {
                 for (h in listAdapter.getSelected())
                     notificationTray.show(h, getToday(), 0)
+                return true
+            }
+
+            R.id.action_create_group -> {
+                showCreateGroupDialog()
                 return true
             }
 

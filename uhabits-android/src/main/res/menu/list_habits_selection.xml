@@ -52,6 +52,11 @@
         app:showAsAction="never"/>
 
     <item
+        android:id="@+id/action_create_group"
+        android:title="@string/group_habit_create_title"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/action_notify"
         android:title="@string/reminder"
         app:showAsAction="never"/>
