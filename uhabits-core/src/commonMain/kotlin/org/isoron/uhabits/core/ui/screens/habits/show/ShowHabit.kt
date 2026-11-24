@@ -102,7 +102,8 @@ class ShowHabitPresenter(
                 theme = theme,
                 subtitle = SubtitleCardPresenter.buildState(
                     habit = habit,
-                    theme = theme
+                    theme = theme,
+                    hasGoal = hasGoal
                 ),
                 overview = OverviewCardPresenter.buildState(
                     habit = habit,
