@@ -151,7 +151,8 @@ class EditHabitActivity : AppCompatActivity() {
 
         updateColors()
 
-        binding.habitTypeOuterBox.visibility = if (habitId >= 0) View.VISIBLE else View.GONE
+        binding.habitTypeOuterBox.visibility =
+            if (habitId >= 0 && !isEditingGroup) View.VISIBLE else View.GONE
         updateHabitTypeControls()
         populateHabitType()
         binding.habitTypePicker.setOnClickListener { showHabitTypePicker() }
