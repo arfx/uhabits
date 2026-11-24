@@ -160,22 +160,21 @@ class HabitCardView(
         }
 
         checkmarkPanel = checkmarkPanelFactory.create().apply {
+            onReadOnlyClick = {
+                state?.record?.takeIf { it.isGroup }?.id?.let(controller::onGroupInsights)
+            }
             onToggle = { date, value, notes ->
-                if (state?.record?.isGroup == true) {
-                    state?.record?.id?.let(controller::onGroupInsights)
-                } else {
-                    triggerRipple(date)
-                    val location = getAbsoluteButtonLocation(date)
-                    state?.record?.id?.let { habitId ->
-                        controller.onToggle(
-                            habitId,
-                            date,
-                            value,
-                            notes,
-                            location.x,
-                            location.y
-                        )
-                    }
+                triggerRipple(date)
+                val location = getAbsoluteButtonLocation(date)
+                state?.record?.id?.let { habitId ->
+                    controller.onToggle(
+                        habitId,
+                        date,
+                        value,
+                        notes,
+                        location.x,
+                        location.y
+                    )
                 }
             }
             onEdit = { date ->
