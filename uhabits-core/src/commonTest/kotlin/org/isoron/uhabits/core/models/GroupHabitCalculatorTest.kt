@@ -85,6 +85,44 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
     }
 
     @Test
+    fun testWeeklyBooleanGoalDoesNotCountAutoCompletedNoDays() {
+        val today = getToday()
+        val group = modelFactory.buildHabit().apply {
+            id = 107L
+            isGroup = true
+            hasGoal = false
+        }
+        val child = modelFactory.buildHabit().apply {
+            groupId = group.id
+            hasGoal = true
+            frequency = Frequency(3, 7)
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            originalEntries.add(Entry(today.minus(2), Entry.YES_MANUAL))
+            originalEntries.add(Entry(today.minus(4), Entry.YES_MANUAL))
+            originalEntries.add(Entry(today.minus(1), Entry.NO))
+            recompute()
+        }
+
+        assertEquals(Entry.YES_AUTO, child.computedEntries.get(today.minus(1)).value)
+        assertTrue(child.computedEntries.get(today.minus(1)).completed)
+
+        GroupHabitCalculator.recompute(group, listOf(child))
+
+        assertFalse(group.isActiveOn(today.minus(1)))
+        assertEquals(
+            listOf(today, today.minus(2), today.minus(4)),
+            group.originalEntries.getKnown().map { it.date }
+        )
+        assertEquals(
+            listOf(child.color),
+            GroupHabitCalculator.contributingColors(group, listOf(child), today)
+        )
+        assertTrue(
+            GroupHabitCalculator.contributingColors(group, listOf(child), today.minus(1)).isEmpty()
+        )
+    }
+
+    @Test
     fun testNoGoalNumericalZeroCountsAsRecordedGroupDay() {
         val today = getToday()
         val group = modelFactory.buildHabit().apply {
