@@ -159,6 +159,43 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
     }
 
     @Test
+    fun testContributingColorsOnlyIncludesSuccessfulChildren() {
+        val today = getToday()
+        val group = modelFactory.buildHabit().apply {
+            id = 106L
+            isGroup = true
+            hasGoal = false
+        }
+        val redChild = modelFactory.buildHabit().apply {
+            groupId = group.id
+            color = PaletteColor(2)
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            recompute()
+        }
+        val blueChild = modelFactory.buildHabit().apply {
+            groupId = group.id
+            color = PaletteColor(7)
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            recompute()
+        }
+        val inactiveChild = modelFactory.buildHabit().apply {
+            groupId = group.id
+            color = PaletteColor(11)
+            originalEntries.add(Entry(today, Entry.NO))
+            recompute()
+        }
+
+        assertEquals(
+            listOf(PaletteColor(2), PaletteColor(7)),
+            GroupHabitCalculator.contributingColors(
+                group,
+                listOf(redChild, blueChild, inactiveChild),
+                today
+            )
+        )
+    }
+
+    @Test
     fun testRejectsChildrenFromAnotherGroup() {
         val group = modelFactory.buildHabit().apply {
             id = 103L
