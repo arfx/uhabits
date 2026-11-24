@@ -27,8 +27,15 @@ data class DeleteHabitsCommand(
     val selected: List<Habit>
 ) : Command {
     override fun run() {
-        val affectedGroups = selected.mapNotNull { it.groupId }.toSet()
-        for (h in selected) habitList.remove(h)
+        val affectedGroups = selected.mapNotNull { it.groupId }.toMutableSet()
+        for (h in selected) {
+            if (h.isGroup && h.id != null) {
+                val children = habitList.filter { it.groupId == h.id }
+                children.forEach { it.groupId = null }
+                if (children.isNotEmpty()) habitList.update(children)
+            }
+            habitList.remove(h)
+        }
         GroupHabitCalculator.recomputeAffectedGroups(habitList, affectedGroups)
     }
 }
