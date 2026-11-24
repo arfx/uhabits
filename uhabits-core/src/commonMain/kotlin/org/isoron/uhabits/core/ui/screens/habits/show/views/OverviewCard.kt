@@ -4,11 +4,11 @@
  * This file is part of Loop Habit Tracker.
  *
  * Loop Habit Tracker is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
  *
- * Loop Habit Tracker is distributed in the hope that it will be useful, but
+ * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
@@ -37,7 +37,11 @@ data class OverviewCardState(
 
 class OverviewCardPresenter {
     companion object {
-        fun buildState(habit: Habit, theme: Theme): OverviewCardState {
+        fun buildState(
+            habit: Habit,
+            theme: Theme,
+            hasGoal: Boolean = habit.hasGoal
+        ): OverviewCardState {
             val today = getToday()
             val lastMonth = today.minus(30)
             val lastYear = today.minus(365)
@@ -45,7 +49,7 @@ class OverviewCardPresenter {
             val scoreToday = scores[today].value.toFloat()
             val scoreLastMonth = scores[lastMonth].value.toFloat()
             val scoreLastYear = scores[lastYear].value.toFloat()
-            val totalCount = if (!habit.hasGoal && habit.isNumerical) {
+            val totalCount = if (!hasGoal && habit.isNumerical) {
                 habit.originalEntries.getKnown()
                     .count { it.value != Entry.SKIP && it.value != Entry.UNKNOWN }
                     .toLong()
@@ -62,7 +66,7 @@ class OverviewCardPresenter {
                 scoreYearDiff = scoreToday - scoreLastYear,
                 totalCount = totalCount,
                 theme = theme,
-                hasGoal = habit.hasGoal
+                hasGoal = hasGoal
             )
         }
     }
