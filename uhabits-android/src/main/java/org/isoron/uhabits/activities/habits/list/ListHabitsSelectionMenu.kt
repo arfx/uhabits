@@ -98,7 +98,6 @@ class ListHabitsSelectionMenu(
         val itemUnarchive = menu.findItem(R.id.action_unarchive_habit)
         val itemNotify = menu.findItem(R.id.action_notify)
         val itemGroup = menu.findItem(R.id.action_create_group)
-        val itemEditGroup = menu.findItem(R.id.action_edit_group)
         val itemGroupInsights = menu.findItem(R.id.action_group_insights)
         val itemAddToGroup = menu.findItem(R.id.action_add_to_group)
         val itemRemoveFromGroup = menu.findItem(R.id.action_remove_from_group)
@@ -114,7 +113,6 @@ class ListHabitsSelectionMenu(
         itemUnarchive.isVisible = behavior.canUnarchive() && selectedGroups.isEmpty()
         itemNotify.isVisible = prefs.isDeveloper && selectedGroups.isEmpty()
         itemGroup.isVisible = selectedHabits.size >= 2 && selectedGroups.isEmpty()
-        itemEditGroup.isVisible = false
         itemGroupInsights.isVisible = selectedGroup != null && selectedHabits.size == 1
         itemAddToGroup.isVisible = selectedGroup != null && selectedChildren.isNotEmpty()
         itemRemoveFromGroup.isVisible = selectedChildren.any { it.groupId != null }
@@ -123,73 +121,6 @@ class ListHabitsSelectionMenu(
         return true
     }
 
-
-    private fun showEditGroupDialog(group: Habit) {
-        val nameInput = EditText(activity).apply {
-            setText(group.name)
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            setSingleLine(true)
-        }
-        val goalSwitch = SwitchCompat(activity).apply {
-            text = activity.getString(R.string.group_habit_goal_enabled)
-            isChecked = group.groupGoalEnabled
-        }
-        var numerator = group.frequency.numerator
-        var denominator = group.frequency.denominator
-        val frequencyLabel = android.widget.TextView(activity).apply {
-            text = formatFrequency(numerator, denominator, activity.resources)
-            isEnabled = goalSwitch.isChecked
-            setPadding(0, 12, 0, 12)
-        }
-        val frequencyButton = android.widget.Button(activity).apply {
-            text = activity.getString(R.string.group_habit_choose_frequency)
-            isEnabled = goalSwitch.isChecked
-            setOnClickListener {
-                val picker = FrequencyPickerDialog(numerator, denominator)
-                picker.onFrequencyPicked = { num, den ->
-                    numerator = num
-                    denominator = den
-                    frequencyLabel.text = formatFrequency(num, den, activity.resources)
-                }
-                picker.show(activity.supportFragmentManager, "groupFrequency")
-            }
-        }
-        goalSwitch.setOnCheckedChangeListener { _, checked ->
-            frequencyLabel.isEnabled = checked
-            frequencyButton.isEnabled = checked
-        }
-        val content = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL
-            val padding = (20 * activity.resources.displayMetrics.density).toInt()
-            setPadding(padding, padding / 2, padding, 0)
-            addView(nameInput)
-            addView(goalSwitch)
-            addView(frequencyLabel)
-            addView(frequencyButton)
-        }
-        AlertDialog.Builder(activity)
-            .setTitle(R.string.group_habit_edit_title)
-            .setView(content)
-            .setNegativeButton(android.R.string.cancel, null)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
-                val name = nameInput.text.toString().trim()
-                if (name.isEmpty()) {
-                    activity.showMessage(activity.getString(R.string.group_habit_name_required))
-                    return@setPositiveButton
-                }
-                val modified = modelFactory.buildHabit().apply {
-                    copyFrom(group)
-                    this.name = name
-                    this.isGroup = true
-                    this.hasGoal = false
-                    this.groupGoalEnabled = goalSwitch.isChecked
-                    this.frequency = Frequency(numerator, denominator)
-                }
-                commandRunner.run(EditHabitCommand(habitList, group.id!!, modified))
-                activeActionMode?.finish()
-            }
-            .show()
-    }
 
     private fun updateSelectedGroupMembership(targetGroupId: Long?) {
         val children = listAdapter.getSelected().filterNot { it.isGroup }
@@ -368,12 +299,6 @@ class ListHabitsSelectionMenu(
                 return true
             }
 
-            R.id.action_edit_group -> {
-                listAdapter.getSelected().singleOrNull()?.takeIf { it.isGroup }?.let {
-                    showEditGroupDialog(it)
-                }
-                return true
-            }
 
             R.id.action_group_insights -> {
                 listAdapter.getSelected().singleOrNull()?.takeIf { it.isGroup }?.id?.let { id ->
