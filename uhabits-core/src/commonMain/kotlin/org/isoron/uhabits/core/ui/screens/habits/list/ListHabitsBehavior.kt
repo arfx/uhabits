@@ -103,7 +103,7 @@ open class ListHabitsBehavior(
         refId: Long?,
         placeBefore: Boolean,
         targetCategory: String,
-        targetGroupId: Long?
+        targetGroupId: Long? = habitList.getById(habitId)?.groupId
     ) {
         val habit = habitList.getById(habitId) ?: return
         val ref = refId?.let { habitList.getById(it) }
