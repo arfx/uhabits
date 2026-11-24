@@ -47,6 +47,43 @@ source.
 
 * **Works offline and respects your privacy.** Loop doesn't require an Internet connection or online account registration. Your confidential data is never sent to anyone. Neither the developers nor any third-parties have access to it.
 
+## Project-specific changes and roadmap
+
+This fork extends the original Loop Habit Tracker with additional habit types and a more flexible way to organize and evaluate habits. The notes below distinguish functionality already implemented on this branch from planned work.
+
+### Implemented on `feature/habit-conversion-integration`
+
+* **Habits without a goal (No-Goal Habits).** Habits can be tracked without assigning a numerical or frequency goal. On the habit card, a No-Goal Habit uses a simple filled dot in the habit's own color instead of a goal progress ring. Goal Habits continue to display their normal progress ring.
+* **Habit type conversion with history preservation.** A habit can be converted between numerical and yes/no tracking while retaining its historical entries.
+  * When converting a yes/no habit to numerical tracking, the conversion uses the configured yes value.
+  * When converting a numerical habit to yes/no tracking, positive historical values become completed checks. The former value and unit are appended to the existing entry note using the format `existing note - value unit` (or just `value unit` when there was no previous note).
+  * Zero and negative values become unchecked entries and do not add a value/unit note. Existing notes remain intact.
+  * Skipped and unknown entries retain their respective states.
+* **Backup compatibility.** Exported backups are prepared for compatibility with the official Loop Habit Tracker 2.3.1 database schema. Custom fields are retained in the exported database copy so that the official importer can ignore fields it does not know. Feature-specific data is not expected to survive a round trip through the official app.
+
+### Planned: Group Habits
+
+The next design direction is to introduce **Group Habits** as a first-class way to combine related habits. This is a planned feature, not implemented functionality yet.
+
+* **A group contains sub-habits.** A Group Habit can be expanded or collapsed on the main screen to show or hide its sub-habits.
+* **OR-based completion.** A Group Habit is considered successful on a date when at least one of its sub-habits is successfully completed on that date.
+* **No double counting.** If multiple sub-habits are completed on the same date, that date still counts only once toward the Group Habit.
+* **Independent group goal.** A Group Habit can have its own goal, configured and evaluated using the existing Goal Habit goal system. Its goal is independent of the goals of its sub-habits.
+* **Optional sub-habit goals.** Sub-habits may keep their own goals or be tracked without a goal. Their individual results remain independent from the Group Habit result.
+* **Reuse the existing Insights page.** Group Habits should use the existing insight and goal-evaluation infrastructure wherever possible, including streaks, heatmaps, history/trends, frequency, and goal evaluation. Group-level insights are based on the combined OR result; each sub-habit remains individually inspectable.
+* **Show which sub-habits contributed.** In the Group Habit heatmap, a day remains one square. When more than one sub-habit was completed on that date, the square is divided into equal vertical color segments, one for each completed sub-habit. This keeps the overall daily result readable while revealing which sub-habits contributed. A single completion uses that sub-habit's color.
+* **Expanded habit color palette.** The color palette will need more choices so that sub-habits in a group can be distinguished clearly. Each sub-habit keeps its own color, which is reused in the segmented heatmap and its legend/details.
+
+The earlier idea of calculating an overall streak directly from categories is superseded as the primary design direction by this explicit Group Habit model. The OR rule remains, but the group itself owns its combined result, optional goal, and insight view.
+
+### Design principles
+
+* Preserve existing habit history and notes when changing tracking types.
+* Keep No-Goal Habits visually distinct without inventing a progress percentage.
+* Reuse existing goal and insight behavior instead of creating parallel systems where possible.
+* Keep group-level and sub-habit-level results independent and avoid counting the same calendar date more than once for a group.
+* Clearly label planned functionality so it is not mistaken for functionality already available in a build.
+
 ## Installing
 
 The easiest way to install Loop is through the [Google Play Store][playstore] or [F-Droid][fdroid].
