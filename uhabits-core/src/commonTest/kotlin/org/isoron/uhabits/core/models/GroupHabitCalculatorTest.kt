@@ -18,6 +18,7 @@
  */
 package org.isoron.uhabits.core.models
 
+import org.isoron.platform.time.getFirstWeekday
 import org.isoron.platform.time.getToday
 import org.isoron.uhabits.core.BaseUnitTest
 import kotlin.test.BeforeTest
@@ -174,6 +175,7 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
     @Test
     fun testIndependentWeeklyGoalDoesNotCreateDailyStreakDays() {
         val today = getToday()
+        val weekStart = today.startOfWeek(getFirstWeekday())
         val group = modelFactory.buildHabit().apply {
             id = 104L
             isGroup = true
@@ -183,17 +185,17 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
         }
         val child = modelFactory.buildHabit().apply {
             groupId = group.id
-            originalEntries.add(Entry(today, Entry.YES_MANUAL))
-            originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
+            originalEntries.add(Entry(weekStart, Entry.YES_MANUAL))
+            originalEntries.add(Entry(weekStart.plus(1), Entry.YES_MANUAL))
             recompute()
         }
 
         GroupHabitCalculator.recompute(group, listOf(child))
 
-        assertTrue(group.isActiveOn(today))
-        assertTrue(group.isActiveOn(today.minus(1)))
-        assertFalse(group.isActiveOn(today.minus(2)))
-        assertEquals(2 to 3, GroupHabitCalculator.goalProgress(group, today))
+        assertTrue(group.isActiveOn(weekStart))
+        assertTrue(group.isActiveOn(weekStart.plus(1)))
+        assertFalse(group.isActiveOn(weekStart.plus(2)))
+        assertEquals(2 to 3, GroupHabitCalculator.goalProgress(group, weekStart.plus(1)))
     }
 
     @Test
