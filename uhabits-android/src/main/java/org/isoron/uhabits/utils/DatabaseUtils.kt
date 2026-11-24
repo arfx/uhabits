@@ -28,7 +28,6 @@ import org.isoron.uhabits.HabitsDatabaseOpener
 import org.isoron.uhabits.core.DATABASE_FILENAME
 import org.isoron.uhabits.core.DATABASE_VERSION
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 
@@ -64,10 +63,14 @@ object DatabaseUtils {
         val date = dateFormat.format(System.currentTimeMillis())
         val filename = "${dir.absolutePath}/Loop Habits Backup $date.db"
         Log.i("DatabaseUtils", "Writing: $filename")
-        val db = getDatabaseFile(context)
-        val dbCopy = File(filename)
-        db.copyTo(dbCopy)
-        return dbCopy.absolutePath
+        val dbCopy = createMainCompatibleDatabaseCopy(context)
+        try {
+            val destination = File(filename)
+            dbCopy.copyTo(destination, overwrite = true)
+            return destination.absolutePath
+        } finally {
+            dbCopy.delete()
+        }
     }
 
     @JvmStatic
@@ -78,13 +81,41 @@ object DatabaseUtils {
         val file = dir.createFile("application/octet-stream", "Loop Habits Backup $date.db")
             ?: throw IOException("Unable to create backup file")
         Log.i("DatabaseUtils", "Writing: ${file.uri}")
-        val db = getDatabaseFile(context)
-        FileInputStream(db).use { input ->
-            context.contentResolver.openOutputStream(file.uri)?.use { output ->
-                input.copyTo(output)
+        val dbCopy = createMainCompatibleDatabaseCopy(context)
+        try {
+            dbCopy.inputStream().use { input ->
+                context.contentResolver.openOutputStream(file.uri)?.use { output ->
+                    input.copyTo(output)
+                } ?: throw IOException("Unable to open backup destination")
             }
+        } finally {
+            dbCopy.delete()
         }
         return file.uri.toString()
+    }
+
+    /**
+     * Creates an export-only copy that can be imported by the current main branch.
+     * The live database remains at DATABASE_VERSION (27); only the copy's
+     * user_version is lowered to 26. Main ignores the additional has_goal column.
+     */
+    private fun createMainCompatibleDatabaseCopy(context: Context): File {
+        val source = getDatabaseFile(context)
+        val copy = File.createTempFile("loop-backup-", ".db", context.cacheDir)
+        try {
+            source.copyTo(copy, overwrite = true)
+            SQLiteDatabase.openDatabase(
+                copy.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READWRITE
+            ).use { exportedDatabase ->
+                exportedDatabase.version = 26
+            }
+            return copy
+        } catch (error: Exception) {
+            copy.delete()
+            throw error
+        }
     }
 
     fun openDatabase(): SQLiteDatabase {
