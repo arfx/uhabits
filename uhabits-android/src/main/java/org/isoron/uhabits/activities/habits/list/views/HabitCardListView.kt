@@ -162,6 +162,7 @@ class HabitCardListView(
         fun commitReorder() {}
         fun onItemClick(pos: Int) {}
         fun onItemLongClick(pos: Int) {}
+        fun onGroupInsights(habitId: Long) {}
         fun onToggle(habitId: Long, date: LocalDate, value: Int, notes: String, x: Float, y: Float) {}
         fun onEdit(habitId: Long, date: LocalDate, x: Float, y: Float) {}
     }

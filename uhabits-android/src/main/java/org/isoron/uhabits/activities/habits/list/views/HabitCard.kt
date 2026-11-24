@@ -67,6 +67,7 @@ class HabitCardView(
     private var scoreRing: RingView
     private var noGoalMarker: TextView
     private var scoreRingContainer: FrameLayout
+    private var groupInsightsButton: TextView
 
     private var dataOffset = 0
     private var state: HabitCardViewState? = null
@@ -96,14 +97,9 @@ class HabitCardView(
                 setColor(c)
             }
         }
-        checkmarkPanel.visibility = when (r.isNumerical) {
-            true -> View.GONE
-            false -> View.VISIBLE
-        }
-        numberPanel.visibility = when (r.isNumerical) {
-            true -> View.VISIBLE
-            false -> View.GONE
-        }
+        checkmarkPanel.visibility = if (r.isGroup || r.isNumerical) View.GONE else View.VISIBLE
+        numberPanel.visibility = if (!r.isGroup && r.isNumerical) View.VISIBLE else View.GONE
+        groupInsightsButton.visibility = if (r.isGroup) View.VISIBLE else View.GONE
         checkmarkPanel.setState(CheckmarkPanelState(r.checkmarks, c, r.notes, newState.buttonCount))
         numberPanel.setState(
             NumberPanelState(
@@ -196,6 +192,20 @@ class HabitCardView(
             }
         }
 
+        groupInsightsButton = TextView(context).apply {
+            text = "▤"
+            textSize = 20f
+            gravity = Gravity.CENTER
+            minWidth = dp(48f).toInt()
+            contentDescription = context.getString(R.string.group_habit_insights)
+            isClickable = true
+            isFocusable = true
+            visibility = View.GONE
+            setOnClickListener {
+                state?.record?.takeIf { it.isGroup }?.id?.let(controller::onGroupInsights)
+            }
+        }
+
         innerFrame = LinearLayout(context).apply {
             gravity = Gravity.CENTER_VERTICAL
             orientation = LinearLayout.HORIZONTAL
@@ -206,6 +216,7 @@ class HabitCardView(
             addView(label)
             addView(checkmarkPanel)
             addView(numberPanel)
+            addView(groupInsightsButton)
 
             setOnTouchListener { v, event ->
                 v.background.setHotspot(event.x, event.y)

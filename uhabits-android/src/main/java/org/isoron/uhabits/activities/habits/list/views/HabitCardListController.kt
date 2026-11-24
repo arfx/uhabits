@@ -75,6 +75,10 @@ class HabitCardListController(
         }
     }
 
+    override fun onGroupInsights(habitId: Long) {
+        behavior.onClickHabit(habitId)
+    }
+
     override fun onToggle(
         habitId: Long,
         date: LocalDate,
