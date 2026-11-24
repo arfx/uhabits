@@ -10,8 +10,8 @@
  *
  * Loop Habit Tracker is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
  *
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
@@ -65,12 +65,11 @@ class HabitCardView(
     private var innerFrame: LinearLayout
     private var label: TextView
     private var scoreRing: RingView
+    private var noGoalMarker: TextView
     private var scoreRingContainer: FrameLayout
 
     private var dataOffset = 0
     private var state: HabitCardViewState? = null
-
-    private var currentToggleTaskId = 0
 
     fun setState(newState: HabitCardViewState) {
         state = newState
@@ -80,12 +79,15 @@ class HabitCardView(
             text = r.name
             setTextColor(c)
         }
-        scoreRing.visibility = View.VISIBLE
-        scoreRing.apply {
-            // Habits without a goal use a neutral 50% ring as their fixed marker.
-            setPercentage(if (r.hasGoal) r.score.toFloat() else 0.5f)
-            setPrecision(1.0f / 16)
-            setColor(c)
+        scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE
+        noGoalMarker.visibility = if (r.hasGoal) View.GONE else View.VISIBLE
+        noGoalMarker.setTextColor(c)
+        if (r.hasGoal) {
+            scoreRing.apply {
+                setPercentage(r.score.toFloat())
+                setPrecision(1.0f / 16)
+                setColor(c)
+            }
         }
         checkmarkPanel.visibility = when (r.isNumerical) {
             true -> View.GONE
@@ -128,9 +130,8 @@ class HabitCardView(
         scoreRing = RingView(context).apply {
             setThickness(dp(3f))
         }
-        noGoalIcon = TextView(context).apply {
-            text = "\uf042" // Font Awesome adjust: half-filled circle for habits without a goal
-            typeface = Typeface.createFromAsset(context.assets, "fontawesome-webfont.ttf")
+        noGoalMarker = TextView(context).apply {
+            text = "●"
             textSize = 11f
             gravity = Gravity.CENTER
             visibility = View.GONE
@@ -141,6 +142,7 @@ class HabitCardView(
                 gravity = Gravity.CENTER
             }
             addView(scoreRing, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            addView(noGoalMarker, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         }
 
         label = TextView(context).apply {
