@@ -30,6 +30,8 @@ data class Habit(
     var description: String = "",
     var frequency: Frequency = Frequency.DAILY,
     var hasGoal: Boolean = true,
+    var isGroup: Boolean = false,
+    var groupId: Long? = null,
     var id: Long? = null,
     var isArchived: Boolean = false,
     var name: String = "",
@@ -139,6 +141,8 @@ data class Habit(
         this.description = other.description
         this.frequency = other.frequency
         this.hasGoal = other.hasGoal
+        this.isGroup = other.isGroup
+        this.groupId = other.groupId
         // this.id should not be copied
         this.isArchived = other.isArchived
         this.name = other.name
@@ -161,6 +165,8 @@ data class Habit(
         if (description != other.description) return false
         if (frequency != other.frequency) return false
         if (hasGoal != other.hasGoal) return false
+        if (isGroup != other.isGroup) return false
+        if (groupId != other.groupId) return false
         if (id != other.id) return false
         if (isArchived != other.isArchived) return false
         if (name != other.name) return false
@@ -182,6 +188,8 @@ data class Habit(
         result = 31 * result + description.hashCode()
         result = 31 * result + frequency.hashCode()
         result = 31 * result + hasGoal.hashCode()
+        result = 31 * result + isGroup.hashCode()
+        result = 31 * result + (groupId?.hashCode() ?: 0)
         result = 31 * result + (id?.hashCode() ?: 0)
         result = 31 * result + isArchived.hashCode()
         result = 31 * result + name.hashCode()

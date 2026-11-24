@@ -177,7 +177,9 @@ class HabitRepositoryTest {
             unit = "minutes",
             uuid = "550e8400-e29b-41d4-a716-446655440000",
             category = "Health",
-            hasGoal = 0
+            hasGoal = 0,
+            isGroup = 1,
+            groupId = 123L
         )
         original.id = repo.insert(original)
 
@@ -201,6 +203,8 @@ class HabitRepositoryTest {
         assertEquals(original.uuid, loaded.uuid)
         assertEquals(original.category, loaded.category)
         assertEquals(original.hasGoal, loaded.hasGoal)
+        assertEquals(original.isGroup, loaded.isGroup)
+        assertEquals(original.groupId, loaded.groupId)
         assertNotNull(loaded.id)
         assertEquals(original.id, loaded.id)
 
