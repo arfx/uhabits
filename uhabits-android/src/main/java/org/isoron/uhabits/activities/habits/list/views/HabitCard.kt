@@ -97,13 +97,11 @@ class HabitCardView(
                 setColor(c)
             }
         }
-        checkmarkPanel.visibility = if (r.isGroup || r.isNumerical) View.GONE else View.VISIBLE
+        // Keep the original checkmark strip visible for groups, but route its
+        // interactions to group insights instead of changing group repetitions.
+        checkmarkPanel.visibility = if (r.isNumerical) View.GONE else View.VISIBLE
         numberPanel.visibility = if (!r.isGroup && r.isNumerical) View.VISIBLE else View.GONE
-        groupInsightsButton.visibility = if (r.isGroup) View.VISIBLE else View.GONE
-        groupInsightsButton.layoutParams = LinearLayout.LayoutParams(
-            resources.getDimensionPixelSize(R.dimen.checkmarkWidth) * newState.buttonCount,
-            MATCH_PARENT
-        )
+        groupInsightsButton.visibility = View.GONE
         checkmarkPanel.setState(CheckmarkPanelState(r.checkmarks, c, r.notes, newState.buttonCount))
         numberPanel.setState(
             NumberPanelState(
@@ -177,10 +175,14 @@ class HabitCardView(
                 }
             }
             onEdit = { date ->
-                triggerRipple(date)
-                val location = getAbsoluteButtonLocation(date)
-                state?.record?.id?.let { habitId ->
-                    controller.onEdit(habitId, date, location.x, location.y)
+                if (state?.record?.isGroup == true) {
+                    state?.record?.id?.let(controller::onGroupInsights)
+                } else {
+                    triggerRipple(date)
+                    val location = getAbsoluteButtonLocation(date)
+                    state?.record?.id?.let { habitId ->
+                        controller.onEdit(habitId, date, location.x, location.y)
+                    }
                 }
             }
         }
@@ -220,7 +222,6 @@ class HabitCardView(
             addView(label)
             addView(checkmarkPanel)
             addView(numberPanel)
-            addView(groupInsightsButton)
 
             setOnTouchListener { v, event ->
                 v.background.setHotspot(event.x, event.y)
