@@ -48,10 +48,16 @@ object ListHabitsPresenter {
         view.primaryOrder = primaryOrder
         view.secondaryOrder = secondaryOrder
 
+        val visibleIds = view.mapNotNull { it.id }.toSet()
+        val allGroupIds = allHabits.filter { it.isGroup }.mapNotNull { it.id }.toSet()
         val today = getToday()
         val dateFrom = today.minus(checkmarkCount - 1)
         val items = mutableListOf<HabitCardState>()
         for (habit in view) {
+            if (habit.groupId != null &&
+                habit.groupId in allGroupIds &&
+                habit.groupId !in visibleIds
+            ) continue
             val id = habit.id ?: continue
             val score = habit.scores[today].value
             val entries = habit.computedEntries.getByInterval(dateFrom, today)
