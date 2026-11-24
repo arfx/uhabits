@@ -34,8 +34,8 @@ object HabitEntryConverter {
     }
 
     /**
-     * Converts positive numerical entries to checks and records their former value and unit
-     * in the entry notes. Zero values remain unchecked and do not create a note.
+     * Converts positive numerical entries to checks and appends their former value and unit
+     * to existing notes, separated by " - ". Zero values remain unchecked without extra text.
      */
     fun numericalToBoolean(entries: List<Entry>, unit: String): List<Entry> =
         entries.map { entry ->
@@ -50,9 +50,8 @@ object HabitEntryConverter {
                 val valueWithUnit = listOf(formerValue, unit.trim())
                     .filter { it.isNotEmpty() }
                     .joinToString(" ")
-                listOf(entry.notes.trim(), valueWithUnit)
-                    .filter { it.isNotEmpty() }
-                    .joinToString("\n")
+                if (entry.notes.isEmpty()) valueWithUnit
+                else "${entry.notes} - $valueWithUnit"
             } else {
                 entry.notes
             }
