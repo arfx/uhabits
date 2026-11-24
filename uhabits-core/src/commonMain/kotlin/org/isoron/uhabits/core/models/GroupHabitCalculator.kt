@@ -4,11 +4,11 @@
  * This file is part of Loop Habit Tracker.
  *
  * Loop Habit Tracker is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at your
  * option) any later version.
  *
- * Loop Habit Tracker is distributed in the hope that it will be useful, but
+ * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
  * more details.
@@ -41,8 +41,7 @@ object GroupHabitCalculator {
                         if (child.hasGoal) {
                             entry.completed
                         } else if (child.isNumerical) {
-                            entry.value > 0 && entry.value != Entry.UNKNOWN &&
-                                entry.value != Entry.SKIP
+                            entry.value != Entry.UNKNOWN && entry.value != Entry.SKIP
                         } else {
                             entry.value == Entry.YES_MANUAL
                         }
