@@ -95,9 +95,11 @@ object DatabaseUtils {
     }
 
     /**
-     * Creates an export-only copy that can be imported by the current main branch.
-     * The live database remains at DATABASE_VERSION (27); only the copy's
-     * user_version is lowered to 26. Main ignores the additional has_goal column.
+     * Creates an export-only copy that can be imported by the Play Store version
+     * Loop 2.3.1 (DATABASE_VERSION 25). The live database remains at
+     * DATABASE_VERSION (27); only the copy's user_version is lowered to 25.
+     * Newer columns such as category and has_goal remain in the file and are
+     * ignored by the older importer's known-field query.
      */
     private fun createMainCompatibleDatabaseCopy(context: Context): File {
         val source = getDatabaseFile(context)
@@ -109,7 +111,7 @@ object DatabaseUtils {
                 null,
                 SQLiteDatabase.OPEN_READWRITE
             ).use { exportedDatabase ->
-                exportedDatabase.version = 26
+                exportedDatabase.version = 25
             }
             return copy
         } catch (error: Exception) {
