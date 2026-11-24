@@ -99,5 +99,20 @@ object GroupHabitCalculator {
         group.unit = ""
         group.targetValue = 0.0
         group.recompute()
+        if (group.groupGoalEnabled) {
+            val today = getToday()
+            val to = today.plus(30)
+            var from = group.computedEntries.getKnown().lastOrNull()?.date ?: today
+            if (from.isNewerThan(to)) from = to
+            group.scores.recompute(
+                frequency = group.frequency,
+                isNumerical = false,
+                numericalHabitType = group.targetType,
+                targetValue = group.targetValue,
+                computedEntries = group.computedEntries,
+                from = from,
+                to = to
+            )
+        }
     }
 }
