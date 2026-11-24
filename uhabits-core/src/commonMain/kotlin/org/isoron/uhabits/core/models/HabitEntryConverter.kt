@@ -45,7 +45,7 @@ object HabitEntryConverter {
                 entry.value > 0 -> Entry.YES_MANUAL
                 else -> Entry.NO
             }
-            val notes = if (entry.value > 0) {
+            val notes = if (entry.value > 0 && entry.value != Entry.SKIP) {
                 val formerValue = formatNumericalValue(entry.value)
                 val valueWithUnit = listOf(formerValue, unit.trim())
                     .filter { it.isNotEmpty() }
