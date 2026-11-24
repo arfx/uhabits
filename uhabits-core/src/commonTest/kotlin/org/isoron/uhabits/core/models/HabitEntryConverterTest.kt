@@ -73,7 +73,7 @@ class HabitEntryConverterTest {
 
         assertEquals(
             listOf(
-                Entry(LocalDate(2026, 1, 1), Entry.YES_MANUAL, "morning\n2,5 km"),
+                Entry(LocalDate(2026, 1, 1), Entry.YES_MANUAL, "morning - 2,5 km"),
                 Entry(LocalDate(2026, 1, 2), Entry.YES_MANUAL, "3 km"),
                 Entry(LocalDate(2026, 1, 3), Entry.NO, "zero note"),
                 Entry(LocalDate(2026, 1, 4), Entry.NO, "negative"),
