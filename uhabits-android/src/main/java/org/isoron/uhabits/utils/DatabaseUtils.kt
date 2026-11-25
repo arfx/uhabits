@@ -98,8 +98,8 @@ object DatabaseUtils {
      * Creates an export-only copy that can be imported by the Play Store version
      * Loop 2.3.1 (DATABASE_VERSION 25). The live database remains at
      * DATABASE_VERSION (29); only the copy's user_version is lowered to 25.
-     * Newer columns such as category, has_goal, is_group, group_id and group_goal_enabled remain in the file and are
-     * ignored by the older importer's known-field query.
+     * Group rows and their derived repetitions are moved into side tables before export.
+     * Loop 2.3.1 ignores those additional tables and imports only ordinary habits.
      */
     private fun createMainCompatibleDatabaseCopy(context: Context): File {
         val source = getDatabaseFile(context)
