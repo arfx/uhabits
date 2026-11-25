@@ -26,6 +26,7 @@ import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.uhabits.core.models.PaletteColor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -101,6 +102,8 @@ class HabitsCSVExporterTest : BaseUnitTest() {
         group.name = "Reading and Stretching"
         group.isGroup = true
         group.groupGoalEnabled = true
+        group.groupGoalType = GroupGoalType.AT_LEAST
+        group.groupGoalThreshold = 2
         group.frequency = Frequency(2, 7)
         group.color = PaletteColor(4)
         habitList.add(group)
@@ -125,8 +128,8 @@ class HabitsCSVExporterTest : BaseUnitTest() {
         assertTrue(!scoresCsv.contains("Reading and Stretching"))
         assertTrue(groupsJson.contains("\"name\": \"Reading and Stretching\""))
         assertTrue(groupsJson.contains("\"groupGoalEnabled\": true"))
-        assertTrue(groupsJson.contains("\"groupGoalType\": 0"))
-        assertTrue(groupsJson.contains("\"groupGoalThreshold\": 1"))
+        assertTrue(groupsJson.contains("\"groupGoalType\": 2"))
+        assertTrue(groupsJson.contains("\"groupGoalThreshold\": 2"))
         assertTrue(groupsJson.contains("\"frequencyNumerator\": 2"))
         assertTrue(groupsJson.contains("\"frequencyDenominator\": 7"))
         assertTrue(groupsJson.contains("\"uuid\": \"${reading.uuid}\""))
