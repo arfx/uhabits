@@ -227,6 +227,30 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
     }
 
     @Test
+    fun testDerivedStateCanBeRestoredFromStoredGroupHistory() {
+        val today = getToday()
+        val weekStart = today.startOfWeek(getFirstWeekday())
+        val group = modelFactory.buildHabit().apply {
+            id = 109L
+            isGroup = true
+            hasGoal = false
+            groupGoalEnabled = true
+            frequency = Frequency(3, 7)
+            originalEntries.add(Entry(weekStart, Entry.YES_MANUAL))
+            originalEntries.add(Entry(weekStart.plus(1), Entry.YES_MANUAL))
+            originalEntries.add(Entry(weekStart.plus(2), Entry.YES_MANUAL))
+        }
+
+        // Simulate a freshly loaded group: only its original history is stored.
+        GroupHabitCalculator.recomputeDerivedState(group)
+
+        assertEquals(false, group.hasGoal)
+        assertTrue(group.scores.get(today).value > 0.0)
+        assertTrue(group.computedEntries.getKnown().any { it.value == Entry.YES_AUTO })
+        assertTrue(group.streaks.getBest(5).isNotEmpty())
+    }
+
+    @Test
     fun testContributingColorsOnlyIncludesSuccessfulChildren() {
         val today = getToday()
         val group = modelFactory.buildHabit().apply {
