@@ -149,6 +149,7 @@ class HabitCardView(
             text = "●"
             textSize = 11f
             gravity = Gravity.CENTER
+            includeFontPadding = false
             visibility = View.GONE
         }
         scoreRingContainer = FrameLayout(context).apply {
