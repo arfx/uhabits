@@ -133,6 +133,24 @@ class LoopDBImporter(
         ) { it.getInt(0) } ?: 0
         if (hasGroupBackup == 0) return
 
+        // Read the backup metadata completely before changing the destination
+        // HabitList. Keeping a cursor open while issuing nested queries on the
+        // same SQLiteDatabase is fragile on Android and can interrupt iteration.
+        data class GroupBackupData(
+            val uuid: String,
+            val name: String,
+            val description: String,
+            val question: String,
+            val freqNum: Int,
+            val freqDen: Int,
+            val color: Int,
+            val archived: Boolean,
+            val category: String,
+            val hasGoal: Boolean,
+            val groupGoalEnabled: Boolean
+        )
+
+        val groups = mutableListOf<GroupBackupData>()
         db.query(
             """SELECT uuid, name, description, question, freq_num, freq_den,
                       color, position, archived, type, target_value, target_type,
@@ -140,39 +158,65 @@ class LoopDBImporter(
                FROM GroupBackup ORDER BY position"""
         ) { stmt ->
             val uuid = stmt.getTextOrNull(0) ?: return@query
-            val group = habitList.getByUUID(uuid) ?: modelFactory.buildHabit()
-            group.uuid = uuid
-            group.name = stmt.getText(1)
-            group.description = stmt.getText(2)
-            group.question = stmt.getText(3)
-            group.frequency = Frequency(stmt.getInt(4), stmt.getInt(5))
-            group.color = PaletteColor(stmt.getInt(6))
-            group.isArchived = stmt.getInt(8) != 0
+            groups.add(
+                GroupBackupData(
+                    uuid = uuid,
+                    name = stmt.getText(1),
+                    description = stmt.getText(2),
+                    question = stmt.getText(3),
+                    freqNum = stmt.getInt(4),
+                    freqDen = stmt.getInt(5),
+                    color = stmt.getInt(6),
+                    archived = stmt.getInt(8) != 0,
+                    category = stmt.getText(13),
+                    hasGoal = stmt.getInt(14) != 0,
+                    groupGoalEnabled = stmt.getInt(15) != 0
+                )
+            )
+        }
+
+        val membersByGroup = mutableMapOf<String, MutableList<String>>()
+        db.query(
+            """SELECT group_uuid, habit_uuid FROM GroupBackupMembers
+               ORDER BY group_uuid, position"""
+        ) { stmt ->
+            val groupUuid = stmt.getTextOrNull(0) ?: return@query
+            val habitUuid = stmt.getTextOrNull(1) ?: return@query
+            membersByGroup.getOrPut(groupUuid) { mutableListOf() }.add(habitUuid)
+        }
+
+        for (backupGroup in groups) {
+            val group = habitList.getByUUID(backupGroup.uuid) ?: modelFactory.buildHabit()
+            group.uuid = backupGroup.uuid
+            group.name = backupGroup.name
+            group.description = backupGroup.description
+            group.question = backupGroup.question
+            group.frequency = Frequency(backupGroup.freqNum, backupGroup.freqDen)
+            group.color = PaletteColor(backupGroup.color)
+            group.isArchived = backupGroup.archived
             group.type = HabitType.YES_NO
             group.targetValue = 0.0
             group.unit = ""
-            group.category = stmt.getText(13)
-            group.hasGoal = stmt.getInt(14) != 0
+            group.category = backupGroup.category
+            group.hasGoal = backupGroup.hasGoal
             group.isGroup = true
             group.groupId = null
-            group.groupGoalEnabled = stmt.getInt(15) != 0
+            group.groupGoalEnabled = backupGroup.groupGoalEnabled
 
             if (group.id == null) habitList.add(group) else habitList.update(listOf(group))
 
+            // Remove stale links before applying the membership from this backup.
             habitList.filter { it.groupId == group.id && !it.isGroup }.forEach { oldChild ->
                 oldChild.groupId = null
                 habitList.update(listOf(oldChild))
             }
-            db.query(
-                """SELECT habit_uuid FROM GroupBackupMembers
-                   WHERE group_uuid = ? ORDER BY position""",
-                uuid
-            ) { member ->
-                val childUuid = member.getTextOrNull(0) ?: return@query
-                val child = habitList.getByUUID(childUuid) ?: return@query
+
+            for (childUuid in membersByGroup[backupGroup.uuid].orEmpty()) {
+                val child = habitList.getByUUID(childUuid) ?: continue
                 child.groupId = group.id
                 habitList.update(listOf(child))
             }
+
             val children = habitList.filter { it.groupId == group.id && !it.isGroup }
             GroupHabitCalculator.recompute(group, children)
             habitList.update(listOf(group))
