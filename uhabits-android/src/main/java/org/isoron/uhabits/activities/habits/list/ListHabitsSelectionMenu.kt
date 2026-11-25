@@ -247,6 +247,15 @@ class ListHabitsSelectionMenu(
                     activity.showMessage(activity.getString(R.string.group_habit_name_required))
                     return@setPositiveButton
                 }
+                val requestedThreshold = thresholdInput.text.toString().toIntOrNull()
+                if (groupGoalType == GroupGoalType.AT_LEAST &&
+                    (requestedThreshold == null || requestedThreshold !in 1..children.size)
+                ) {
+                    activity.showMessage(
+                        activity.getString(R.string.group_goal_threshold_invalid, children.size)
+                    )
+                    return@setPositiveButton
+                }
                 val group = modelFactory.buildHabit().apply {
                     this.name = name
                     this.color = children.first().color
@@ -255,7 +264,7 @@ class ListHabitsSelectionMenu(
                     this.hasGoal = false
                     this.groupGoalEnabled = goalSwitch.isChecked
                     this.groupGoalType = groupGoalType
-                    this.groupGoalThreshold = thresholdInput.text.toString().toIntOrNull()?.coerceIn(1, children.size) ?: 1
+                    this.groupGoalThreshold = if (groupGoalType == GroupGoalType.AT_LEAST) requestedThreshold!! else 1
                     this.frequency = Frequency(numerator, denominator)
                 }
                 commandRunner.run(
