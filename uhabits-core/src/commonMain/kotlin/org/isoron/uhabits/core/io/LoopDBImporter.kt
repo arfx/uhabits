@@ -24,6 +24,7 @@ import org.isoron.platform.io.DatabaseOpener
 import org.isoron.platform.io.FileOpener
 import org.isoron.platform.io.UserFile
 import org.isoron.platform.io.getVersion
+import org.isoron.platform.io.setVersion
 import org.isoron.platform.io.migrateTo
 import org.isoron.platform.io.query
 import org.isoron.platform.io.querySingle
@@ -80,6 +81,7 @@ class LoopDBImporter(
 
     override suspend fun importHabitsFromFile(file: UserFile) {
         val db = opener.open(file.pathString)
+        reconcileSchemaVersion(db)
         db.migrateTo(DATABASE_VERSION) { version ->
             val filename = org.isoron.platform.io.format("%02d.sql", version)
             fileOpener.openResourceFile("migrations/$filename").lines().joinToString("\n")
@@ -121,6 +123,25 @@ class LoopDBImporter(
         restoreGroups(db)
         habitList.resort()
         db.close()
+    }
+
+    /**
+     * Some backups are created from a newer schema but retain an older
+     * PRAGMA user_version. Reconcile the known post-v25 columns before
+     * running migrations, otherwise ALTER TABLE fails with duplicate columns.
+     */
+    private fun reconcileSchemaVersion(db: Database) {
+        val columns = mutableSetOf<String>()
+        db.query("PRAGMA table_info(Habits)") { stmt ->
+            columns.add(stmt.getText(1))
+        }
+
+        if (db.getVersion() < 26 && "category" in columns) db.setVersion(26)
+        if (db.getVersion() < 27 && "has_goal" in columns) db.setVersion(27)
+        if (db.getVersion() < 28 && "is_group" in columns && "group_id" in columns) {
+            db.setVersion(28)
+        }
+        if (db.getVersion() < 29 && "group_goal_enabled" in columns) db.setVersion(29)
     }
 
     /**
