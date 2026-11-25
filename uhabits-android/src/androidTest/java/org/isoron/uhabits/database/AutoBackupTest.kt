@@ -26,6 +26,7 @@ import org.isoron.uhabits.AndroidDirFinder
 import org.isoron.uhabits.BaseAndroidTest
 import org.isoron.uhabits.core.commands.CreateGroupHabitCommand
 import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.utils.DatabaseUtils
 import kotlinx.coroutines.runBlocking
@@ -56,6 +57,8 @@ class AutoBackupTest : BaseAndroidTest() {
             name = "Reading group"
             isGroup = true
             groupGoalEnabled = true
+            groupGoalType = GroupGoalType.AT_LEAST
+            groupGoalThreshold = 2
             frequency = Frequency(2, 7)
             color = PaletteColor(4)
         }
@@ -77,6 +80,11 @@ class AutoBackupTest : BaseAndroidTest() {
             backup.rawQuery("SELECT COUNT(*) FROM GroupBackup", null).use {
                 assertTrue(it.moveToFirst())
                 assertEquals(1, it.getInt(0))
+            }
+            backup.rawQuery("SELECT group_goal_type, group_goal_threshold FROM GroupBackup", null).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(GroupGoalType.AT_LEAST.value, it.getInt(0))
+                assertEquals(2, it.getInt(1))
             }
             backup.rawQuery("SELECT COUNT(*) FROM GroupBackupMembers", null).use {
                 assertTrue(it.moveToFirst())
@@ -143,6 +151,8 @@ class AutoBackupTest : BaseAndroidTest() {
         assertEquals(PaletteColor(4), restoredGroup.color)
         assertTrue(restoredGroup.isGroup)
         assertTrue(restoredGroup.groupGoalEnabled)
+        assertEquals(GroupGoalType.AT_LEAST, restoredGroup.groupGoalType)
+        assertEquals(2, restoredGroup.groupGoalThreshold)
 
         val restoredFirst = habitList.getByUUID("backup-test-reading")
         val restoredSecond = habitList.getByUUID("backup-test-evening")
