@@ -29,7 +29,9 @@ data class HabitData(
     var hasGoal: Int = 1,
     var isGroup: Int = 0,
     var groupId: Long? = null,
-    var groupGoalEnabled: Int = 0
+    var groupGoalEnabled: Int = 0,
+    var groupGoalType: Int = 0,
+    var groupGoalThreshold: Int = 1
 )
 
 class HabitRepository(private val db: Database) {
@@ -37,7 +39,7 @@ class HabitRepository(private val db: Database) {
         db.prepareStatement(
             """SELECT id, name, description, question, freq_num, freq_den, color,
                position, reminder_hour, reminder_min, reminder_days, highlight,
-               archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled
+               archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled, group_goal_type, group_goal_threshold
                FROM Habits ORDER BY position"""
         )
     }
@@ -46,8 +48,8 @@ class HabitRepository(private val db: Database) {
         db.prepareStatement(
             """INSERT INTO Habits(name, description, question, freq_num, freq_den,
                color, position, reminder_hour, reminder_min, reminder_days,
-               highlight, archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+               highlight, archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled, group_goal_type, group_goal_threshold)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         )
     }
 
@@ -65,7 +67,7 @@ class HabitRepository(private val db: Database) {
             """UPDATE Habits SET name=?, description=?, question=?, freq_num=?,
                freq_den=?, color=?, position=?, reminder_hour=?, reminder_min=?,
                reminder_days=?, highlight=?, archived=?, type=?, target_value=?,
-               target_type=?, unit=?, uuid=?, category=?, has_goal=?, is_group=?, group_id=?, group_goal_enabled=? WHERE id=?"""
+               target_type=?, unit=?, uuid=?, category=?, has_goal=?, is_group=?, group_id=?, group_goal_enabled=?, group_goal_type=?, group_goal_threshold=? WHERE id=?"""
         )
     }
 
@@ -137,6 +139,8 @@ class HabitRepository(private val db: Database) {
         stmt.bindInt(20 + o, data.isGroup)
         if (data.groupId != null) stmt.bindLong(21 + o, data.groupId!!) else stmt.bindNull(21 + o)
         stmt.bindInt(22 + o, data.groupGoalEnabled)
+        stmt.bindInt(23 + o, data.groupGoalType)
+        stmt.bindInt(24 + o, data.groupGoalThreshold)
     }
 
     private fun readRow(stmt: PreparedStatement): HabitData {
@@ -163,7 +167,9 @@ class HabitRepository(private val db: Database) {
             hasGoal = stmt.getInt(19),
             isGroup = stmt.getInt(20),
             groupId = stmt.getLongOrNull(21),
-            groupGoalEnabled = stmt.getInt(22)
+            groupGoalEnabled = stmt.getInt(22),
+            groupGoalType = stmt.getInt(23),
+            groupGoalThreshold = stmt.getInt(24)
         )
     }
 }
