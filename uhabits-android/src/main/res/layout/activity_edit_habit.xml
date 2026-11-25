@@ -169,6 +169,25 @@
                 </LinearLayout>
             </FrameLayout>
 
+            <FrameLayout
+                android:id="@+id/groupRuleOuterBox"
+                style="@style/FormOuterBox"
+                android:visibility="gone">
+                <LinearLayout style="@style/FormInnerBox">
+                    <TextView style="@style/FormLabel" android:text="@string/group_goal_rule" />
+                    <TextView
+                        style="@style/FormDropdown"
+                        android:id="@+id/groupRulePicker" />
+                    <EditText
+                        android:id="@+id/groupGoalThresholdInput"
+                        style="@style/FormInput"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:hint="@string/group_goal_threshold_hint"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </FrameLayout>
+
             <!-- Frequency -->
             <FrameLayout
                 android:id="@+id/frequencyOuterBox"
