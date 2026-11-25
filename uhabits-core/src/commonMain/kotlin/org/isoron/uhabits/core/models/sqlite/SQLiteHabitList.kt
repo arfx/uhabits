@@ -264,6 +264,7 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
                 freqNum = numerator,
                 freqDen = denominator,
                 color = habit.color.paletteIndex,
+                customColor = habit.color.customColor,
                 position = habit.position,
                 reminderHour = habit.reminder?.hour,
                 reminderMin = habit.reminder?.minute,
@@ -291,7 +292,7 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
             habit.description = data.description
             habit.question = data.question
             habit.frequency = Frequency(data.freqNum, data.freqDen)
-            habit.color = PaletteColor(data.color)
+            habit.color = PaletteColor(data.color, data.customColor)
             habit.isArchived = data.archived != 0
             habit.type = HabitType.fromInt(data.type)
             habit.targetType = NumericalHabitType.fromInt(data.targetType)

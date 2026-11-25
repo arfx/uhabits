@@ -31,7 +31,8 @@ data class HabitData(
     var groupId: Long? = null,
     var groupGoalEnabled: Int = 0,
     var groupGoalType: Int = 0,
-    var groupGoalThreshold: Int = 1
+    var groupGoalThreshold: Int = 1,
+    var customColor: Int? = null
 )
 
 class HabitRepository(private val db: Database) {
@@ -39,7 +40,8 @@ class HabitRepository(private val db: Database) {
         db.prepareStatement(
             """SELECT id, name, description, question, freq_num, freq_den, color,
                position, reminder_hour, reminder_min, reminder_days, highlight,
-               archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled, group_goal_type, group_goal_threshold
+               archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled, group_goal_type, group_goal_threshold,
+               (SELECT color FROM HabitCustomColors WHERE habit_uuid = Habits.uuid) AS custom_color
                FROM Habits ORDER BY position"""
         )
     }
@@ -90,12 +92,15 @@ class HabitRepository(private val db: Database) {
             insertWithIdStmt.bindLong(1, data.id!!)
             bindForInsert(insertWithIdStmt, data, offset = 1)
             insertWithIdStmt.step()
+            saveCustomColor(data)
             return data.id!!
         }
         insertStmt.reset()
         bindForInsert(insertStmt, data)
         insertStmt.step()
-        return db.queryLong("SELECT last_insert_rowid()")
+        val id = db.queryLong("SELECT last_insert_rowid()")
+        saveCustomColor(data)
+        return id
     }
 
     fun update(data: HabitData) {
@@ -103,12 +108,20 @@ class HabitRepository(private val db: Database) {
         bindForInsert(updateStmt, data)
         updateStmt.bindLong(25, data.id!!)
         updateStmt.step()
+        saveCustomColor(data)
     }
 
     fun delete(id: Long) {
         deleteStmt.reset()
         deleteStmt.bindLong(1, id)
         deleteStmt.step()
+        db.run("DELETE FROM HabitCustomColors WHERE habit_uuid = (SELECT uuid FROM Habits WHERE id = ?)") { bindLong(1, id) }
+    }
+
+    private fun saveCustomColor(data: HabitData) {
+        val uuid = data.uuid ?: return
+        if (data.customColor == null) db.run("DELETE FROM HabitCustomColors WHERE habit_uuid = '$uuid'")
+        else db.run("INSERT OR REPLACE INTO HabitCustomColors(habit_uuid, color) VALUES ('$uuid', ${data.customColor})")
     }
 
     fun execSQL(sql: String) = db.run(sql)
@@ -169,7 +182,8 @@ class HabitRepository(private val db: Database) {
             groupId = stmt.getLongOrNull(21),
             groupGoalEnabled = stmt.getInt(22),
             groupGoalType = stmt.getInt(23),
-            groupGoalThreshold = stmt.getInt(24)
+            groupGoalThreshold = stmt.getInt(24),
+            customColor = stmt.getIntOrNull(25)
         )
     }
 }
