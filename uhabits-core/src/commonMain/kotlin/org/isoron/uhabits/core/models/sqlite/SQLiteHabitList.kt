@@ -25,6 +25,7 @@ import org.isoron.uhabits.core.database.HabitRepository
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.GroupHabitCalculator
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.HabitMatcher
 import org.isoron.uhabits.core.models.HabitType
@@ -278,7 +279,9 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
                 hasGoal = if (habit.hasGoal) 1 else 0,
                 isGroup = if (habit.isGroup) 1 else 0,
                 groupId = habit.groupId,
-                groupGoalEnabled = if (habit.groupGoalEnabled) 1 else 0
+                groupGoalEnabled = if (habit.groupGoalEnabled) 1 else 0,
+                groupGoalType = habit.groupGoalType.value,
+                groupGoalThreshold = habit.groupGoalThreshold
             )
         }
 
@@ -301,6 +304,8 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
             habit.isGroup = data.isGroup != 0
             habit.groupId = data.groupId
             habit.groupGoalEnabled = data.groupGoalEnabled != 0
+            habit.groupGoalType = GroupGoalType.fromInt(data.groupGoalType)
+            habit.groupGoalThreshold = data.groupGoalThreshold.coerceAtLeast(1)
             if (data.reminderHour != null && data.reminderMin != null) {
                 habit.reminder = Reminder(
                     data.reminderHour!!,
