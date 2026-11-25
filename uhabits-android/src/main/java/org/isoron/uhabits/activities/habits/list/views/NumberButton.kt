@@ -90,7 +90,7 @@ class NumberButtonView(
 
     override fun onClick(v: View) {
         val newValue = if (state.value >= 0.0) state.value + 1.0 else 1.0
-        state = state.copy(value = newValue, completed = true)
+        state = state.copy(value = newValue)
         invalidate()
         onIncrement(newValue, state.notes)
         performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
