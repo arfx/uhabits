@@ -27,6 +27,9 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.RelativeSizeSpan
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -77,7 +80,7 @@ class HabitCardView(
         val r = newState.record
         val c = getActiveColor(r)
         label.apply {
-            text = when {
+            val labelText = when {
                 r.isGroup && r.groupGoalEnabled && r.isExpanded -> "▾  ${r.name}  (${r.groupGoalProgress}/${r.groupGoalTarget})"
                 r.isGroup && r.groupGoalEnabled -> "▸  ${r.name}  (${r.groupGoalProgress}/${r.groupGoalTarget})"
                 r.isGroup && r.isExpanded -> "▾  ${r.name}"
@@ -85,10 +88,18 @@ class HabitCardView(
                 r.isGroupChild -> "    ${r.name}"
                 else -> r.name
             }
+            text = if (r.isGroup) {
+                SpannableString(labelText).apply {
+                    setSpan(RelativeSizeSpan(1.5f), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+            } else {
+                labelText
+            }
             setTextColor(c)
         }
         scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE
-        noGoalMarker.visibility = if (r.hasGoal) View.GONE else View.VISIBLE
+        // Groups use their expand/collapse arrow as the state indicator.
+        noGoalMarker.visibility = if (r.isGroup || r.hasGoal) View.GONE else View.VISIBLE
         noGoalMarker.setTextColor(c)
         if (r.hasGoal) {
             scoreRing.apply {
