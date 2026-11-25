@@ -158,7 +158,7 @@ object DatabaseUtils {
                               AND groups.uuid IS NOT NULL
                               AND habits.uuid IS NOT NULL"""
                     )
-                    exportedDatabase.execSQL("DELETE FROM Habits WHERE is_group = 1")
+                    exportedDatabase.execSQL(\n                        "DELETE FROM Repetitions WHERE habit IN (SELECT id FROM Habits WHERE is_group = 1)"\n                    )\n                    exportedDatabase.execSQL("DELETE FROM Habits WHERE is_group = 1")
                     exportedDatabase.version = 25
                     exportedDatabase.setTransactionSuccessful()
                 } finally {
