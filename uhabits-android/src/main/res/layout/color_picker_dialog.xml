@@ -34,12 +34,31 @@
             android:layout_gravity="center"
             android:gravity="center" />
 
-        <com.android.colorpicker.ColorPickerPalette
-            android:id="@+id/color_picker"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <com.android.colorpicker.ColorPickerPalette
+                android:id="@+id/color_picker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:visibility="gone" />
+
+            <View
+                android:id="@+id/custom_color_picker_button"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="4dp"
+                android:contentDescription="Choose custom color"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone" />
+        </LinearLayout>
     </FrameLayout>
 </ScrollView>
