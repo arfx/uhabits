@@ -528,6 +528,16 @@ class EditHabitActivity : AppCompatActivity() {
         updateGoalControls()
     }
 
+    private fun updateGoalControls() {
+        val isNumerical = habitType == HabitType.NUMERICAL
+        binding.frequencyOuterBox.visibility =
+            if (!isNumerical && hasGoal) View.VISIBLE else View.GONE
+        binding.targetOuterBox.visibility =
+            if (isNumerical && hasGoal) View.VISIBLE else View.GONE
+        binding.targetTypeOuterBox.visibility =
+            if (isNumerical && hasGoal) View.VISIBLE else View.GONE
+    }
+
     private fun showHabitTypePicker() {
         val options = arrayOf(getString(R.string.yes_or_no), getString(R.string.measurable))
         AlertDialog.Builder(this)
