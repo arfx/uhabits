@@ -32,6 +32,10 @@ import org.isoron.uhabits.core.AppScope
 import org.isoron.uhabits.core.DATABASE_VERSION
 import org.isoron.uhabits.core.commands.CommandRunner
 import org.isoron.uhabits.core.commands.CreateHabitCommand
+import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.GroupHabitCalculator
+import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.commands.EditHabitCommand
 import org.isoron.uhabits.core.database.HabitData
 import org.isoron.uhabits.core.models.Entry
@@ -114,8 +118,63 @@ class LoopDBImporter(
             }
             habit.recompute()
         }
+        restoreGroups(db)
         habitList.resort()
         db.close()
+    }
+
+    /**
+     * Restores group metadata from backups created by this fork. Older Loop
+     * versions simply ignore these additional tables and import ordinary habits.
+     */
+    private fun restoreGroups(db: Database) {
+        val hasGroupBackup = db.querySingle(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='GroupBackup'"
+        ) { it.getInt(0) } ?: 0
+        if (hasGroupBackup == 0) return
+
+        db.query(
+            """SELECT uuid, name, description, question, freq_num, freq_den,
+                      color, position, archived, type, target_value, target_type,
+                      unit, category, has_goal, group_goal_enabled
+               FROM GroupBackup ORDER BY position"""
+        ) { stmt ->
+            val uuid = stmt.getTextOrNull(0) ?: return@query
+            val group = habitList.getByUUID(uuid) ?: modelFactory.buildHabit()
+            group.uuid = uuid
+            group.name = stmt.getText(1)
+            group.description = stmt.getText(2)
+            group.question = stmt.getText(3)
+            group.frequency = Frequency(stmt.getInt(4), stmt.getInt(5))
+            group.color = PaletteColor(stmt.getInt(6))
+            group.isArchived = stmt.getInt(8) != 0
+            group.type = HabitType.YES_NO
+            group.targetValue = 0.0
+            group.unit = ""
+            group.category = stmt.getText(13)
+            group.hasGoal = stmt.getInt(14) != 0
+            group.isGroup = true
+            group.groupId = null
+            group.groupGoalEnabled = stmt.getInt(15) != 0
+
+            if (group.id == null) habitList.add(group) else habitList.update(listOf(group))
+
+            val childIds = mutableListOf<Long>()
+            db.query(
+                """SELECT habit_uuid FROM GroupBackupMembers
+                   WHERE group_uuid = ? ORDER BY position""",
+                uuid
+            ) { member ->
+                val childUuid = member.getTextOrNull(0) ?: return@query
+                val child = habitList.getByUUID(childUuid) ?: return@query
+                child.groupId = group.id
+                child.id?.let { childIds.add(it) }
+                habitList.update(listOf(child))
+            }
+            val children = habitList.filter { it.groupId == group.id && !it.isGroup }
+            GroupHabitCalculator.recompute(group, children)
+            habitList.update(listOf(group))
+        }
     }
 
     private fun loadHabits(db: Database): List<HabitData> {
