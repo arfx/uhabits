@@ -19,6 +19,7 @@
 package org.isoron.uhabits.activities.common.dialogs
 
 import com.android.colorpicker.ColorPickerDialog
+import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.ui.callbacks.OnColorPickedCallback
 import org.isoron.uhabits.utils.toPaletteColor
 
