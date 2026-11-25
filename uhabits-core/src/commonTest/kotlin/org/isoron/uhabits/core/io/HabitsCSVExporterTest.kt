@@ -125,6 +125,8 @@ class HabitsCSVExporterTest : BaseUnitTest() {
         assertTrue(!scoresCsv.contains("Reading and Stretching"))
         assertTrue(groupsJson.contains("\"name\": \"Reading and Stretching\""))
         assertTrue(groupsJson.contains("\"groupGoalEnabled\": true"))
+        assertTrue(groupsJson.contains("\"groupGoalType\": 0"))
+        assertTrue(groupsJson.contains("\"groupGoalThreshold\": 1"))
         assertTrue(groupsJson.contains("\"frequencyNumerator\": 2"))
         assertTrue(groupsJson.contains("\"frequencyDenominator\": 7"))
         assertTrue(groupsJson.contains("\"uuid\": \"${reading.uuid}\""))
