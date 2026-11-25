@@ -61,4 +61,4 @@ testing and an explicit review.
 ## License
 
 This fork retains the upstream project's license. See
-[LICENSE](LICENSE) and the [upstream repository](https://github.com/iSoron/uhabits).
+[LICENSE.txt](LICENSE.txt) and the [upstream repository](https://github.com/iSoron/uhabits).
