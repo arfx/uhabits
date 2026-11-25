@@ -165,7 +165,7 @@ public class ColorPickerPalette extends TableLayout {
             }
         });
         TableRow.LayoutParams params = new TableRow.LayoutParams(
-                LayoutParams.MATCH_PARENT,
+                mNumColumns * (mSwatchLength + 2 * mMarginSize) - 2 * mMarginSize,
                 mSwatchLength
         );
         params.setMargins(mMarginSize, mMarginSize, mMarginSize, mMarginSize);
