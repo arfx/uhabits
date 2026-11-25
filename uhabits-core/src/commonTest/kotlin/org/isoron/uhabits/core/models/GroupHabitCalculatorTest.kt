@@ -63,6 +63,54 @@ class GroupHabitCalculatorTest : BaseUnitTest() {
     }
 
     @Test
+    fun testAndRuleRequiresEveryMemberOnTheSameDate() {
+        val today = getToday()
+        val group = modelFactory.buildHabit().apply {
+            id = 110L
+            isGroup = true
+            groupGoalType = GroupGoalType.AND
+        }
+        val first = modelFactory.buildHabit().apply {
+            groupId = group.id
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
+            recompute()
+        }
+        val second = modelFactory.buildHabit().apply {
+            groupId = group.id
+            originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
+            recompute()
+        }
+
+        GroupHabitCalculator.recompute(group, listOf(first, second))
+
+        assertEquals(listOf(today.minus(1)), group.originalEntries.getKnown().map { it.date })
+    }
+
+    @Test
+    fun testAtLeastRuleRequiresConfiguredNumberOfMembers() {
+        val today = getToday()
+        val group = modelFactory.buildHabit().apply {
+            id = 111L
+            isGroup = true
+            groupGoalType = GroupGoalType.AT_LEAST
+            groupGoalThreshold = 2
+        }
+        val children = (1..3).map {
+            modelFactory.buildHabit().apply {
+                groupId = group.id
+                if (it <= 2) originalEntries.add(Entry(today, Entry.YES_MANUAL))
+                if (it <= 1) originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
+                recompute()
+            }
+        }
+
+        GroupHabitCalculator.recompute(group, children)
+
+        assertEquals(listOf(today), group.originalEntries.getKnown().map { it.date })
+    }
+
+    @Test
     fun testWeeklyBooleanGoalOnlyContributesActualCompletionDates() {
         val today = getToday()
         val group = modelFactory.buildHabit().apply {
