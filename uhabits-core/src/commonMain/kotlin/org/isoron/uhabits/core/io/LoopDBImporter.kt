@@ -143,6 +143,8 @@ class LoopDBImporter(
         }
         if (db.getVersion() < 29 && "group_goal_enabled" in columns) db.setVersion(29)
         if (db.getVersion() < 30 && "group_goal_type" in columns && "group_goal_threshold" in columns) db.setVersion(30)
+        val hasCustomColors = db.querySingle("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='HabitCustomColors'") { it.getInt(0) } ?: 0
+        if (db.getVersion() < 31 && hasCustomColors > 0) db.setVersion(31)
     }
 
     /**
@@ -265,6 +267,12 @@ class LoopDBImporter(
 
     private fun loadHabits(db: Database): List<HabitData> {
         val result = mutableListOf<HabitData>()
+        val customColors = mutableMapOf<String, Int>()
+        val hasCustomColors = db.querySingle("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='HabitCustomColors'") { it.getInt(0) } ?: 0
+        if (hasCustomColors > 0) db.query("SELECT habit_uuid, color FROM HabitCustomColors") { stmt ->
+            val uuid = stmt.getTextOrNull(0) ?: return@query
+            customColors[uuid] = stmt.getInt(1)
+        }
         db.query(
             "SELECT id, name, description, question, freq_num, freq_den, color, " +
                 "position, reminder_hour, reminder_min, reminder_days, highlight, " +
@@ -292,7 +300,8 @@ class LoopDBImporter(
                     unit = stmt.getTextOrNull(16) ?: "",
                     uuid = stmt.getTextOrNull(17),
                     category = stmt.getText(18),
-                    hasGoal = stmt.getInt(19)
+                    hasGoal = stmt.getInt(19),
+                    customColor = customColors[stmt.getTextOrNull(17)]
                 )
             )
         }

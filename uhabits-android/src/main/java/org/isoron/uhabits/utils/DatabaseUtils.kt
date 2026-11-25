@@ -97,8 +97,10 @@ object DatabaseUtils {
     /**
      * Creates an export-only copy that can be imported by the Play Store version
      * Loop 2.3.1 (DATABASE_VERSION 25). The live database remains at
-     * DATABASE_VERSION (30); only the copy's user_version is lowered to 25.
+     * DATABASE_VERSION (31); only the copy's user_version is lowered to 25.
      * Group rows and their derived repetitions are moved into side tables before export.
+     * Custom colors are preserved in HabitCustomColors by habit UUID. Loop 2.3.1 ignores
+     * this extra table and reads the valid fallback palette index from Habits.color.
      * Loop 2.3.1 ignores those additional tables and imports only ordinary habits.
      */
     private fun createMainCompatibleDatabaseCopy(context: Context): File {

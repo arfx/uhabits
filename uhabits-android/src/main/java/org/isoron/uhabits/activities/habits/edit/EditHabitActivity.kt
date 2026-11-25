@@ -29,6 +29,10 @@ import android.text.Spanned
 import android.text.format.DateFormat
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.TextView
+import android.graphics.Color as AndroidColor
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -84,6 +88,7 @@ class EditHabitActivity : AppCompatActivity() {
     var unit = ""
     var color = PaletteColor(11)
     var androidColor = 0
+    private var customColorValue: Int? = null
     var freqNum = 1
     var freqDen = 1
     var reminderHour = -1
@@ -121,6 +126,7 @@ class EditHabitActivity : AppCompatActivity() {
             groupGoalThreshold = habit.groupGoalThreshold
             goalFrequencyConfigured = hasGoal
             color = habit.color
+            customColorValue = habit.color.customColor
             freqNum = habit.frequency.numerator
             freqDen = habit.frequency.denominator
             targetType = habit.targetType
@@ -142,7 +148,8 @@ class EditHabitActivity : AppCompatActivity() {
         if (state != null) {
             habitId = state.getLong("habitId")
             habitType = HabitType.fromInt(state.getInt("habitType"))
-            color = PaletteColor(state.getInt("paletteColor"))
+            color = PaletteColor(state.getInt("paletteColor"), state.getInt("customColor", Int.MIN_VALUE).takeIf { it != Int.MIN_VALUE })
+            customColorValue = color.customColor
             freqNum = state.getInt("freqNum")
             freqDen = state.getInt("freqDen")
             reminderHour = state.getInt("reminderHour")
@@ -194,8 +201,12 @@ class EditHabitActivity : AppCompatActivity() {
         binding.colorButton.setOnClickListener {
             val picker = colorPickerDialogFactory.create(color, themeSwitcher.currentTheme)
             picker.setListener { paletteColor ->
-                this.color = paletteColor
-                updateColors()
+                if (paletteColor.paletteIndex == PaletteColor.CUSTOM_PICKER_INDEX) showCustomColorPicker()
+                else {
+                    this.color = paletteColor
+                    customColorValue = null
+                    updateColors()
+                }
             }
             picker.dismissCurrentAndShow(supportFragmentManager, "colorPicker")
         }
@@ -324,7 +335,7 @@ class EditHabitActivity : AppCompatActivity() {
         habit.question = binding.questionInput.text.trim().toString()
         habit.description = binding.notesInput.text.trim().toString()
         habit.category = binding.categoryInput.text.trim().toString()
-        habit.color = color
+        habit.color = customColorValue?.let { PaletteColor.custom(it) } ?: color
         if (reminderHour >= 0) {
             habit.reminder = Reminder(reminderHour, reminderMin, reminderDays)
         } else {
@@ -610,8 +621,51 @@ class EditHabitActivity : AppCompatActivity() {
         populateTargetType()
     }
 
+    private fun showCustomColorPicker() {
+        val hsv = FloatArray(3)
+        AndroidColor.colorToHSV(customColorValue ?: AndroidColor.RED, hsv)
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 12, 32, 0)
+        }
+        val preview = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (48 * resources.displayMetrics.density).toInt()
+            )
+            setBackgroundColor(AndroidColor.HSVToColor(hsv))
+        }
+        container.addView(preview)
+        listOf("Hue", "Saturation", "Brightness").forEachIndexed { index, label ->
+            container.addView(TextView(this).apply { text = label })
+            container.addView(SeekBar(this).apply {
+                max = if (index == 0) 360 else 100
+                progress = (hsv[index] * max).toInt()
+                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
+                        hsv[index] = progress.toFloat() / (if (index == 0) 360f else 100f)
+                        preview.setBackgroundColor(AndroidColor.HSVToColor(hsv))
+                    }
+                    override fun onStartTrackingTouch(bar: SeekBar?) {}
+                    override fun onStopTrackingTouch(bar: SeekBar?) {}
+                })
+            })
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.color)
+            .setView(container)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                customColorValue = AndroidColor.HSVToColor(hsv)
+                color = PaletteColor.custom(customColorValue!!)
+                updateColors()
+            }
+            .show()
+    }
+
     private fun updateColors() {
-        androidColor = themeSwitcher.currentTheme.color(color).toInt()
+        val displayColor = customColorValue?.let { PaletteColor.custom(it) } ?: color
+        androidColor = themeSwitcher.currentTheme.color(displayColor).toInt()
         binding.colorButton.backgroundTintList = ColorStateList.valueOf(androidColor)
         if (!themeSwitcher.isNightMode) {
             window.statusBarColor = androidColor
@@ -630,6 +684,7 @@ class EditHabitActivity : AppCompatActivity() {
             putLong("habitId", habitId)
             putInt("habitType", habitType.value)
             putInt("paletteColor", color.paletteIndex)
+            putInt("customColor", customColorValue ?: Int.MIN_VALUE)
             putInt("androidColor", androidColor)
             putInt("freqNum", freqNum)
             putInt("freqDen", freqDen)
