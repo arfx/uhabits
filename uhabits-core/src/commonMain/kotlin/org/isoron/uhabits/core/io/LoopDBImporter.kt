@@ -174,13 +174,25 @@ class LoopDBImporter(
             val groupGoalThreshold: Int
         )
 
+        val groupBackupColumns = mutableSetOf<String>()
+        db.query("PRAGMA table_info(GroupBackup)") { stmt ->
+            groupBackupColumns.add(stmt.getText(1))
+        }
+        val hasRuleColumns = "group_goal_type" in groupBackupColumns &&
+            "group_goal_threshold" in groupBackupColumns
         val groups = mutableListOf<GroupBackupData>()
-        db.query(
+        val groupSelect = if (hasRuleColumns) {
             """SELECT uuid, name, description, question, freq_num, freq_den,
                       color, position, archived, type, target_value, target_type,
                       unit, category, has_goal, group_goal_enabled, group_goal_type, group_goal_threshold
                FROM GroupBackup ORDER BY position"""
-        ) { stmt ->
+        } else {
+            """SELECT uuid, name, description, question, freq_num, freq_den,
+                      color, position, archived, type, target_value, target_type,
+                      unit, category, has_goal, group_goal_enabled
+               FROM GroupBackup ORDER BY position"""
+        }
+        db.query(groupSelect) { stmt ->
             val uuid = stmt.getTextOrNull(0) ?: return@query
             groups.add(
                 GroupBackupData(
@@ -195,8 +207,8 @@ class LoopDBImporter(
                     category = stmt.getText(13),
                     hasGoal = stmt.getInt(14) != 0,
                     groupGoalEnabled = stmt.getInt(15) != 0,
-                    groupGoalType = stmt.getInt(16),
-                    groupGoalThreshold = stmt.getInt(17)
+                    groupGoalType = if (hasRuleColumns) stmt.getInt(16) else 0,
+                    groupGoalThreshold = if (hasRuleColumns) stmt.getInt(17) else 1
                 )
             )
         }
