@@ -50,7 +50,7 @@ class WidgetUpdater(
 
     override fun onCommandFinished(command: Command) {
         if (command is CreateRepetitionCommand) {
-            updateWidgets(command.habit.id)
+            updateWidgets(command.habit.id, command.habit.groupId)
         } else {
             updateWidgets()
         }
@@ -79,17 +79,30 @@ class WidgetUpdater(
     }
 
     fun updateWidgets(modifiedHabitId: Long?) {
+        updateWidgets(modifiedHabitId, null)
+    }
+
+    /**
+     * Updates widgets showing the changed habit or its parent group.
+     * Group widgets store the group ID, while repetition commands refer to
+     * the child habit that was changed.
+     */
+    fun updateWidgets(modifiedHabitId: Long?, parentGroupId: Long?) {
         taskRunner.execute {
-            updateWidgets(modifiedHabitId, CheckmarkWidgetProvider::class.java)
-            updateWidgets(modifiedHabitId, HistoryWidgetProvider::class.java)
-            updateWidgets(modifiedHabitId, ScoreWidgetProvider::class.java)
-            updateWidgets(modifiedHabitId, StreakWidgetProvider::class.java)
-            updateWidgets(modifiedHabitId, FrequencyWidgetProvider::class.java)
-            updateWidgets(modifiedHabitId, TargetWidgetProvider::class.java)
+            updateWidgets(modifiedHabitId, parentGroupId, CheckmarkWidgetProvider::class.java)
+            updateWidgets(modifiedHabitId, parentGroupId, HistoryWidgetProvider::class.java)
+            updateWidgets(modifiedHabitId, parentGroupId, ScoreWidgetProvider::class.java)
+            updateWidgets(modifiedHabitId, parentGroupId, StreakWidgetProvider::class.java)
+            updateWidgets(modifiedHabitId, parentGroupId, FrequencyWidgetProvider::class.java)
+            updateWidgets(modifiedHabitId, parentGroupId, TargetWidgetProvider::class.java)
         }
     }
 
-    private fun updateWidgets(modifiedHabitId: Long?, providerClass: Class<*>) {
+    private fun updateWidgets(
+        modifiedHabitId: Long?,
+        parentGroupId: Long?,
+        providerClass: Class<*>
+    ) {
         val widgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(
             ComponentName(context, providerClass)
         )
@@ -97,7 +110,9 @@ class WidgetUpdater(
         val modifiedWidgetIds = when (modifiedHabitId) {
             null -> widgetIds.toList()
             else -> widgetIds.filter { w ->
-                widgetPrefs.getHabitIdsFromWidgetId(w).contains(modifiedHabitId)
+                val selectedHabitIds = widgetPrefs.getHabitIdsFromWidgetId(w)
+                selectedHabitIds.contains(modifiedHabitId) ||
+                    (parentGroupId != null && selectedHabitIds.contains(parentGroupId))
             }
         }
 
