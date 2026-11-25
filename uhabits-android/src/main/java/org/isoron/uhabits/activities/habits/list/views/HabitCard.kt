@@ -93,6 +93,10 @@ class HabitCardView(
             else -> "●"
         }
         noGoalMarker.textSize = if (r.isGroup) 27.5f else 11f
+        // The triangle glyph sits optically below the text baseline even when
+        // its TextView is geometrically centered. Nudge group arrows slightly
+        // upward so they align with the group title on Android.
+        noGoalMarker.translationY = if (r.isGroup) -dp(2f) else 0f
         noGoalMarker.setTextColor(c)
         if (r.hasGoal) {
             scoreRing.apply {
