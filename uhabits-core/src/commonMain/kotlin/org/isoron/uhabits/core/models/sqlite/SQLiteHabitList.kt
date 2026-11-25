@@ -24,6 +24,7 @@ import org.isoron.uhabits.core.database.HabitData
 import org.isoron.uhabits.core.database.HabitRepository
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.HabitMatcher
 import org.isoron.uhabits.core.models.HabitType
@@ -56,6 +57,11 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
             (h.originalEntries as SQLiteEntryList).habitId = h.id
             list.add(h)
         }
+
+        // Computed entries, scores and streaks are in-memory data. Restore
+        // them for groups from their persisted aggregate history on startup.
+        list.filter { it.isGroup }.forEach { GroupHabitCalculator.recomputeDerivedState(it) }
+
         if (shouldRebuildOrder) rebuildOrder()
     }
 
