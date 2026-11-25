@@ -19,6 +19,7 @@
 package org.isoron.uhabits.core.commands
 
 import org.isoron.uhabits.core.models.GroupHabitCalculator
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.ModelFactory
@@ -41,6 +42,11 @@ data class CreateGroupHabitCommand(
             habitList.getById(id) ?: throw IllegalArgumentException("Habit $id does not exist")
         }
         require(children.none { it.isGroup }) { "Group Habits cannot contain other groups" }
+        if (model.groupGoalType == GroupGoalType.AT_LEAST) {
+            require(model.groupGoalThreshold in 1..children.size) {
+                "Group goal threshold must be between 1 and the number of members"
+            }
+        }
 
         val affectedGroupIds = children.mapNotNull { it.groupId }.toSet()
         val group = modelFactory.buildHabit()
