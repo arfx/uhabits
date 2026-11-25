@@ -236,6 +236,12 @@
     <string name="group_habit_create_title">Gruppe erstellen</string>
     <string name="group_habit_name_hint">Gruppenname</string>
     <string name="group_habit_goal_enabled">Gruppenziel festlegen</string>
+    <string name="group_goal_rule">Gruppenregel</string>
+    <string name="group_goal_rule_or">OR – mindestens ein Mitglied</string>
+    <string name="group_goal_rule_and">AND – alle Mitglieder</string>
+    <string name="group_goal_rule_at_least">N aus M – Mindestanzahl</string>
+    <string name="group_goal_threshold_hint">Benötigte erfolgreiche Mitglieder</string>
+    <string name="group_goal_threshold_invalid">Bitte eine Zahl zwischen 1 und %1$d eingeben.</string>
     <string name="group_habit_weekly_goal">%1$d Tage pro Woche</string>
     <string name="group_habit_choose_frequency">Zielfrequenz ändern</string>
     <string name="group_habit_name_required">Bitte einen Gruppennamen eingeben</string>
