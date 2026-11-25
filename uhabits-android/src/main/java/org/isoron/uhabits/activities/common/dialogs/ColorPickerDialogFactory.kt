@@ -38,7 +38,7 @@ class ColorPickerDialogFactory(@param:ActivityContext private val context: Conte
         val androidColor = theme.color(color).toInt()
         dialog.initialize(
             R.string.color_picker_default_title,
-            res.getPalette() + intArrayOf(android.graphics.Color.MAGENTA),
+            res.getPalette(),
             androidColor,
             4,
             SIZE_SMALL
