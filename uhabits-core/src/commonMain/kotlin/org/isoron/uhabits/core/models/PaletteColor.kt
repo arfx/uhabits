@@ -25,7 +25,10 @@ data class PaletteColor(val paletteIndex: Int, val customColor: Int? = null) {
         fun custom(argb: Int) = PaletteColor(19, argb)
     }
     fun toCsvColor(): String {
-        customColor?.let { val hex = (it and 0xFFFFFF).toString(16).uppercase().padStart(6, '0'); return "#$hex" }
+        customColor?.let {
+            val hex = (it and 0xFFFFFF).toString(16).uppercase().padStart(6, '0')
+            return "#$hex"
+        }
         return arrayOf(
             "#D32F2F", //  0 red
             "#E64A19", //  1 deep orange
