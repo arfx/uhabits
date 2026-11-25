@@ -48,6 +48,7 @@ import org.isoron.uhabits.core.commands.EditHabitCommand
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.uhabits.core.models.HabitEntryConverter
 import org.isoron.uhabits.core.models.NumericalHabitType
 import org.isoron.uhabits.core.models.PaletteColor
@@ -92,6 +93,8 @@ class EditHabitActivity : AppCompatActivity() {
     var hasGoal = true
     var goalFrequencyConfigured = true
     private var isEditingGroup = false
+    private var groupGoalType = GroupGoalType.OR
+    private var groupGoalThreshold = 1
     private var conversionYesValue: Int? = null
 
     override fun onCreate(state: Bundle?) {
@@ -114,6 +117,8 @@ class EditHabitActivity : AppCompatActivity() {
             habitType = habit.type
             isEditingGroup = habit.isGroup
             hasGoal = if (isEditingGroup) habit.groupGoalEnabled else habit.hasGoal
+            groupGoalType = habit.groupGoalType
+            groupGoalThreshold = habit.groupGoalThreshold
             goalFrequencyConfigured = hasGoal
             color = habit.color
             freqNum = habit.frequency.numerator
@@ -145,6 +150,8 @@ class EditHabitActivity : AppCompatActivity() {
             reminderDays = WeekdayList(state.getInt("reminderDays"))
             hasGoal = state.getBoolean("hasGoal", true)
             goalFrequencyConfigured = state.getBoolean("goalFrequencyConfigured", hasGoal)
+            groupGoalType = GroupGoalType.fromInt(state.getInt("groupGoalType", GroupGoalType.OR.value))
+            groupGoalThreshold = state.getInt("groupGoalThreshold", 1)
             conversionYesValue = state.getInt("conversionYesValue", Int.MIN_VALUE).takeIf { it != Int.MIN_VALUE }
             targetType = NumericalHabitType.fromInt(state.getInt("targetType", NumericalHabitType.AT_LEAST.value))
         }
@@ -158,6 +165,10 @@ class EditHabitActivity : AppCompatActivity() {
         binding.habitTypePicker.setOnClickListener { showHabitTypePicker() }
 
         if (isEditingGroup) {
+            binding.groupRuleOuterBox.visibility = View.VISIBLE
+            binding.groupGoalThresholdInput.setText(groupGoalThreshold.toString())
+            populateGroupGoalRule()
+            binding.groupRulePicker.setOnClickListener { showGroupGoalRulePicker() }
             binding.goalEnabledSwitch.text = getString(R.string.group_habit_goal_enabled)
         }
         binding.goalEnabledSwitch.isChecked = hasGoal
@@ -325,6 +336,8 @@ class EditHabitActivity : AppCompatActivity() {
             habit.isGroup = true
             habit.hasGoal = false
             habit.groupGoalEnabled = hasGoal
+            habit.groupGoalType = groupGoalType
+            habit.groupGoalThreshold = groupGoalThreshold
         } else {
             habit.hasGoal = hasGoal
         }
@@ -375,6 +388,17 @@ class EditHabitActivity : AppCompatActivity() {
     }
 
     private fun validate(): Boolean {
+        if (isEditingGroup && groupGoalType == GroupGoalType.AT_LEAST) {
+            val threshold = binding.groupGoalThresholdInput.text.toString().toIntOrNull()
+            val memberCount = (application as HabitsApplication).component.habitList.count {
+                !it.isGroup && it.groupId == habitId
+            }
+            if (threshold == null || threshold < 1 || threshold > memberCount) {
+                binding.groupGoalThresholdInput.error = getString(R.string.group_goal_threshold_invalid, memberCount)
+                return false
+            }
+            groupGoalThreshold = threshold
+        }
         var isValid = true
         if (binding.nameInput.text.isEmpty()) {
             binding.nameInput.error = getFormattedValidationError(R.string.validation_cannot_be_blank)
@@ -407,6 +431,36 @@ class EditHabitActivity : AppCompatActivity() {
         .replace(',', '.')
         .toDoubleOrNull()
         ?.takeIf { it.isFinite() }
+
+    private fun populateGroupGoalRule() {
+        binding.groupRulePicker.text = when (groupGoalType) {
+            GroupGoalType.OR -> getString(R.string.group_goal_rule_or)
+            GroupGoalType.AND -> getString(R.string.group_goal_rule_and)
+            GroupGoalType.AT_LEAST -> getString(R.string.group_goal_rule_at_least)
+        }
+        binding.groupGoalThresholdInput.visibility =
+            if (groupGoalType == GroupGoalType.AT_LEAST) View.VISIBLE else View.GONE
+    }
+
+    private fun showGroupGoalRulePicker() {
+        val labels = arrayOf(
+            getString(R.string.group_goal_rule_or),
+            getString(R.string.group_goal_rule_and),
+            getString(R.string.group_goal_rule_at_least)
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.group_goal_rule)
+            .setItems(labels) { dialog, which ->
+                groupGoalType = when (which) {
+                    1 -> GroupGoalType.AND
+                    2 -> GroupGoalType.AT_LEAST
+                    else -> GroupGoalType.OR
+                }
+                populateGroupGoalRule()
+                dialog.dismiss()
+            }
+            .show()
+    }
 
     private fun populateReminder() {
         if (reminderHour < 0) {
@@ -583,6 +637,8 @@ class EditHabitActivity : AppCompatActivity() {
             putInt("reminderMin", reminderMin)
             putInt("reminderDays", reminderDays.toInteger())
             putBoolean("hasGoal", hasGoal)
+            putInt("groupGoalType", groupGoalType.value)
+            putInt("groupGoalThreshold", groupGoalThreshold)
             putBoolean("goalFrequencyConfigured", goalFrequencyConfigured)
             putInt("conversionYesValue", conversionYesValue ?: Int.MIN_VALUE)
             putInt("targetType", targetType.value)
