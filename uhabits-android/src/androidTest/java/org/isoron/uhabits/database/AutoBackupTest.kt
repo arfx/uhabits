@@ -19,6 +19,7 @@
 
 package org.isoron.uhabits.database
 
+import org.isoron.platform.io.UserFile
 import org.isoron.platform.time.DateUtils
 import android.database.sqlite.SQLiteDatabase
 import org.isoron.uhabits.AndroidDirFinder
@@ -27,6 +28,7 @@ import org.isoron.uhabits.core.commands.CreateGroupHabitCommand
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.utils.DatabaseUtils
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import java.io.File
 import java.io.FileOutputStream
@@ -92,6 +94,62 @@ class AutoBackupTest : BaseAndroidTest() {
                 assertEquals(1, it.getInt(0))
             }
         }
+    }
+
+    @Test
+    fun testGroupDataIsRestoredFromBackup() = runBlocking {
+        val first = fixtures.createEmptyHabit().apply {
+            name = "Morning reading"
+            uuid = "backup-test-reading"
+        }
+        val second = fixtures.createShortHabit().apply {
+            name = "Evening reading"
+            uuid = "backup-test-evening"
+        }
+        habitList.update(listOf(first, second))
+
+        val group = modelFactory.buildHabit().apply {
+            name = "Reading group"
+            description = "Backup restore test"
+            question = "Did I read?"
+            uuid = "backup-test-group"
+            isGroup = true
+            groupGoalEnabled = true
+            frequency = Frequency(2, 7)
+            color = PaletteColor(4)
+        }
+        CreateGroupHabitCommand(
+            modelFactory,
+            habitList,
+            group,
+            listOf(first.id!!, second.id!!)
+        ).run()
+
+        val basedir = AndroidDirFinder(targetContext).getFilesDir("Backups")!!
+        val backupPath = DatabaseUtils.saveDatabaseCopy(targetContext, basedir)
+
+        // Simulate restoring onto a clean installation.
+        fixtures.purgeHabits(habitList)
+        val backupFile = UserFile(backupPath)
+        assertTrue(component.parent.genericImporter.canHandle(backupFile))
+        component.parent.genericImporter.importHabitsFromFile(backupFile)
+
+        val restoredGroup = habitList.getByUUID("backup-test-group")
+        assertNotNull("Group should be restored", restoredGroup)
+        assertEquals("Reading group", restoredGroup!!.name)
+        assertEquals("Backup restore test", restoredGroup.description)
+        assertEquals("Did I read?", restoredGroup.question)
+        assertEquals(Frequency(2, 7), restoredGroup.frequency)
+        assertEquals(PaletteColor(4), restoredGroup.color)
+        assertTrue(restoredGroup.isGroup)
+        assertTrue(restoredGroup.groupGoalEnabled)
+
+        val restoredFirst = habitList.getByUUID("backup-test-reading")
+        val restoredSecond = habitList.getByUUID("backup-test-evening")
+        assertNotNull("First member should be restored", restoredFirst)
+        assertNotNull("Second member should be restored", restoredSecond)
+        assertEquals(restoredGroup.id, restoredFirst!!.groupId)
+        assertEquals(restoredGroup.id, restoredSecond!!.groupId)
     }
 
     @Test
