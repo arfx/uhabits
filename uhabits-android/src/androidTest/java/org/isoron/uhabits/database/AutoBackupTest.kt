@@ -123,6 +123,8 @@ class AutoBackupTest : BaseAndroidTest() {
             uuid = "backup-test-group"
             isGroup = true
             groupGoalEnabled = true
+            groupGoalType = GroupGoalType.AT_LEAST
+            groupGoalThreshold = 2
             frequency = Frequency(2, 7)
             color = PaletteColor(4)
         }
