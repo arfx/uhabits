@@ -7,6 +7,6 @@ enum class GroupGoalType(val value: Int) {
 
     companion object {
         fun fromInt(value: Int): GroupGoalType =
-            entries.firstOrNull { it.value == value } ?: OR
+            values().firstOrNull { it.value == value } ?: OR
     }
 }
