@@ -4,9 +4,9 @@
  * This file is part of Loop Habit Tracker.
  *
  * Loop Habit Tracker is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
- * option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Loop Habit Tracker is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -528,16 +528,6 @@ class EditHabitActivity : AppCompatActivity() {
         updateGoalControls()
     }
 
-    private fun updateGoalControls() {
-        val isNumerical = habitType == HabitType.NUMERICAL
-        binding.frequencyOuterBox.visibility =
-            if (!isNumerical && hasGoal) View.VISIBLE else View.GONE
-        binding.targetOuterBox.visibility =
-            if (isNumerical && hasGoal) View.VISIBLE else View.GONE
-        binding.targetTypeOuterBox.visibility =
-            if (isNumerical && hasGoal) View.VISIBLE else View.GONE
-    }
-
     private fun showHabitTypePicker() {
         val options = arrayOf(getString(R.string.yes_or_no), getString(R.string.measurable))
         AlertDialog.Builder(this)
@@ -640,10 +630,10 @@ class EditHabitActivity : AppCompatActivity() {
             container.addView(TextView(this).apply { text = label })
             container.addView(SeekBar(this).apply {
                 max = if (index == 0) 360 else 100
-                progress = (hsv[index] * max).toInt()
+                progress = if (index == 0) hsv[index].roundToInt() else (hsv[index] * 100).roundToInt()
                 setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
-                        hsv[index] = progress.toFloat() / (if (index == 0) 360f else 100f)
+                        hsv[index] = if (index == 0) progress.toFloat() else progress.toFloat() / 100f
                         preview.setBackgroundColor(AndroidColor.HSVToColor(hsv))
                     }
                     override fun onStartTrackingTouch(bar: SeekBar?) {}
