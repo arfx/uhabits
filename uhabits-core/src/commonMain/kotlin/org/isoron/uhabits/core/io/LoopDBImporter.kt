@@ -142,6 +142,7 @@ class LoopDBImporter(
             db.setVersion(28)
         }
         if (db.getVersion() < 29 && "group_goal_enabled" in columns) db.setVersion(29)
+        if (db.getVersion() < 30 && "group_goal_type" in columns && "group_goal_threshold" in columns) db.setVersion(30)
     }
 
     /**
@@ -168,14 +169,16 @@ class LoopDBImporter(
             val archived: Boolean,
             val category: String,
             val hasGoal: Boolean,
-            val groupGoalEnabled: Boolean
+            val groupGoalEnabled: Boolean,
+            val groupGoalType: Int,
+            val groupGoalThreshold: Int
         )
 
         val groups = mutableListOf<GroupBackupData>()
         db.query(
             """SELECT uuid, name, description, question, freq_num, freq_den,
                       color, position, archived, type, target_value, target_type,
-                      unit, category, has_goal, group_goal_enabled
+                      unit, category, has_goal, group_goal_enabled, group_goal_type, group_goal_threshold
                FROM GroupBackup ORDER BY position"""
         ) { stmt ->
             val uuid = stmt.getTextOrNull(0) ?: return@query
@@ -191,7 +194,9 @@ class LoopDBImporter(
                     archived = stmt.getInt(8) != 0,
                     category = stmt.getText(13),
                     hasGoal = stmt.getInt(14) != 0,
-                    groupGoalEnabled = stmt.getInt(15) != 0
+                    groupGoalEnabled = stmt.getInt(15) != 0,
+                    groupGoalType = stmt.getInt(16),
+                    groupGoalThreshold = stmt.getInt(17)
                 )
             )
         }
@@ -223,6 +228,8 @@ class LoopDBImporter(
             group.isGroup = true
             group.groupId = null
             group.groupGoalEnabled = backupGroup.groupGoalEnabled
+            group.groupGoalType = org.isoron.uhabits.core.models.GroupGoalType.fromInt(backupGroup.groupGoalType)
+            group.groupGoalThreshold = backupGroup.groupGoalThreshold.coerceAtLeast(1)
 
             if (group.id == null) habitList.add(group) else habitList.update(listOf(group))
 
