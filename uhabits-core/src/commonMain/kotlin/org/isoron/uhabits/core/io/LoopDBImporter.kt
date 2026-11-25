@@ -159,7 +159,10 @@ class LoopDBImporter(
 
             if (group.id == null) habitList.add(group) else habitList.update(listOf(group))
 
-            val childIds = mutableListOf<Long>()
+            habitList.filter { it.groupId == group.id && !it.isGroup }.forEach { oldChild ->
+                oldChild.groupId = null
+                habitList.update(listOf(oldChild))
+            }
             db.query(
                 """SELECT habit_uuid FROM GroupBackupMembers
                    WHERE group_uuid = ? ORDER BY position""",
@@ -168,7 +171,6 @@ class LoopDBImporter(
                 val childUuid = member.getTextOrNull(0) ?: return@query
                 val child = habitList.getByUUID(childUuid) ?: return@query
                 child.groupId = group.id
-                child.id?.let { childIds.add(it) }
                 habitList.update(listOf(child))
             }
             val children = habitList.filter { it.groupId == group.id && !it.isGroup }
