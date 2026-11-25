@@ -20,8 +20,13 @@
 package org.isoron.uhabits.database
 
 import org.isoron.platform.time.DateUtils
+import android.database.sqlite.SQLiteDatabase
 import org.isoron.uhabits.AndroidDirFinder
 import org.isoron.uhabits.BaseAndroidTest
+import org.isoron.uhabits.core.commands.CreateGroupHabitCommand
+import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.PaletteColor
+import org.isoron.uhabits.utils.DatabaseUtils
 import org.junit.Test
 import java.io.File
 import java.io.FileOutputStream
@@ -39,6 +44,54 @@ class AutoBackupTest : BaseAndroidTest() {
         for (k in 1..25) assertDoesNotExist("${basedir.path}/test-$k.txt")
         for (k in 26..30) assertExists("${basedir.path}/test-$k.txt")
         assertExists("${basedir.path}/Loop Habits Backup 1970-02-10 000000.db")
+    }
+
+    @Test
+    fun testGroupDataIsStoredSeparatelyInLegacyCompatibleBackup() {
+        val first = fixtures.createEmptyHabit()
+        val second = fixtures.createShortHabit()
+        val group = modelFactory.buildHabit().apply {
+            name = "Reading group"
+            isGroup = true
+            groupGoalEnabled = true
+            frequency = Frequency(2, 7)
+            color = PaletteColor(4)
+        }
+        CreateGroupHabitCommand(
+            modelFactory,
+            habitList,
+            group,
+            listOf(first.id!!, second.id!!)
+        ).run()
+
+        val basedir = AndroidDirFinder(targetContext).getFilesDir("Backups")!!
+        val backupPath = DatabaseUtils.saveDatabaseCopy(targetContext, basedir)
+        SQLiteDatabase.openDatabase(backupPath, null, SQLiteDatabase.OPEN_READONLY).use { backup ->
+            assertEquals(25, backup.version)
+            backup.rawQuery("SELECT COUNT(*) FROM Habits WHERE is_group = 1", null).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(0, it.getInt(0))
+            }
+            backup.rawQuery("SELECT COUNT(*) FROM GroupBackup", null).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(1, it.getInt(0))
+            }
+            backup.rawQuery("SELECT COUNT(*) FROM GroupBackupMembers", null).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(2, it.getInt(0))
+            }
+        }
+
+        SQLiteDatabase.openDatabase(
+            DatabaseUtils.getDatabaseFile(targetContext).absolutePath,
+            null,
+            SQLiteDatabase.OPEN_READONLY
+        ).use { live ->
+            live.rawQuery("SELECT COUNT(*) FROM Habits WHERE is_group = 1", null).use {
+                assertTrue(it.moveToFirst())
+                assertEquals(1, it.getInt(0))
+            }
+        }
     }
 
     @Test
