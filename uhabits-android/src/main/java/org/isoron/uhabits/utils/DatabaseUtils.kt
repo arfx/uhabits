@@ -111,7 +111,59 @@ object DatabaseUtils {
                 null,
                 SQLiteDatabase.OPEN_READWRITE
             ).use { exportedDatabase ->
-                exportedDatabase.version = 25
+                exportedDatabase.beginTransaction()
+                try {
+                    exportedDatabase.execSQL(
+                        """CREATE TABLE IF NOT EXISTS GroupBackup (
+                            uuid TEXT PRIMARY KEY,
+                            name TEXT NOT NULL,
+                            description TEXT NOT NULL,
+                            question TEXT NOT NULL,
+                            freq_num INTEGER NOT NULL,
+                            freq_den INTEGER NOT NULL,
+                            color INTEGER NOT NULL,
+                            position INTEGER NOT NULL,
+                            archived INTEGER NOT NULL,
+                            type INTEGER NOT NULL,
+                            target_value REAL NOT NULL,
+                            target_type INTEGER NOT NULL,
+                            unit TEXT NOT NULL,
+                            category TEXT NOT NULL,
+                            has_goal INTEGER NOT NULL,
+                            group_goal_enabled INTEGER NOT NULL
+                        )"""
+                    )
+                    exportedDatabase.execSQL(
+                        """CREATE TABLE IF NOT EXISTS GroupBackupMembers (
+                            group_uuid TEXT NOT NULL,
+                            habit_uuid TEXT NOT NULL,
+                            position INTEGER NOT NULL,
+                            PRIMARY KEY (group_uuid, habit_uuid)
+                        )"""
+                    )
+                    exportedDatabase.execSQL(
+                        """INSERT INTO GroupBackup
+                            SELECT uuid, name, description, question, freq_num, freq_den,
+                                   color, position, archived, type, target_value,
+                                   target_type, unit, category, has_goal, group_goal_enabled
+                            FROM Habits WHERE is_group = 1 AND uuid IS NOT NULL"""
+                    )
+                    exportedDatabase.execSQL(
+                        """INSERT INTO GroupBackupMembers
+                            SELECT groups.uuid, habits.uuid, habits.position
+                            FROM Habits habits
+                            INNER JOIN Habits groups ON habits.group_id = groups.id
+                            WHERE groups.is_group = 1
+                              AND habits.is_group = 0
+                              AND groups.uuid IS NOT NULL
+                              AND habits.uuid IS NOT NULL"""
+                    )
+                    exportedDatabase.execSQL("DELETE FROM Habits WHERE is_group = 1")
+                    exportedDatabase.version = 25
+                    exportedDatabase.setTransactionSuccessful()
+                } finally {
+                    exportedDatabase.endTransaction()
+                }
             }
             return copy
         } catch (error: Exception) {
