@@ -35,6 +35,7 @@ import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.uhabits.core.models.ModelFactory
 import org.isoron.uhabits.intents.IntentFactory
 import android.view.Menu
@@ -166,6 +167,36 @@ class ListHabitsSelectionMenu(
             text = activity.getString(R.string.group_habit_goal_enabled)
             isChecked = false
         }
+        var groupGoalType = GroupGoalType.OR
+        val groupRuleButton = android.widget.Button(activity).apply {
+            text = activity.getString(R.string.group_goal_rule_or)
+            setOnClickListener {
+                val labels = arrayOf(
+                    activity.getString(R.string.group_goal_rule_or),
+                    activity.getString(R.string.group_goal_rule_and),
+                    activity.getString(R.string.group_goal_rule_at_least)
+                )
+                AlertDialog.Builder(activity)
+                    .setTitle(R.string.group_goal_rule)
+                    .setItems(labels) { dialog, which ->
+                        groupGoalType = when (which) {
+                            1 -> GroupGoalType.AND
+                            2 -> GroupGoalType.AT_LEAST
+                            else -> GroupGoalType.OR
+                        }
+                        text = labels[which]
+                        thresholdInput.visibility = if (groupGoalType == GroupGoalType.AT_LEAST) android.view.View.VISIBLE else android.view.View.GONE
+                        dialog.dismiss()
+                    }
+                    .show()
+            }
+        }
+        val thresholdInput = EditText(activity).apply {
+            hint = activity.getString(R.string.group_goal_threshold_hint)
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText("1")
+            visibility = android.view.View.GONE
+        }
         val frequencyLabel = android.widget.TextView(activity).apply {
             text = formatFrequency(3, 7, activity.resources)
             setPadding(0, 12, 0, 12)
@@ -200,6 +231,8 @@ class ListHabitsSelectionMenu(
                 ViewGroup.LayoutParams.WRAP_CONTENT
             ))
             addView(goalSwitch)
+            addView(groupRuleButton)
+            addView(thresholdInput)
             addView(frequencyLabel)
             addView(frequencyButton)
         }
@@ -221,6 +254,8 @@ class ListHabitsSelectionMenu(
                     this.type = HabitType.YES_NO
                     this.hasGoal = false
                     this.groupGoalEnabled = goalSwitch.isChecked
+                    this.groupGoalType = groupGoalType
+                    this.groupGoalThreshold = thresholdInput.text.toString().toIntOrNull()?.coerceIn(1, children.size) ?: 1
                     this.frequency = Frequency(numerator, denominator)
                 }
                 commandRunner.run(
