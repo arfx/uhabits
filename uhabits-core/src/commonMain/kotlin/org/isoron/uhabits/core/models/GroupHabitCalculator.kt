@@ -98,11 +98,22 @@ object GroupHabitCalculator {
         group.unit = ""
         group.targetValue = 0.0
 
-        // A group with an enabled goal must use the same computed entries,
-        // score history and streak calculation as an ordinary boolean habit.
-        // Keep the persisted hasGoal flag false: group goals are stored separately.
+        recomputeDerivedState(group)
+    }
+
+    /**
+     * Rebuilds computed entries, scores and streaks from the group's stored
+     * aggregate history. This is needed after loading habits because these
+     * derived values are held in memory and are not persisted.
+     */
+    fun recomputeDerivedState(group: Habit) {
+        require(group.isGroup) { "Habit must be a Group Habit" }
+
+        // Group goals are stored separately from the ordinary hasGoal flag.
+        // Temporarily expose the effective goal while rebuilding derived data.
+        val storedHasGoal = group.hasGoal
         group.hasGoal = group.groupGoalEnabled
         group.recompute()
-        group.hasGoal = false
+        group.hasGoal = storedHasGoal
     }
 }
