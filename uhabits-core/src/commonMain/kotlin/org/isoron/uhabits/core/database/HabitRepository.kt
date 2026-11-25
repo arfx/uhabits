@@ -112,10 +112,10 @@ class HabitRepository(private val db: Database) {
     }
 
     fun delete(id: Long) {
+        db.run("DELETE FROM HabitCustomColors WHERE habit_uuid = (SELECT uuid FROM Habits WHERE id = ?)") { bindLong(1, id) }
         deleteStmt.reset()
         deleteStmt.bindLong(1, id)
         deleteStmt.step()
-        db.run("DELETE FROM HabitCustomColors WHERE habit_uuid = (SELECT uuid FROM Habits WHERE id = ?)") { bindLong(1, id) }
     }
 
     private fun saveCustomColor(data: HabitData) {
