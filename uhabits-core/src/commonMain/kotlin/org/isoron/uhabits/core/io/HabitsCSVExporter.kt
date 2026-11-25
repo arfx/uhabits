@@ -130,7 +130,7 @@ class HabitsCSVExporter(
     private fun writeMultipleHabitsScores(habits: List<Habit>): String {
         val sb = StringBuilder()
         writeMultipleHabitsHeader(sb, habits)
-        val timeframe = getTimeframe()
+        val timeframe = getTimeframe(habits)
         val oldest = timeframe[0]
         val newest = getToday()
         val scores = habits.map { habit ->
@@ -155,7 +155,7 @@ class HabitsCSVExporter(
 
     private fun writeMultipleHabitsCheckmarks(habits: List<Habit>): String {
         val sb = StringBuilder()
-        writeMultipleHabitsHeader(sb)
+        writeMultipleHabitsHeader(sb, habits)
         val timeframe = getTimeframe()
         val oldest = timeframe[0]
         val newest = getToday()
@@ -164,7 +164,7 @@ class HabitsCSVExporter(
         for (i in 0..days) {
             val date = newest.minus(i).toCSVString()
             sb.append(date).append(delimiter)
-            for (j in selectedHabits.indices) {
+            for (j in habits.indices) {
                 sb.append(checkmarks[j][i].formattedValue).append(delimiter)
             }
             sb.append("\n")
@@ -177,7 +177,7 @@ class HabitsCSVExporter(
         sb.append(csvLine(fields))
     }
 
-    private fun getTimeframe(): Array<LocalDate> {
+    private fun getTimeframe(habits: List<Habit>): Array<LocalDate> {
         var oldest = LocalDate(1000000)
         var newest = LocalDate(0)
         for (habit in habits) {
@@ -188,6 +188,7 @@ class HabitsCSVExporter(
             oldest = if (currOld.isOlderThan(oldest)) currOld else oldest
             newest = if (currNew.isNewerThan(newest)) currNew else newest
         }
+        if (oldest == LocalDate(1000000)) return arrayOf(getToday(), getToday())
         return arrayOf(oldest, newest)
     }
 }
