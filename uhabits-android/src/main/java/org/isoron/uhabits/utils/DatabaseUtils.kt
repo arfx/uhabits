@@ -97,7 +97,7 @@ object DatabaseUtils {
     /**
      * Creates an export-only copy that can be imported by the Play Store version
      * Loop 2.3.1 (DATABASE_VERSION 25). The live database remains at
-     * DATABASE_VERSION (29); only the copy's user_version is lowered to 25.
+     * DATABASE_VERSION (30); only the copy's user_version is lowered to 25.
      * Group rows and their derived repetitions are moved into side tables before export.
      * Loop 2.3.1 ignores those additional tables and imports only ordinary habits.
      */
@@ -130,7 +130,9 @@ object DatabaseUtils {
                             unit TEXT NOT NULL,
                             category TEXT NOT NULL,
                             has_goal INTEGER NOT NULL,
-                            group_goal_enabled INTEGER NOT NULL
+                            group_goal_enabled INTEGER NOT NULL,
+                            group_goal_type INTEGER NOT NULL DEFAULT 0,
+                            group_goal_threshold INTEGER NOT NULL DEFAULT 1
                         )"""
                     )
                     exportedDatabase.execSQL(
@@ -145,7 +147,8 @@ object DatabaseUtils {
                         """INSERT INTO GroupBackup
                             SELECT uuid, name, description, question, freq_num, freq_den,
                                    color, position, archived, type, target_value,
-                                   target_type, unit, category, has_goal, group_goal_enabled
+                                   target_type, unit, category, has_goal, group_goal_enabled,
+                                   group_goal_type, group_goal_threshold
                             FROM Habits WHERE is_group = 1 AND uuid IS NOT NULL"""
                     )
                     exportedDatabase.execSQL(
