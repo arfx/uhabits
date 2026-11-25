@@ -46,6 +46,8 @@ class NumberPanelView(
     private var dataOffset = 0
 
     var onEdit: (LocalDate) -> Unit = { _ -> }
+
+    var onIncrement: (LocalDate, Double, String) -> Unit = { _, _, _ -> }
         set(value) {
             field = value
             setupButtons()
@@ -92,6 +94,7 @@ class NumberPanelView(
                 )
             )
             button.onEdit = { onEdit(date) }
+            button.onIncrement = { value, notes -> onIncrement(date, value, notes) }
         }
     }
 }

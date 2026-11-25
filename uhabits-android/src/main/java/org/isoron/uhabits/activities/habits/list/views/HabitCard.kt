@@ -46,6 +46,7 @@ import org.isoron.uhabits.inject.ActivityContext
 import org.isoron.uhabits.utils.currentTheme
 import org.isoron.uhabits.utils.dp
 import org.isoron.uhabits.utils.sres
+import kotlin.math.roundToInt
 
 data class HabitCardViewState(
     val record: HabitCardState,
@@ -209,6 +210,20 @@ class HabitCardView(
                 val location = getAbsoluteButtonLocation(date)
                 state?.record?.id?.let { habitId ->
                     controller.onEdit(habitId, date, location.x, location.y)
+                }
+            }
+            onIncrement = { date, value, notes ->
+                triggerRipple(date)
+                val location = getAbsoluteButtonLocation(date)
+                state?.record?.id?.let { habitId ->
+                    controller.onToggle(
+                        habitId,
+                        date,
+                        (value * 1000).roundToInt(),
+                        notes,
+                        location.x,
+                        location.y
+                    )
                 }
             }
         }

@@ -25,6 +25,7 @@ import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.text.TextPaint
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
@@ -88,8 +89,14 @@ class NumberButtonView(
     }
 
     override fun onClick(v: View) {
-        onEdit()
+        val newValue = if (state.value >= 0.0) state.value + 1.0 else 1.0
+        state = state.copy(value = newValue, completed = true)
+        invalidate()
+        onIncrement(newValue, state.notes)
+        performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
     }
+
+    var onIncrement: (Double, String) -> Unit = { _, _ -> }
 
     override fun onLongClick(v: View): Boolean {
         onEdit()
