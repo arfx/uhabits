@@ -19,7 +19,6 @@
 package org.isoron.uhabits.core.models
 
 import org.isoron.platform.time.LocalDate
-import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.platform.time.getFirstWeekday
 import org.isoron.platform.time.getToday
 
@@ -81,6 +80,10 @@ object GroupHabitCalculator {
         require(children.none { it.isGroup }) { "Group Habits cannot contain other groups" }
         require(children.all { it.groupId == group.id }) {
             "All children must belong to the supplied group"
+        }
+
+        if (group.groupGoalType == GroupGoalType.AT_LEAST) {
+            group.groupGoalThreshold = group.groupGoalThreshold.coerceIn(1, children.size.coerceAtLeast(1))
         }
 
         val successesByDate = children
