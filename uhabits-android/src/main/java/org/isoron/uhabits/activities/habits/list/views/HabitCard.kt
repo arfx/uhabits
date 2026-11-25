@@ -27,9 +27,6 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
-import android.text.SpannableString
-import android.text.Spanned
-import android.text.style.RelativeSizeSpan
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -80,26 +77,22 @@ class HabitCardView(
         val r = newState.record
         val c = getActiveColor(r)
         label.apply {
-            val labelText = when {
-                r.isGroup && r.groupGoalEnabled && r.isExpanded -> "▾  ${r.name}  (${r.groupGoalProgress}/${r.groupGoalTarget})"
-                r.isGroup && r.groupGoalEnabled -> "▸  ${r.name}  (${r.groupGoalProgress}/${r.groupGoalTarget})"
-                r.isGroup && r.isExpanded -> "▾  ${r.name}"
-                r.isGroup -> "▸  ${r.name}"
+            text = when {
+                r.isGroup && r.groupGoalEnabled -> "${r.name}  (${r.groupGoalProgress}/${r.groupGoalTarget})"
                 r.isGroupChild -> "    ${r.name}"
                 else -> r.name
-            }
-            text = if (r.isGroup) {
-                SpannableString(labelText).apply {
-                    setSpan(RelativeSizeSpan(1.5f), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            } else {
-                labelText
             }
             setTextColor(c)
         }
         scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE
         // Groups use their expand/collapse arrow as the state indicator.
-        noGoalMarker.visibility = if (r.isGroup || r.hasGoal) View.GONE else View.VISIBLE
+        noGoalMarker.visibility = if (r.isGroup || !r.hasGoal) View.VISIBLE else View.GONE
+        noGoalMarker.text = when {
+            r.isGroup && r.isExpanded -> "▾"
+            r.isGroup -> "▸"
+            else -> "●"
+        }
+        noGoalMarker.textSize = if (r.isGroup) 27.5f else 11f
         noGoalMarker.setTextColor(c)
         if (r.hasGoal) {
             scoreRing.apply {
@@ -147,6 +140,7 @@ class HabitCardView(
 
     init {
         val ringSize = dp(15f).toInt()
+        val indicatorSize = dp(28f).toInt()
         val sideMargin = dp(8f).toInt()
         scoreRing = RingView(context).apply {
             setThickness(dp(3f))
@@ -158,11 +152,11 @@ class HabitCardView(
             visibility = View.GONE
         }
         scoreRingContainer = FrameLayout(context).apply {
-            layoutParams = LinearLayout.LayoutParams(ringSize, ringSize).apply {
+            layoutParams = LinearLayout.LayoutParams(indicatorSize, indicatorSize).apply {
                 setMargins(sideMargin, 0, sideMargin, 0)
                 gravity = Gravity.CENTER
             }
-            addView(scoreRing, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+            addView(scoreRing, FrameLayout.LayoutParams(ringSize, ringSize, Gravity.CENTER))
             addView(noGoalMarker, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         }
 
