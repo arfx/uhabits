@@ -71,6 +71,8 @@ class HabitsCSVExporter(
                 append("      \"position\": ${group.position},\n")
                 append("      \"color\": ${group.color.paletteIndex},\n")
                 append("      \"groupGoalEnabled\": ${group.groupGoalEnabled},\n")
+                append("      \"groupGoalType\": ${group.groupGoalType.value},\n")
+                append("      \"groupGoalThreshold\": ${group.groupGoalThreshold},\n")
                 append("      \"frequencyNumerator\": ${group.frequency.numerator},\n")
                 append("      \"frequencyDenominator\": ${group.frequency.denominator},\n")
                 append("      \"members\": [")
