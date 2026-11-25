@@ -31,6 +31,8 @@ data class Habit(
     var frequency: Frequency = Frequency.DAILY,
     var hasGoal: Boolean = true,
     var groupGoalEnabled: Boolean = false,
+    var groupGoalType: GroupGoalType = GroupGoalType.OR,
+    var groupGoalThreshold: Int = 1,
     var isGroup: Boolean = false,
     var groupId: Long? = null,
     var id: Long? = null,
@@ -143,6 +145,8 @@ data class Habit(
         this.frequency = other.frequency
         this.hasGoal = other.hasGoal
         this.groupGoalEnabled = other.groupGoalEnabled
+        this.groupGoalType = other.groupGoalType
+        this.groupGoalThreshold = other.groupGoalThreshold
         this.isGroup = other.isGroup
         this.groupId = other.groupId
         // this.id should not be copied
@@ -168,6 +172,8 @@ data class Habit(
         if (frequency != other.frequency) return false
         if (hasGoal != other.hasGoal) return false
         if (groupGoalEnabled != other.groupGoalEnabled) return false
+        if (groupGoalType != other.groupGoalType) return false
+        if (groupGoalThreshold != other.groupGoalThreshold) return false
         if (isGroup != other.isGroup) return false
         if (groupId != other.groupId) return false
         if (id != other.id) return false
@@ -192,6 +198,8 @@ data class Habit(
         result = 31 * result + frequency.hashCode()
         result = 31 * result + hasGoal.hashCode()
         result = 31 * result + groupGoalEnabled.hashCode()
+        result = 31 * result + groupGoalType.hashCode()
+        result = 31 * result + groupGoalThreshold
         result = 31 * result + isGroup.hashCode()
         result = 31 * result + (groupId?.hashCode() ?: 0)
         result = 31 * result + (id?.hashCode() ?: 0)
