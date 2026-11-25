@@ -39,20 +39,64 @@ class HabitsCSVExporter(
 
     suspend fun writeArchive(): ByteArray {
         val zip = ZipWriter()
-        zip.addEntry("Habits.csv", allHabits.writeCSV())
-        for (h in selectedHabits) {
-            val habitDirName = habitDirName(h)
+        val exportableHabits = allHabits.filter { !it.isGroup }
+        val selectedExportableHabits = selectedHabits.filter { !it.isGroup }
+        zip.addEntry("Habits.csv", allHabits.writeCSV(exportableHabits))
+        zip.addEntry("Groups.json", writeGroupsJson(exportableHabits))
+        for (h in selectedExportableHabits) {
+            val habitDirName = habitDirName(h, exportableHabits)
             zip.addEntry("${habitDirName}Scores.csv", writeScores(h))
             zip.addEntry("${habitDirName}Checkmarks.csv", writeEntries(h.computedEntries))
         }
-        zip.addEntry("Scores.csv", writeMultipleHabitsScores())
-        zip.addEntry("Checkmarks.csv", writeMultipleHabitsCheckmarks())
+        zip.addEntry("Scores.csv", writeMultipleHabitsScores(selectedExportableHabits))
+        zip.addEntry("Checkmarks.csv", writeMultipleHabitsCheckmarks(selectedExportableHabits))
         return zip.toBytes()
     }
 
-    private fun habitDirName(h: Habit): String {
+    private fun habitDirName(h: Habit, exportableHabits: List<Habit>): String {
         val sane = sanitizeFilename(h.name)
-        return format("%03d", allHabits.indexOf(h) + 1) + " " + sane.trim() + "/"
+        return format("%03d", exportableHabits.indexOf(h) + 1) + " " + sane.trim() + "/"
+    }
+
+    private fun writeGroupsJson(exportableHabits: List<Habit>): String {
+        val groups = allHabits.filter { it.isGroup }
+        return buildString {
+            append("{\n  \"version\": 1,\n  \"groups\": [")
+            groups.forEachIndexed { groupIndex, group ->
+                if (groupIndex > 0) append(",")
+                val children = exportableHabits.filter { it.groupId == group.id }
+                append("\n    {\n")
+                append("      \"uuid\": \"${jsonEscape(group.uuid ?: "")}\",\n")
+                append("      \"name\": \"${jsonEscape(group.name)}\",\n")
+                append("      \"position\": ${group.position},\n")
+                append("      \"color\": ${group.color.paletteIndex},\n")
+                append("      \"groupGoalEnabled\": ${group.groupGoalEnabled},\n")
+                append("      \"frequencyNumerator\": ${group.frequency.numerator},\n")
+                append("      \"frequencyDenominator\": ${group.frequency.denominator},\n")
+                append("      \"members\": [")
+                children.forEachIndexed { childIndex, child ->
+                    if (childIndex > 0) append(", ")
+                    append("{\"uuid\": \"${jsonEscape(child.uuid ?: "")}\", ")
+                    append("\"exportPosition\": ${exportableHabits.indexOf(child) + 1}}")
+                }
+                append("]\n    }")
+            }
+            if (groups.isNotEmpty()) append("\n  ")
+            append("]\n}\n")
+        }
+    }
+
+    private fun jsonEscape(value: String): String = buildString {
+        value.forEach { char ->
+            when (char) {
+                '\\' -> append("\\\\")
+                '"' -> append("\\\"")
+                '\n' -> append("\\n")
+                '\r' -> append("\\r")
+                '\t' -> append("\\t")
+                else -> append(char)
+            }
+        }
     }
 
     private fun sanitizeFilename(name: String): String {
@@ -83,21 +127,21 @@ class HabitsCSVExporter(
         return sb.toString()
     }
 
-    private fun writeMultipleHabitsScores(): String {
+    private fun writeMultipleHabitsScores(habits: List<Habit>): String {
         val sb = StringBuilder()
-        writeMultipleHabitsHeader(sb)
+        writeMultipleHabitsHeader(sb, habits)
         val timeframe = getTimeframe()
         val oldest = timeframe[0]
         val newest = getToday()
-        val scores = selectedHabits.map { habit ->
+        val scores = habits.map { habit ->
             if (habit.hasGoal) ArrayList(habit.scores.getByInterval(oldest, newest)) else arrayListOf()
         }
         val days = oldest.daysUntil(newest)
         for (i in 0..days) {
             val date = newest.minus(i).toCSVString()
             sb.append(date).append(delimiter)
-            for (j in selectedHabits.indices) {
-                val score = if (selectedHabits[j].hasGoal) {
+            for (j in habits.indices) {
+                val score = if (habits[j].hasGoal) {
                     format("%.4f", scores[j][i].value)
                 } else {
                     ""
@@ -109,13 +153,13 @@ class HabitsCSVExporter(
         return sb.toString()
     }
 
-    private fun writeMultipleHabitsCheckmarks(): String {
+    private fun writeMultipleHabitsCheckmarks(habits: List<Habit>): String {
         val sb = StringBuilder()
         writeMultipleHabitsHeader(sb)
         val timeframe = getTimeframe()
         val oldest = timeframe[0]
         val newest = getToday()
-        val checkmarks = selectedHabits.map { ArrayList(it.computedEntries.getByInterval(oldest, newest)) }
+        val checkmarks = habits.map { ArrayList(it.computedEntries.getByInterval(oldest, newest)) }
         val days = oldest.daysUntil(newest)
         for (i in 0..days) {
             val date = newest.minus(i).toCSVString()
@@ -128,15 +172,15 @@ class HabitsCSVExporter(
         return sb.toString()
     }
 
-    private fun writeMultipleHabitsHeader(sb: StringBuilder) {
-        val fields = arrayOf("Date") + selectedHabits.map { it.name } + arrayOf("")
+    private fun writeMultipleHabitsHeader(sb: StringBuilder, habits: List<Habit>) {
+        val fields = arrayOf("Date") + habits.map { it.name } + arrayOf("")
         sb.append(csvLine(fields))
     }
 
     private fun getTimeframe(): Array<LocalDate> {
         var oldest = LocalDate(1000000)
         var newest = LocalDate(0)
-        for (habit in selectedHabits) {
+        for (habit in habits) {
             val entries = habit.computedEntries.getKnown()
             if (entries.isEmpty()) continue
             val currNew = entries[0].date
