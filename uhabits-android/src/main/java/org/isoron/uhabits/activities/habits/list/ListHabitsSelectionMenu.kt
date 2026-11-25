@@ -168,6 +168,12 @@ class ListHabitsSelectionMenu(
             isChecked = false
         }
         var groupGoalType = GroupGoalType.OR
+        val thresholdInput = EditText(activity).apply {
+            hint = activity.getString(R.string.group_goal_threshold_hint)
+            inputType = InputType.TYPE_CLASS_NUMBER
+            setText("1")
+            visibility = android.view.View.GONE
+        }
         val groupRuleButton = android.widget.Button(activity).apply {
             text = activity.getString(R.string.group_goal_rule_or)
             setOnClickListener {
@@ -190,12 +196,6 @@ class ListHabitsSelectionMenu(
                     }
                     .show()
             }
-        }
-        val thresholdInput = EditText(activity).apply {
-            hint = activity.getString(R.string.group_goal_threshold_hint)
-            inputType = InputType.TYPE_CLASS_NUMBER
-            setText("1")
-            visibility = android.view.View.GONE
         }
         val frequencyLabel = android.widget.TextView(activity).apply {
             text = formatFrequency(3, 7, activity.resources)
