@@ -18,8 +18,6 @@ package com.android.colorpicker;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -98,23 +96,6 @@ public class ColorPickerPalette extends TableLayout {
         // Fills the table with swatches based on the array of palette.
         TableRow row = createTableRow();
         for (int color : colors) {
-            // The final magenta entry is the custom-color action, not a palette color.
-            // Render it as a full-width rainbow button below the regular color grid.
-            if (color == Color.MAGENTA) {
-                if (rowElements > 0) {
-                    while (rowElements != mNumColumns) {
-                        addSwatchToRow(row, createBlankSpace(), rowNumber);
-                        rowElements++;
-                    }
-                    addView(row);
-                    row = createTableRow();
-                    rowElements = 0;
-                }
-                addView(createCustomColorRow(color));
-                rowNumber++;
-                continue;
-            }
-
             tableElements++;
             View colorSwatch = createColorSwatch(color, selectedColor);
             setSwatchDescription(rowNumber, tableElements, rowElements, color == selectedColor,
@@ -138,39 +119,6 @@ public class ColorPickerPalette extends TableLayout {
             }
             addView(row);
         }
-    }
-
-    private TableRow createCustomColorRow(int color) {
-        TableRow row = createTableRow();
-        View button = new View(getContext());
-        GradientDrawable gradient = new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[] {
-                        Color.RED,
-                        0xFFFF8000,
-                        Color.YELLOW,
-                        Color.GREEN,
-                        Color.CYAN,
-                        Color.BLUE,
-                        0xFF8000FF,
-                        Color.MAGENTA
-                }
-        );
-        gradient.setCornerRadius(getResources().getDisplayMetrics().density * 6);
-        button.setBackground(gradient);
-        button.setContentDescription("Choose custom color");
-        button.setOnClickListener(v -> {
-            if (mOnColorSelectedListener != null) {
-                mOnColorSelectedListener.onColorSelected(color);
-            }
-        });
-        TableRow.LayoutParams params = new TableRow.LayoutParams(
-                mNumColumns * (mSwatchLength + 2 * mMarginSize) - 2 * mMarginSize,
-                mSwatchLength
-        );
-        params.setMargins(mMarginSize, mMarginSize, mMarginSize, mMarginSize);
-        row.addView(button, params);
-        return row;
     }
 
     /**
