@@ -18,6 +18,8 @@ package com.android.colorpicker;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,6 +57,7 @@ public class ColorPickerDialog extends AppCompatDialogFragment implements OnColo
 
     private ColorPickerPalette mPalette;
     private ProgressBar mProgress;
+    private View mCustomColorButton;
 
     protected OnColorSelectedListener mListener;
 
@@ -110,6 +113,17 @@ public class ColorPickerDialog extends AppCompatDialogFragment implements OnColo
         mProgress = (ProgressBar) view.findViewById(android.R.id.progress);
         mPalette = (ColorPickerPalette) view.findViewById(R.id.color_picker);
         mPalette.init(mSize, mColumns, this);
+        mCustomColorButton = view.findViewById(R.id.custom_color_picker_button);
+        GradientDrawable rainbow = new GradientDrawable(
+            GradientDrawable.Orientation.LEFT_RIGHT,
+            new int[] {
+                Color.RED, 0xFFFF8000, Color.YELLOW, Color.GREEN,
+                Color.CYAN, Color.BLUE, 0xFF8000FF, Color.MAGENTA
+            }
+        );
+        rainbow.setCornerRadius(getResources().getDisplayMetrics().density * 6);
+        mCustomColorButton.setBackground(rainbow);
+        mCustomColorButton.setOnClickListener(v -> onColorSelected(Color.MAGENTA));
 
         if (mColors != null) {
             showPaletteView();
@@ -149,6 +163,7 @@ public class ColorPickerDialog extends AppCompatDialogFragment implements OnColo
             mProgress.setVisibility(View.GONE);
             refreshPalette();
             mPalette.setVisibility(View.VISIBLE);
+            if (mCustomColorButton != null) mCustomColorButton.setVisibility(View.VISIBLE);
         }
     }
 
