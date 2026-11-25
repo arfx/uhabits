@@ -156,7 +156,7 @@ class HabitsCSVExporter(
     private fun writeMultipleHabitsCheckmarks(habits: List<Habit>): String {
         val sb = StringBuilder()
         writeMultipleHabitsHeader(sb, habits)
-        val timeframe = getTimeframe()
+        val timeframe = getTimeframe(habits)
         val oldest = timeframe[0]
         val newest = getToday()
         val checkmarks = habits.map { ArrayList(it.computedEntries.getByInterval(oldest, newest)) }
