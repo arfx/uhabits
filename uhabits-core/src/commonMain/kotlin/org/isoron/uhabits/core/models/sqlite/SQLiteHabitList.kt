@@ -157,6 +157,7 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
         list.removeAll()
         repository.execSQL("delete from habits")
         repository.execSQL("delete from repetitions")
+        repository.execSQL("delete from HabitCustomColors")
         observable.notifyListeners()
     }
 
