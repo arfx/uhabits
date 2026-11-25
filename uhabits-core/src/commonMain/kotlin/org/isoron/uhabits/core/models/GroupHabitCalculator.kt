@@ -19,15 +19,15 @@
 package org.isoron.uhabits.core.models
 
 import org.isoron.platform.time.LocalDate
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.platform.time.getFirstWeekday
 import org.isoron.platform.time.getToday
 
 /**
  * Builds the daily history of a Group Habit from its child habits.
  *
- * A group day succeeds when at least one child habit succeeds on that date.
- * Multiple successful children on the same date still produce exactly one
- * group entry, so group frequency goals count unique calendar days.
+ * A group day succeeds according to its configured member rule. Multiple
+ * successful children on the same date still produce exactly one group entry.
  */
 object GroupHabitCalculator {
 
@@ -83,13 +83,25 @@ object GroupHabitCalculator {
             "All children must belong to the supplied group"
         }
 
-        val successfulDates = children
+        val successesByDate = children
             .flatMap { child ->
                 child.originalEntries.getKnown()
                     .filter { original -> isSuccessfulOn(child, original.date) }
                     .map { it.date }
             }
-            .toSet()
+            .groupingBy { it }
+            .eachCount()
+
+        val requiredSuccesses = when (group.groupGoalType) {
+            GroupGoalType.OR -> 1
+            GroupGoalType.AND -> children.size
+            GroupGoalType.AT_LEAST -> group.groupGoalThreshold.coerceAtLeast(1)
+        }
+        val successfulDates = if (children.isEmpty()) {
+            emptySet()
+        } else {
+            successesByDate.filterValues { count -> count >= requiredSuccesses }.keys
+        }
 
         group.originalEntries.replaceAll(
             successfulDates.map { date -> Entry(date, Entry.YES_MANUAL) }
