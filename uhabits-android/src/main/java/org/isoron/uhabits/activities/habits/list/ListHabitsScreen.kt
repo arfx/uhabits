@@ -292,8 +292,56 @@ class ListHabitsScreen(
 
     override fun showColorPicker(defaultColor: PaletteColor, callback: OnColorPickedCallback) {
         val picker = colorPickerFactory.create(defaultColor, themeSwitcher.currentTheme!!)
-        picker.setListener(callback)
+        picker.setListener { paletteColor ->
+            if (paletteColor.paletteIndex == PaletteColor.CUSTOM_PICKER_INDEX) {
+                showCustomColorPicker(defaultColor.customColor) { customColor ->
+                    callback.onColorPicked(PaletteColor.custom(customColor))
+                }
+            } else {
+                callback.onColorPicked(paletteColor)
+            }
+        }
         picker.dismissCurrentAndShow(activity.supportFragmentManager, "picker")
+    }
+
+    private fun showCustomColorPicker(initialColor: Int?, onColorPicked: (Int) -> Unit) {
+        val hsv = FloatArray(3)
+        android.graphics.Color.colorToHSV(initialColor ?: android.graphics.Color.RED, hsv)
+        val container = android.widget.LinearLayout(activity).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(32, 12, 32, 0)
+        }
+        val preview = android.view.View(activity).apply {
+            layoutParams = android.widget.LinearLayout.LayoutParams(
+                android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                (48 * activity.resources.displayMetrics.density).toInt()
+            )
+            setBackgroundColor(android.graphics.Color.HSVToColor(hsv))
+        }
+        container.addView(preview)
+        listOf("Hue", "Saturation", "Brightness").forEachIndexed { index, label ->
+            container.addView(android.widget.TextView(activity).apply { text = label })
+            container.addView(android.widget.SeekBar(activity).apply {
+                max = if (index == 0) 360 else 100
+                progress = if (index == 0) hsv[index].toInt() else (hsv[index] * 100).toInt()
+                setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(bar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                        hsv[index] = if (index == 0) progress.toFloat() else progress.toFloat() / 100f
+                        preview.setBackgroundColor(android.graphics.Color.HSVToColor(hsv))
+                    }
+                    override fun onStartTrackingTouch(bar: android.widget.SeekBar?) {}
+                    override fun onStopTrackingTouch(bar: android.widget.SeekBar?) {}
+                })
+            })
+        }
+        androidx.appcompat.app.AlertDialog.Builder(activity)
+            .setTitle(R.string.color)
+            .setView(container)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                onColorPicked(android.graphics.Color.HSVToColor(hsv))
+            }
+            .show()
     }
 
     override fun showCategoryInput(current: String, onConfirmed: (String) -> Unit) {
