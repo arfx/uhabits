@@ -55,7 +55,7 @@ android {
         versionName = "2.3.2-dev"
         minSdk = 28
         targetSdk = 36
-        applicationId = "org.arfx.habittracker"
+        applicationId = "org.isoron.uhabits"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -81,6 +81,9 @@ android {
 
         debug {
             enableUnitTestCoverage = true
+            // Keep debug/test installs separate from the official Loop app.
+            applicationIdSuffix = ".testing"
+            versionNameSuffix = "-testing"
         }
     }
 
