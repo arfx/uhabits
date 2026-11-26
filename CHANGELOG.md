@@ -11,6 +11,42 @@
   Long-pressing the value continues to open the existing manual number-entry dialog.
 
 
+### Added (arfx fork)
+
+- Add **No-Goal Habits** to track habits without a numerical or frequency target.
+- Allow converting habits between yes/no and numerical tracking while preserving
+  historical entries, including skipped and unknown states.
+- Add **Group Habits** with configurable OR, AND and N-of-M completion rules.
+- Add independent goals and frequency settings for groups, plus group-level
+  progress, score, streak, calendar and history insights.
+- Add custom habit colors through the color picker, including a rainbow custom-color
+  action; persist custom color values and include their hexadecimal values in CSV
+  exports.
+- Allow numerical habit values to be incremented by tapping the displayed value.
+  Long-pressing the value continues to open the existing manual number-entry dialog.
+
+### Changed (arfx fork)
+
+- Add group expand/collapse and group editing, including changing completion rules
+  and thresholds after creation.
+- Derive group completion and insight data from the selected rule and contributing
+  member habits.
+- Keep group metadata separate from ordinary habit rows in CSV exports.
+
+### Data and compatibility (arfx fork)
+
+- Store group definitions, members and completion-rule settings in fork backup
+  metadata so groups can be restored by this fork.
+- Keep ordinary habit data exportable in a format compatible with the official
+  Loop 2.3.1 importer. The official app does not preserve this fork's group metadata.
+
+### Development (arfx fork)
+
+- Use a separate development application ID (`org.arfx.habittracker`) so the
+  development build can be installed alongside the official Loop app.
+- Add a manual GitHub Actions debug-APK workflow that runs core JVM tests before
+  building the Android debug APK.
+
 ### Added
 
 - Allow user to organize habits into categories (@iSoron)
