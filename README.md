@@ -6,9 +6,7 @@ guidelines and upstream documentation, see the
 [original Loop Habit Tracker README](https://github.com/iSoron/uhabits#readme).
 
 This fork keeps the upstream project as its foundation and adds the features listed
-below. The current feature candidate is
-[`feature/numeric-tap-increment`](https://github.com/arfx/uhabits/tree/feature/numeric-tap-increment).
-Changes are tested in Android APK builds before any integration into `dev`.
+below. The completed Android feature work is integrated into `dev`. Android test builds are kept installable alongside the official Loop app through a dedicated debug application ID suffix.
 
 ## Fork features
 
@@ -63,8 +61,8 @@ Changes are tested in Android APK builds before any integration into `dev`.
 
 ## Development and testing
 
-The feature candidate includes the no-goal, habit-conversion, group-habit,
-custom-color and numeric tap-to-increment work described above. It is a development
+The `dev` branch contains the no-goal, habit-conversion, group-habit,
+custom-color and numeric tap-to-increment work described above. It is a fork development
 branch, not an upstream Loop release.
 
 APK builds are started manually through GitHub Actions. See
@@ -72,29 +70,33 @@ APK builds are started manually through GitHub Actions. See
 build instructions. The workflow runs the core JVM unit tests, compiles the Android instrumentation
 tests, and then builds the debug APK; generated artifacts are retained for 14 days.
 
-The development APK uses application ID `org.arfx.habittracker` and can be installed
+The debug APK uses application ID `org.isoron.uhabits.testing` and can be installed
 alongside the official Loop Habit Tracker, which uses `org.isoron.uhabits`. Each app
 has its own app data and database.
 
 ### Package identity — release decision
 
-- **Development/testing:** Keep the fork application ID as
-  `org.arfx.habittracker`. This allows the development APK to coexist with the
-  official Loop app without overwriting its installation or app data.
-- **Potential compatibility release:** If we decide to publish a release intended
-  to replace or update the official Loop app, use `org.isoron.uhabits` as the
-  Android application ID. This is a deliberate release-time decision; do not change
-  the development branch just for this purpose.
-- **No blanket package rename:** The Kotlin namespace can remain
-  `org.isoron.uhabits`; it is separate from the Android application ID. Before a
-  compatibility release, audit and align all externally visible identifiers that
-  depend on the app identity, including ContentProvider authorities, content URI
-  authorities, intent action strings, widget references and manifest declarations.
-  Do not blindly replace every occurrence of either package string.
-- **Release checklist:** Resolve any mixed fork/upstream identifiers (including
-  mismatched URI authorities), then test installation as an update over the official
-  app, data preservation, widgets, shortcuts and external intents. Until that
-  verification is complete, keep using the fork application ID for test builds.
+- **Debug/testing:** The base application ID is `org.isoron.uhabits`. The Gradle
+  `debug` build type automatically appends `.testing`, producing
+  `org.isoron.uhabits.testing`. This lets the debug APK coexist with the official
+  Loop app without replacing its installation or app data.
+- **Release:** The `release` build type uses the base ID unchanged:
+  `org.isoron.uhabits`.
+- **How to switch:** No manual package edits or branch switching are needed. Use
+  `./gradlew :uhabits-android:assembleDebug` for the parallel-install test build
+  and `./gradlew :uhabits-android:assembleRelease` for the original-ID release
+  build. GitHub Actions' Android Debug APK workflow builds the debug variant.
+- **Namespace:** The Kotlin namespace remains `org.isoron.uhabits`; it is
+  independent of the application ID. The FileProvider authority uses the Gradle
+  `${applicationId}` placeholder and therefore follows the selected build variant.
+- **Signing limitation:** Matching the original application ID does not by itself
+  allow an APK to update the official Loop installation. Android also requires the
+  same signing certificate. Without the official signing key, the release APK
+  cannot replace the official app in place.
+- **Release checklist:** Before publishing, verify the release variant's manifest,
+  provider/URI authorities, intent actions, widgets, shortcuts and external intents.
+  Test installation and data migration separately. Do not blindly replace every
+  occurrence of either package string.
 
 Before integrating the feature branch into `dev`, changes receive further testing
 and an explicit review.
