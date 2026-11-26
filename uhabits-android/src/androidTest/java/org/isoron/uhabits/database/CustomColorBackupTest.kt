@@ -44,6 +44,13 @@ class CustomColorBackupTest : BaseAndroidTest() {
 
         SQLiteDatabase.openDatabase(backupPath, null, SQLiteDatabase.OPEN_READONLY).use { backup ->
             backup.rawQuery(
+                "SELECT color FROM Habits WHERE uuid = ?",
+                arrayOf(uuid)
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals(19, cursor.getInt(0))
+            }
+            backup.rawQuery(
                 "SELECT color FROM HabitCustomColors WHERE habit_uuid = ?",
                 arrayOf(uuid)
             ).use { cursor ->
