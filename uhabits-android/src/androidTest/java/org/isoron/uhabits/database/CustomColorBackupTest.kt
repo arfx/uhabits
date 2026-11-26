@@ -20,12 +20,13 @@ package org.isoron.uhabits.database
 
 import android.database.sqlite.SQLiteDatabase
 import kotlinx.coroutines.runBlocking
-import org.isoron.platform.io.UserFile
+import org.isoron.platform.io.AndroidFileOpener
 import org.isoron.uhabits.AndroidDirFinder
 import org.isoron.uhabits.BaseAndroidTest
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.utils.DatabaseUtils
 import org.junit.Test
+import java.io.File
 
 class CustomColorBackupTest : BaseAndroidTest() {
     @Test
@@ -60,7 +61,8 @@ class CustomColorBackupTest : BaseAndroidTest() {
         }
 
         fixtures.purgeHabits(habitList)
-        val backupFile = UserFile(backupPath)
+        val backupFile = AndroidFileOpener(targetContext.assets, targetContext.filesDir)
+            .openUserFile("Backups/${File(backupPath).name}")
         assertTrue(component.parent.genericImporter.canHandle(backupFile))
         component.parent.genericImporter.importHabitsFromFile(backupFile)
 
