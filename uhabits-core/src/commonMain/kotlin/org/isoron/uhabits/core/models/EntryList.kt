@@ -94,10 +94,16 @@ open class EntryList {
     open fun recomputeFrom(
         originalEntries: EntryList,
         frequency: Frequency,
-        isNumerical: Boolean
+        isNumerical: Boolean,
+        hasGoal: Boolean = true
     ) {
         clear()
         val original = originalEntries.getKnown()
+        if (!hasGoal) {
+            original.forEach { add(it) }
+            densifyWithUnknownPlaceholders(original)
+            return
+        }
         if (isNumerical) {
             original.forEach { add(it) }
             densifyWithUnknownPlaceholders(original)
@@ -136,8 +142,20 @@ open class EntryList {
         frequency: Frequency,
         isNumerical: Boolean,
         targetType: NumericalHabitType,
-        targetValue: Double
+        targetValue: Double,
+        hasGoal: Boolean = true
     ) {
+        if (!hasGoal) {
+            for (entry in getKnown()) {
+                val completed = if (isNumerical) {
+                    entry.value > 0 && entry.value != Entry.SKIP
+                } else {
+                    entry.value == YES_MANUAL
+                }
+                if (entry.completed != completed) add(entry.copy(completed = completed))
+            }
+            return
+        }
         if (isNumerical) {
             val firstWeekday = getFirstWeekday()
             val denominator = frequency.denominator
@@ -196,6 +214,16 @@ open class EntryList {
     }
 
     /**
+     * Replaces all stored entries with the supplied historical entries.
+     * Used when converting a habit type; dates and notes are retained by the caller.
+     */
+    @Synchronized
+    open fun replaceAll(entries: List<Entry>) {
+        clear()
+        entries.forEach { add(it) }
+    }
+
+    /**
      * Removes all known entries.
      */
     @Synchronized
@@ -230,7 +258,9 @@ open class EntryList {
             }
 
             if (isNumerical) {
-                list[weekday] += entry.value
+                if (entry.value != SKIP && entry.value != UNKNOWN) {
+                    list[weekday] += max(0, entry.value)
+                }
             } else if (entry.value == YES_MANUAL) {
                 list[weekday] += 1
             }

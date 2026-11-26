@@ -97,7 +97,6 @@ public class ColorPickerPalette extends TableLayout {
         TableRow row = createTableRow();
         for (int color : colors) {
             tableElements++;
-
             View colorSwatch = createColorSwatch(color, selectedColor);
             setSwatchDescription(rowNumber, tableElements, rowElements, color == selectedColor,
                     colorSwatch);

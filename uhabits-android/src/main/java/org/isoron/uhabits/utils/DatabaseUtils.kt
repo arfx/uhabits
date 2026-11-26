@@ -28,7 +28,6 @@ import org.isoron.uhabits.HabitsDatabaseOpener
 import org.isoron.uhabits.core.DATABASE_FILENAME
 import org.isoron.uhabits.core.DATABASE_VERSION
 import java.io.File
-import java.io.FileInputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 
@@ -64,10 +63,14 @@ object DatabaseUtils {
         val date = dateFormat.format(System.currentTimeMillis())
         val filename = "${dir.absolutePath}/Loop Habits Backup $date.db"
         Log.i("DatabaseUtils", "Writing: $filename")
-        val db = getDatabaseFile(context)
-        val dbCopy = File(filename)
-        db.copyTo(dbCopy)
-        return dbCopy.absolutePath
+        val dbCopy = createMainCompatibleDatabaseCopy(context)
+        try {
+            val destination = File(filename)
+            dbCopy.copyTo(destination, overwrite = true)
+            return destination.absolutePath
+        } finally {
+            dbCopy.delete()
+        }
     }
 
     @JvmStatic
@@ -78,13 +81,103 @@ object DatabaseUtils {
         val file = dir.createFile("application/octet-stream", "Loop Habits Backup $date.db")
             ?: throw IOException("Unable to create backup file")
         Log.i("DatabaseUtils", "Writing: ${file.uri}")
-        val db = getDatabaseFile(context)
-        FileInputStream(db).use { input ->
-            context.contentResolver.openOutputStream(file.uri)?.use { output ->
-                input.copyTo(output)
+        val dbCopy = createMainCompatibleDatabaseCopy(context)
+        try {
+            dbCopy.inputStream().use { input ->
+                context.contentResolver.openOutputStream(file.uri)?.use { output ->
+                    input.copyTo(output)
+                } ?: throw IOException("Unable to open backup destination")
             }
+        } finally {
+            dbCopy.delete()
         }
         return file.uri.toString()
+    }
+
+    /**
+     * Creates an export-only copy that can be imported by the Play Store version
+     * Loop 2.3.1 (DATABASE_VERSION 25). The live database remains at
+     * DATABASE_VERSION (31); only the copy's user_version is lowered to 25.
+     * Group rows and their derived repetitions are moved into side tables before export.
+     * Custom colors are preserved in HabitCustomColors by habit UUID. Loop 2.3.1 ignores
+     * this extra table and reads the valid fallback palette index from Habits.color.
+     * Loop 2.3.1 ignores those additional tables and imports only ordinary habits.
+     */
+    private fun createMainCompatibleDatabaseCopy(context: Context): File {
+        val source = getDatabaseFile(context)
+        val copy = File.createTempFile("loop-backup-", ".db", context.cacheDir)
+        try {
+            source.copyTo(copy, overwrite = true)
+            SQLiteDatabase.openDatabase(
+                copy.absolutePath,
+                null,
+                SQLiteDatabase.OPEN_READWRITE
+            ).use { exportedDatabase ->
+                exportedDatabase.beginTransaction()
+                try {
+                    exportedDatabase.execSQL(
+                        """CREATE TABLE IF NOT EXISTS GroupBackup (
+                            uuid TEXT PRIMARY KEY,
+                            name TEXT NOT NULL,
+                            description TEXT NOT NULL,
+                            question TEXT NOT NULL,
+                            freq_num INTEGER NOT NULL,
+                            freq_den INTEGER NOT NULL,
+                            color INTEGER NOT NULL,
+                            position INTEGER NOT NULL,
+                            archived INTEGER NOT NULL,
+                            type INTEGER NOT NULL,
+                            target_value REAL NOT NULL,
+                            target_type INTEGER NOT NULL,
+                            unit TEXT NOT NULL,
+                            category TEXT NOT NULL,
+                            has_goal INTEGER NOT NULL,
+                            group_goal_enabled INTEGER NOT NULL,
+                            group_goal_type INTEGER NOT NULL DEFAULT 0,
+                            group_goal_threshold INTEGER NOT NULL DEFAULT 1
+                        )"""
+                    )
+                    exportedDatabase.execSQL(
+                        """CREATE TABLE IF NOT EXISTS GroupBackupMembers (
+                            group_uuid TEXT NOT NULL,
+                            habit_uuid TEXT NOT NULL,
+                            position INTEGER NOT NULL,
+                            PRIMARY KEY (group_uuid, habit_uuid)
+                        )"""
+                    )
+                    exportedDatabase.execSQL(
+                        """INSERT INTO GroupBackup
+                            SELECT uuid, name, description, question, freq_num, freq_den,
+                                   color, position, archived, type, target_value,
+                                   target_type, unit, category, has_goal, group_goal_enabled,
+                                   group_goal_type, group_goal_threshold
+                            FROM Habits WHERE is_group = 1 AND uuid IS NOT NULL"""
+                    )
+                    exportedDatabase.execSQL(
+                        """INSERT INTO GroupBackupMembers
+                            SELECT groups.uuid, habits.uuid, habits.position
+                            FROM Habits habits
+                            INNER JOIN Habits groups ON habits.group_id = groups.id
+                            WHERE groups.is_group = 1
+                              AND habits.is_group = 0
+                              AND groups.uuid IS NOT NULL
+                              AND habits.uuid IS NOT NULL"""
+                    )
+                    exportedDatabase.execSQL(
+                        "DELETE FROM Repetitions WHERE habit IN (SELECT id FROM Habits WHERE is_group = 1)"
+                    )
+                    exportedDatabase.execSQL("DELETE FROM Habits WHERE is_group = 1")
+                    exportedDatabase.version = 25
+                    exportedDatabase.setTransactionSuccessful()
+                } finally {
+                    exportedDatabase.endTransaction()
+                }
+            }
+            return copy
+        } catch (error: Exception) {
+            copy.delete()
+            throw error
+        }
     }
 
     fun openDatabase(): SQLiteDatabase {

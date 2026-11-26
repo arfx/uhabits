@@ -120,7 +120,13 @@ class ShowHabitActivity : AppCompatActivity(), CommandRunner.Listener {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return menu.onOptionsItemSelected(item)
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            else -> menu.onOptionsItemSelected(item) || super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onResume() {
@@ -153,7 +159,8 @@ class ShowHabitActivity : AppCompatActivity(), CommandRunner.Listener {
                     ShowHabitPresenter.buildState(
                         habit = habit,
                         preferences = preferences,
-                        theme = themeSwitcher.currentTheme
+                        theme = themeSwitcher.currentTheme,
+                        habitList = (applicationContext as HabitsApplication).component.habitList
                     )
                 )
             }

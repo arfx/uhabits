@@ -148,8 +148,8 @@ open class MemoryHabitList : HabitList {
         val positionComparator =
             Comparator<Habit> { habit1, habit2 -> habit1.position.compareTo(habit2.position) }
         val statusComparatorDesc = Comparator { h1: Habit, h2: Habit ->
-            if (h1.isCompletedToday() != h2.isCompletedToday()) {
-                return@Comparator if (h1.isCompletedToday()) -1 else 1
+            if (h1.isActiveToday() != h2.isActiveToday()) {
+                return@Comparator if (h1.isActiveToday()) -1 else 1
             }
             if (h1.isNumerical != h2.isNumerical) {
                 return@Comparator if (h1.isNumerical) -1 else 1

@@ -25,7 +25,14 @@ data class HabitData(
     var targetType: Int = 0,
     var unit: String = "",
     var uuid: String? = null,
-    var category: String = ""
+    var category: String = "",
+    var hasGoal: Int = 1,
+    var isGroup: Int = 0,
+    var groupId: Long? = null,
+    var groupGoalEnabled: Int = 0,
+    var groupGoalType: Int = 0,
+    var groupGoalThreshold: Int = 1,
+    var customColor: Int? = null
 )
 
 class HabitRepository(private val db: Database) {
@@ -33,7 +40,8 @@ class HabitRepository(private val db: Database) {
         db.prepareStatement(
             """SELECT id, name, description, question, freq_num, freq_den, color,
                position, reminder_hour, reminder_min, reminder_days, highlight,
-               archived, type, target_value, target_type, unit, uuid, category
+               archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled, group_goal_type, group_goal_threshold,
+               (SELECT color FROM HabitCustomColors WHERE habit_uuid = Habits.uuid) AS custom_color
                FROM Habits ORDER BY position"""
         )
     }
@@ -42,8 +50,8 @@ class HabitRepository(private val db: Database) {
         db.prepareStatement(
             """INSERT INTO Habits(name, description, question, freq_num, freq_den,
                color, position, reminder_hour, reminder_min, reminder_days,
-               highlight, archived, type, target_value, target_type, unit, uuid, category)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+               highlight, archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled, group_goal_type, group_goal_threshold)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         )
     }
 
@@ -51,8 +59,8 @@ class HabitRepository(private val db: Database) {
         db.prepareStatement(
             """INSERT INTO Habits(id, name, description, question, freq_num, freq_den,
                color, position, reminder_hour, reminder_min, reminder_days,
-               highlight, archived, type, target_value, target_type, unit, uuid, category)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+               highlight, archived, type, target_value, target_type, unit, uuid, category, has_goal, is_group, group_id, group_goal_enabled, group_goal_type, group_goal_threshold)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         )
     }
 
@@ -61,7 +69,7 @@ class HabitRepository(private val db: Database) {
             """UPDATE Habits SET name=?, description=?, question=?, freq_num=?,
                freq_den=?, color=?, position=?, reminder_hour=?, reminder_min=?,
                reminder_days=?, highlight=?, archived=?, type=?, target_value=?,
-               target_type=?, unit=?, uuid=?, category=? WHERE id=?"""
+               target_type=?, unit=?, uuid=?, category=?, has_goal=?, is_group=?, group_id=?, group_goal_enabled=?, group_goal_type=?, group_goal_threshold=? WHERE id=?"""
         )
     }
 
@@ -84,25 +92,44 @@ class HabitRepository(private val db: Database) {
             insertWithIdStmt.bindLong(1, data.id!!)
             bindForInsert(insertWithIdStmt, data, offset = 1)
             insertWithIdStmt.step()
+            saveCustomColor(data)
             return data.id!!
         }
         insertStmt.reset()
         bindForInsert(insertStmt, data)
         insertStmt.step()
-        return db.queryLong("SELECT last_insert_rowid()")
+        val id = db.queryLong("SELECT last_insert_rowid()")
+        saveCustomColor(data)
+        return id
     }
 
     fun update(data: HabitData) {
         updateStmt.reset()
         bindForInsert(updateStmt, data)
-        updateStmt.bindLong(19, data.id!!)
+        updateStmt.bindLong(25, data.id!!)
         updateStmt.step()
+        saveCustomColor(data)
     }
 
     fun delete(id: Long) {
+        db.run("DELETE FROM HabitCustomColors WHERE habit_uuid = (SELECT uuid FROM Habits WHERE id = ?)") { bindLong(1, id) }
         deleteStmt.reset()
         deleteStmt.bindLong(1, id)
         deleteStmt.step()
+    }
+
+    private fun saveCustomColor(data: HabitData) {
+        val uuid = data.uuid ?: return
+        if (data.customColor == null) {
+            db.run("DELETE FROM HabitCustomColors WHERE habit_uuid = ?") {
+                bindText(1, uuid)
+            }
+        } else {
+            db.run("INSERT OR REPLACE INTO HabitCustomColors(habit_uuid, color) VALUES (?, ?)") {
+                bindText(1, uuid)
+                bindInt(2, data.customColor!!)
+            }
+        }
     }
 
     fun execSQL(sql: String) = db.run(sql)
@@ -129,6 +156,12 @@ class HabitRepository(private val db: Database) {
         stmt.bindText(16 + o, data.unit)
         if (data.uuid != null) stmt.bindText(17 + o, data.uuid!!) else stmt.bindNull(17 + o)
         stmt.bindText(18 + o, data.category)
+        stmt.bindInt(19 + o, data.hasGoal)
+        stmt.bindInt(20 + o, data.isGroup)
+        if (data.groupId != null) stmt.bindLong(21 + o, data.groupId!!) else stmt.bindNull(21 + o)
+        stmt.bindInt(22 + o, data.groupGoalEnabled)
+        stmt.bindInt(23 + o, data.groupGoalType)
+        stmt.bindInt(24 + o, data.groupGoalThreshold)
     }
 
     private fun readRow(stmt: PreparedStatement): HabitData {
@@ -151,7 +184,14 @@ class HabitRepository(private val db: Database) {
             targetType = stmt.getInt(15),
             unit = stmt.getText(16),
             uuid = stmt.getTextOrNull(17),
-            category = stmt.getText(18)
+            category = stmt.getText(18),
+            hasGoal = stmt.getInt(19),
+            isGroup = stmt.getInt(20),
+            groupId = stmt.getLongOrNull(21),
+            groupGoalEnabled = stmt.getInt(22),
+            groupGoalType = stmt.getInt(23),
+            groupGoalThreshold = stmt.getInt(24),
+            customColor = stmt.getIntOrNull(25)
         )
     }
 }

@@ -40,13 +40,16 @@ jobs:
       - name: Run core unit tests
         run: ./gradlew :uhabits-core:jvmTest --stacktrace --no-daemon
 
+      - name: Compile Android instrumentation tests
+        run: ./gradlew :uhabits-android:assembleDebugAndroidTest --stacktrace --no-daemon
+
       - name: Build debug APK
         run: ./gradlew :uhabits-android:assembleDebug --stacktrace --no-daemon
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: uhabits-debug-apk
+          name: habit-tracker-debug-apk
           path: uhabits-android/build/outputs/apk/debug/uhabits-android-debug.apk
           if-no-files-found: error
           retention-days: 14

@@ -4,9 +4,9 @@
  * This file is part of Loop Habit Tracker.
  *
  * Loop Habit Tracker is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by the
- * Free Software Foundation, either version 3 of the License, or (at your
- * option) any later version.
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
  * Loop Habit Tracker is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
@@ -24,10 +24,15 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.os.Bundle
 import android.text.Html
+import android.text.InputType
 import android.text.Spanned
 import android.text.format.DateFormat
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.TextView
+import android.graphics.Color as AndroidColor
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -47,10 +52,13 @@ import org.isoron.uhabits.core.commands.EditHabitCommand
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.GroupGoalType
+import org.isoron.uhabits.core.models.HabitEntryConverter
 import org.isoron.uhabits.core.models.NumericalHabitType
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.models.Reminder
 import org.isoron.uhabits.core.models.WeekdayList
+import kotlin.math.roundToInt
 import org.isoron.uhabits.databinding.ActivityEditHabitBinding
 import org.isoron.uhabits.utils.applyBottomInset
 import org.isoron.uhabits.utils.applyRootViewInsets
@@ -80,12 +88,19 @@ class EditHabitActivity : AppCompatActivity() {
     var unit = ""
     var color = PaletteColor(11)
     var androidColor = 0
+    private var customColorValue: Int? = null
     var freqNum = 1
     var freqDen = 1
     var reminderHour = -1
     var reminderMin = -1
     var reminderDays: WeekdayList = WeekdayList.EVERY_DAY
     var targetType = NumericalHabitType.AT_LEAST
+    var hasGoal = true
+    var goalFrequencyConfigured = true
+    private var isEditingGroup = false
+    private var groupGoalType = GroupGoalType.OR
+    private var groupGoalThreshold = 1
+    private var conversionYesValue: Int? = null
 
     override fun onCreate(state: Bundle?) {
         super.onCreate(state)
@@ -105,7 +120,13 @@ class EditHabitActivity : AppCompatActivity() {
             habitId = intent.getLongExtra("habitId", -1)
             val habit = component.habitList.getById(habitId)!!
             habitType = habit.type
+            isEditingGroup = habit.isGroup
+            hasGoal = if (isEditingGroup) habit.groupGoalEnabled else habit.hasGoal
+            groupGoalType = habit.groupGoalType
+            groupGoalThreshold = habit.groupGoalThreshold
+            goalFrequencyConfigured = hasGoal
             color = habit.color
+            customColorValue = habit.color.customColor
             freqNum = habit.frequency.numerator
             freqDen = habit.frequency.denominator
             targetType = habit.targetType
@@ -127,28 +148,49 @@ class EditHabitActivity : AppCompatActivity() {
         if (state != null) {
             habitId = state.getLong("habitId")
             habitType = HabitType.fromInt(state.getInt("habitType"))
-            color = PaletteColor(state.getInt("paletteColor"))
+            color = PaletteColor(state.getInt("paletteColor"), state.getInt("customColor", Int.MIN_VALUE).takeIf { it != Int.MIN_VALUE })
+            customColorValue = color.customColor
             freqNum = state.getInt("freqNum")
             freqDen = state.getInt("freqDen")
             reminderHour = state.getInt("reminderHour")
             reminderMin = state.getInt("reminderMin")
             reminderDays = WeekdayList(state.getInt("reminderDays"))
+            hasGoal = state.getBoolean("hasGoal", true)
+            goalFrequencyConfigured = state.getBoolean("goalFrequencyConfigured", hasGoal)
+            groupGoalType = GroupGoalType.fromInt(state.getInt("groupGoalType", GroupGoalType.OR.value))
+            groupGoalThreshold = state.getInt("groupGoalThreshold", 1)
+            conversionYesValue = state.getInt("conversionYesValue", Int.MIN_VALUE).takeIf { it != Int.MIN_VALUE }
+            targetType = NumericalHabitType.fromInt(state.getInt("targetType", NumericalHabitType.AT_LEAST.value))
         }
 
         updateColors()
 
-        when (habitType) {
-            HabitType.YES_NO -> {
-                binding.unitOuterBox.visibility = View.GONE
-                binding.targetOuterBox.visibility = View.GONE
-                binding.targetTypeOuterBox.visibility = View.GONE
-            }
-            HabitType.NUMERICAL -> {
-                binding.nameInput.hint = getString(R.string.measurable_short_example)
-                binding.questionInput.hint = getString(R.string.measurable_question_example)
-                binding.frequencyOuterBox.visibility = View.GONE
-            }
+        binding.habitTypeOuterBox.visibility =
+            if (habitId >= 0 && !isEditingGroup) View.VISIBLE else View.GONE
+        updateHabitTypeControls()
+        populateHabitType()
+        binding.habitTypePicker.setOnClickListener { showHabitTypePicker() }
+
+        if (isEditingGroup) {
+            binding.groupRuleOuterBox.visibility = View.VISIBLE
+            binding.groupGoalThresholdInput.setText(groupGoalThreshold.toString())
+            populateGroupGoalRule()
+            binding.groupRulePicker.setOnClickListener { showGroupGoalRulePicker() }
+            binding.goalEnabledSwitch.text = getString(R.string.group_habit_goal_enabled)
         }
+        binding.goalEnabledSwitch.isChecked = hasGoal
+        binding.goalEnabledSwitch.setOnCheckedChangeListener { _, checked ->
+            if (checked && !hasGoal) {
+                goalFrequencyConfigured = false
+                freqNum = 1
+                freqDen = 1
+                if (habitType == HabitType.NUMERICAL) binding.targetInput.text.clear()
+                populateFrequency()
+            }
+            hasGoal = checked
+            updateGoalControls()
+        }
+        updateGoalControls()
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -159,8 +201,12 @@ class EditHabitActivity : AppCompatActivity() {
         binding.colorButton.setOnClickListener {
             val picker = colorPickerDialogFactory.create(color, themeSwitcher.currentTheme)
             picker.setListener { paletteColor ->
-                this.color = paletteColor
-                updateColors()
+                if (paletteColor.paletteIndex == PaletteColor.CUSTOM_PICKER_INDEX) showCustomColorPicker()
+                else {
+                    this.color = paletteColor
+                    customColorValue = null
+                    updateColors()
+                }
             }
             picker.dismissCurrentAndShow(supportFragmentManager, "colorPicker")
         }
@@ -171,6 +217,8 @@ class EditHabitActivity : AppCompatActivity() {
             picker.onFrequencyPicked = { num, den ->
                 freqNum = num
                 freqDen = den
+                goalFrequencyConfigured = true
+                binding.booleanFrequencyPicker.error = null
                 populateFrequency()
             }
             picker.dismissCurrentAndShow(supportFragmentManager, "frequencyPicker")
@@ -206,6 +254,8 @@ class EditHabitActivity : AppCompatActivity() {
                     2 -> 30
                     else -> 1
                 }
+                goalFrequencyConfigured = true
+                binding.numericalFrequencyPicker.error = null
                 populateFrequency()
                 dialog.dismiss()
             }
@@ -261,6 +311,16 @@ class EditHabitActivity : AppCompatActivity() {
         }
     }
 
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     private fun save() {
         val component = (application as HabitsApplication).component
         val habit = component.modelFactory.buildHabit()
@@ -275,7 +335,7 @@ class EditHabitActivity : AppCompatActivity() {
         habit.question = binding.questionInput.text.trim().toString()
         habit.description = binding.notesInput.text.trim().toString()
         habit.category = binding.categoryInput.text.trim().toString()
-        habit.color = color
+        habit.color = customColorValue?.let { PaletteColor.custom(it) } ?: color
         if (reminderHour >= 0) {
             habit.reminder = Reminder(reminderHour, reminderMin, reminderDays)
         } else {
@@ -283,18 +343,49 @@ class EditHabitActivity : AppCompatActivity() {
         }
 
         habit.frequency = Frequency(freqNum, freqDen)
+        if (isEditingGroup) {
+            habit.isGroup = true
+            habit.hasGoal = false
+            habit.groupGoalEnabled = hasGoal
+            habit.groupGoalType = groupGoalType
+            habit.groupGoalThreshold = groupGoalThreshold
+        } else {
+            habit.hasGoal = hasGoal
+        }
         if (habitType == HabitType.NUMERICAL) {
-            habit.targetValue = binding.targetInput.text.toString().toDouble()
-            habit.targetType = targetType
+            if (hasGoal) {
+                habit.targetValue = requireNotNull(parseTargetValue())
+                habit.targetType = targetType
+            }
             habit.unit = binding.unitInput.text.trim().toString()
+        } else {
+            habit.targetValue = 0.0
+            habit.unit = ""
         }
         habit.type = habitType
+
+        val convertedEntries = if (original != null && original.type != habitType) {
+            when {
+                original.type == HabitType.YES_NO && habitType == HabitType.NUMERICAL ->
+                    HabitEntryConverter.booleanToNumerical(
+                        original.originalEntries.getKnown(),
+                        original.computedEntries.getKnown(),
+                        conversionYesValue ?: 1000
+                    )
+                original.type == HabitType.NUMERICAL && habitType == HabitType.YES_NO ->
+                    HabitEntryConverter.numericalToBoolean(original.originalEntries.getKnown(), original.unit)
+                else -> null
+            }
+        } else {
+            null
+        }
 
         val command = if (habitId >= 0) {
             EditHabitCommand(
                 component.habitList,
                 habitId,
-                habit
+                habit,
+                convertedEntries
             )
         } else {
             CreateHabitCommand(
@@ -308,18 +399,78 @@ class EditHabitActivity : AppCompatActivity() {
     }
 
     private fun validate(): Boolean {
+        if (isEditingGroup && groupGoalType == GroupGoalType.AT_LEAST) {
+            val threshold = binding.groupGoalThresholdInput.text.toString().toIntOrNull()
+            val memberCount = (application as HabitsApplication).component.habitList.count {
+                !it.isGroup && it.groupId == habitId
+            }
+            if (threshold == null || threshold < 1 || threshold > memberCount) {
+                binding.groupGoalThresholdInput.error = getString(R.string.group_goal_threshold_invalid, memberCount)
+                return false
+            }
+            groupGoalThreshold = threshold
+        }
         var isValid = true
         if (binding.nameInput.text.isEmpty()) {
             binding.nameInput.error = getFormattedValidationError(R.string.validation_cannot_be_blank)
             isValid = false
         }
-        if (habitType == HabitType.NUMERICAL) {
-            if (binding.targetInput.text.isEmpty()) {
+        if (hasGoal && !goalFrequencyConfigured) {
+            val picker = if (habitType == HabitType.NUMERICAL) {
+                binding.numericalFrequencyPicker
+            } else {
+                binding.booleanFrequencyPicker
+            }
+            picker.error = getString(R.string.validation_goal_frequency_required)
+            isValid = false
+        }
+        if (habitType == HabitType.NUMERICAL && hasGoal) {
+            val targetValue = parseTargetValue()
+            if (binding.targetInput.text.isBlank()) {
                 binding.targetInput.error = getString(R.string.validation_cannot_be_blank)
+                isValid = false
+            } else if (targetValue == null) {
+                binding.targetInput.error = getString(R.string.validation_invalid_number)
                 isValid = false
             }
         }
         return isValid
+    }
+
+    private fun parseTargetValue(): Double? = binding.targetInput.text.toString()
+        .trim()
+        .replace(',', '.')
+        .toDoubleOrNull()
+        ?.takeIf { it.isFinite() }
+
+    private fun populateGroupGoalRule() {
+        binding.groupRulePicker.text = when (groupGoalType) {
+            GroupGoalType.OR -> getString(R.string.group_goal_rule_or)
+            GroupGoalType.AND -> getString(R.string.group_goal_rule_and)
+            GroupGoalType.AT_LEAST -> getString(R.string.group_goal_rule_at_least)
+        }
+        binding.groupGoalThresholdInput.visibility =
+            if (groupGoalType == GroupGoalType.AT_LEAST) View.VISIBLE else View.GONE
+    }
+
+    private fun showGroupGoalRulePicker() {
+        val labels = arrayOf(
+            getString(R.string.group_goal_rule_or),
+            getString(R.string.group_goal_rule_and),
+            getString(R.string.group_goal_rule_at_least)
+        )
+        AlertDialog.Builder(this)
+            .setTitle(R.string.group_goal_rule)
+            .setItems(labels) { dialog, which ->
+                groupGoalType = when (which) {
+                    1 -> GroupGoalType.AND
+                    2 -> GroupGoalType.AT_LEAST
+                    else -> GroupGoalType.OR
+                }
+                populateGroupGoalRule()
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun populateReminder() {
@@ -354,8 +505,167 @@ class EditHabitActivity : AppCompatActivity() {
         }
     }
 
+    private fun populateHabitType() {
+        binding.habitTypePicker.text = when (habitType) {
+            HabitType.YES_NO -> getString(R.string.yes_or_no)
+            HabitType.NUMERICAL -> getString(R.string.measurable)
+        }
+    }
+
+    private fun updateHabitTypeControls() {
+        val isNumerical = habitType == HabitType.NUMERICAL
+        binding.unitOuterBox.visibility = if (isNumerical) View.VISIBLE else View.GONE
+        binding.nameInput.hint = if (isNumerical) {
+            getString(R.string.measurable_short_example)
+        } else {
+            getString(R.string.yes_or_no_short_example)
+        }
+        binding.questionInput.hint = if (isNumerical) {
+            getString(R.string.measurable_question_example)
+        } else {
+            getString(R.string.example_question_boolean)
+        }
+        updateGoalControls()
+    }
+
+    private fun updateGoalControls() {
+        val isNumerical = habitType == HabitType.NUMERICAL
+        binding.frequencyOuterBox.visibility =
+            if (!isNumerical && hasGoal) View.VISIBLE else View.GONE
+        binding.targetOuterBox.visibility =
+            if (isNumerical && hasGoal) View.VISIBLE else View.GONE
+        binding.targetTypeOuterBox.visibility =
+            if (isNumerical && hasGoal) View.VISIBLE else View.GONE
+    }
+
+    private fun showHabitTypePicker() {
+        val options = arrayOf(getString(R.string.yes_or_no), getString(R.string.measurable))
+        AlertDialog.Builder(this)
+            .setTitle(R.string.habit_type)
+            .setItems(options) { dialog, which ->
+                dialog.dismiss()
+                val selectedType = if (which == 0) HabitType.YES_NO else HabitType.NUMERICAL
+                if (selectedType != habitType) {
+                    if (selectedType == HabitType.NUMERICAL) {
+                        showBooleanToNumericalDialog()
+                    } else {
+                        AlertDialog.Builder(this)
+                            .setTitle(R.string.convert_to_yes_no)
+                            .setMessage(R.string.conversion_numerical_to_boolean_message)
+                            .setNegativeButton(android.R.string.cancel, null)
+                            .setPositiveButton(R.string.convert) { _, _ ->
+                                changeHabitType(HabitType.YES_NO)
+                            }
+                            .show()
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun showBooleanToNumericalDialog() {
+        val valueInput = android.widget.EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            hint = getString(R.string.conversion_yes_value_hint)
+            setText("1")
+            selectAll()
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.convert_to_numerical)
+            .setMessage(R.string.conversion_boolean_to_numerical_message)
+            .setView(valueInput)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.convert, null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val value = valueInput.text.toString().replace(',', '.').toDoubleOrNull()
+                val scaledValue = value?.times(1000.0)
+                if (
+                    scaledValue == null ||
+                    !scaledValue.isFinite() ||
+                    scaledValue < 1.0 ||
+                    scaledValue > Int.MAX_VALUE.toDouble()
+                ) {
+                    valueInput.error = getString(R.string.validation_conversion_value_required)
+                } else {
+                    conversionYesValue = scaledValue.roundToInt()
+                    changeHabitType(HabitType.NUMERICAL)
+                    dialog.dismiss()
+                }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun changeHabitType(newType: HabitType) {
+        if (newType == habitType) return
+        habitType = newType
+        freqNum = 1
+        freqDen = 1
+        goalFrequencyConfigured = false
+        binding.booleanFrequencyPicker.error = null
+        binding.numericalFrequencyPicker.error = null
+        binding.targetInput.error = null
+        if (newType == HabitType.NUMERICAL) {
+            targetType = NumericalHabitType.AT_LEAST
+            binding.targetInput.text.clear()
+            binding.unitInput.text.clear()
+        } else {
+            binding.targetInput.text.clear()
+            binding.unitInput.text.clear()
+        }
+        updateHabitTypeControls()
+        populateHabitType()
+        populateFrequency()
+        populateTargetType()
+    }
+
+    private fun showCustomColorPicker() {
+        val hsv = FloatArray(3)
+        AndroidColor.colorToHSV(customColorValue ?: AndroidColor.RED, hsv)
+        val container = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 12, 32, 0)
+        }
+        val preview = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (48 * resources.displayMetrics.density).toInt()
+            )
+            setBackgroundColor(AndroidColor.HSVToColor(hsv))
+        }
+        container.addView(preview)
+        listOf("Hue", "Saturation", "Brightness").forEachIndexed { index, label ->
+            container.addView(TextView(this).apply { text = label })
+            container.addView(SeekBar(this).apply {
+                max = if (index == 0) 360 else 100
+                progress = if (index == 0) hsv[index].roundToInt() else (hsv[index] * 100).roundToInt()
+                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
+                        hsv[index] = if (index == 0) progress.toFloat() else progress.toFloat() / 100f
+                        preview.setBackgroundColor(AndroidColor.HSVToColor(hsv))
+                    }
+                    override fun onStartTrackingTouch(bar: SeekBar?) {}
+                    override fun onStopTrackingTouch(bar: SeekBar?) {}
+                })
+            })
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.color)
+            .setView(container)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                customColorValue = AndroidColor.HSVToColor(hsv)
+                color = PaletteColor.custom(customColorValue!!)
+                updateColors()
+            }
+            .show()
+    }
+
     private fun updateColors() {
-        androidColor = themeSwitcher.currentTheme.color(color).toInt()
+        val displayColor = customColorValue?.let { PaletteColor.custom(it) } ?: color
+        androidColor = themeSwitcher.currentTheme.color(displayColor).toInt()
         binding.colorButton.backgroundTintList = ColorStateList.valueOf(androidColor)
         if (!themeSwitcher.isNightMode) {
             window.statusBarColor = androidColor
@@ -374,12 +684,19 @@ class EditHabitActivity : AppCompatActivity() {
             putLong("habitId", habitId)
             putInt("habitType", habitType.value)
             putInt("paletteColor", color.paletteIndex)
+            putInt("customColor", customColorValue ?: Int.MIN_VALUE)
             putInt("androidColor", androidColor)
             putInt("freqNum", freqNum)
             putInt("freqDen", freqDen)
             putInt("reminderHour", reminderHour)
             putInt("reminderMin", reminderMin)
             putInt("reminderDays", reminderDays.toInteger())
+            putBoolean("hasGoal", hasGoal)
+            putInt("groupGoalType", groupGoalType.value)
+            putInt("groupGoalThreshold", groupGoalThreshold)
+            putBoolean("goalFrequencyConfigured", goalFrequencyConfigured)
+            putInt("conversionYesValue", conversionYesValue ?: Int.MIN_VALUE)
+            putInt("targetType", targetType.value)
         }
     }
 }

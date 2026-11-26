@@ -19,8 +19,16 @@
 
 package org.isoron.uhabits.core.models
 
-data class PaletteColor(val paletteIndex: Int) {
+data class PaletteColor(val paletteIndex: Int, val customColor: Int? = null) {
+    companion object {
+        const val CUSTOM_PICKER_INDEX = 20
+        fun custom(argb: Int) = PaletteColor(19, argb)
+    }
     fun toCsvColor(): String {
+        customColor?.let {
+            val hex = (it and 0xFFFFFF).toString(16).uppercase().padStart(6, '0')
+            return "#$hex"
+        }
         return arrayOf(
             "#D32F2F", //  0 red
             "#E64A19", //  1 deep orange

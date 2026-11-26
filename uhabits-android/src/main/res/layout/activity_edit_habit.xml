@@ -140,6 +140,54 @@
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- Habit type -->
+            <FrameLayout
+                android:id="@+id/habitTypeOuterBox"
+                style="@style/FormOuterBox">
+                <LinearLayout style="@style/FormInnerBox">
+                    <TextView
+                        style="@style/FormLabel"
+                        android:text="@string/habit_type" />
+                    <TextView
+                        style="@style/FormDropdown"
+                        android:id="@+id/habitTypePicker" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- Goal setting -->
+            <FrameLayout style="@style/FormOuterBox">
+                <LinearLayout style="@style/FormInnerBox">
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/goalEnabledSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minHeight="56dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:text="@string/goal_enabled"
+                        android:textColor="?attr/contrast100" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/groupRuleOuterBox"
+                style="@style/FormOuterBox"
+                android:visibility="gone">
+                <LinearLayout style="@style/FormInnerBox">
+                    <TextView style="@style/FormLabel" android:text="@string/group_goal_rule" />
+                    <TextView
+                        style="@style/FormDropdown"
+                        android:id="@+id/groupRulePicker" />
+                    <EditText
+                        android:id="@+id/groupGoalThresholdInput"
+                        style="@style/FormInput"
+                        android:inputType="number"
+                        android:maxLines="1"
+                        android:hint="@string/group_goal_threshold_hint"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </FrameLayout>
+
             <!-- Frequency -->
             <FrameLayout
                 android:id="@+id/frequencyOuterBox"

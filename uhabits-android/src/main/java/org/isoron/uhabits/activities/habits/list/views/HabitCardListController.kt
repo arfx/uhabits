@@ -63,10 +63,20 @@ class HabitCardListController(
         val result = adapter.onDragEnd()
         if (result != null) {
             cancelSelection()
-            behavior.reorderHabit(result.habitId, result.refId, result.placeBefore, result.targetCategory)
+            behavior.reorderHabit(
+                result.habitId,
+                result.refId,
+                result.placeBefore,
+                result.targetCategory,
+                result.targetGroupId
+            )
         } else {
             adapter.flushPending()
         }
+    }
+
+    override fun onGroupInsights(habitId: Long) {
+        behavior.onClickHabit(habitId)
     }
 
     override fun onToggle(
@@ -122,8 +132,12 @@ class HabitCardListController(
     internal inner class NormalMode : Mode {
         override fun onItemClick(position: Int) {
             if (position < 0 || position >= adapter.itemCount) return
-            val id = adapter.habitAt(position)?.id ?: return
-            behavior.onClickHabit(id)
+            val card = adapter.habitAt(position) ?: return
+            if (card.isGroup) {
+                adapter.toggleGroup(position)
+                return
+            }
+            behavior.onClickHabit(card.id)
         }
 
         override fun onItemLongClick(position: Int): Boolean {

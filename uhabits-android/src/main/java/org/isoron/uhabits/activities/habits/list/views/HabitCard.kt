@@ -10,8 +10,8 @@
  *
  * Loop Habit Tracker is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
  *
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
@@ -46,6 +46,7 @@ import org.isoron.uhabits.inject.ActivityContext
 import org.isoron.uhabits.utils.currentTheme
 import org.isoron.uhabits.utils.dp
 import org.isoron.uhabits.utils.sres
+import kotlin.math.roundToInt
 
 data class HabitCardViewState(
     val record: HabitCardState,
@@ -65,33 +66,56 @@ class HabitCardView(
     private var innerFrame: LinearLayout
     private var label: TextView
     private var scoreRing: RingView
+    private var noGoalMarker: TextView
+    private var scoreRingContainer: FrameLayout
+    private var groupInsightsButton: TextView
 
     private var dataOffset = 0
     private var state: HabitCardViewState? = null
-
-    private var currentToggleTaskId = 0
 
     fun setState(newState: HabitCardViewState) {
         state = newState
         val r = newState.record
         val c = getActiveColor(r)
         label.apply {
-            text = r.name
+            text = when {
+                r.isGroup && r.groupGoalEnabled -> "${r.name}  (${r.groupGoalProgress}/${r.groupGoalTarget})"
+                r.isGroupChild -> "    ${r.name}"
+                else -> r.name
+            }
             setTextColor(c)
         }
-        scoreRing.apply {
-            setPercentage(r.score.toFloat())
-            setPrecision(1.0f / 16)
-            setColor(c)
+        scoreRing.visibility = if (r.hasGoal) View.VISIBLE else View.GONE
+        // Groups use their expand/collapse arrow as the state indicator.
+        noGoalMarker.visibility = if (r.isGroup || !r.hasGoal) View.VISIBLE else View.GONE
+        noGoalMarker.text = when {
+            r.isGroup && r.isExpanded -> "▾"
+            r.isGroup -> "▸"
+            else -> "●"
         }
-        checkmarkPanel.visibility = when (r.isNumerical) {
-            true -> View.GONE
-            false -> View.VISIBLE
+        noGoalMarker.textSize = if (r.isGroup) 27.5f else 11f
+        // The triangle glyph sits optically below the text baseline even when
+        // its TextView is geometrically centered. Nudge group arrows slightly
+        // upward so they align with the group title on Android.
+        noGoalMarker.translationY = if (r.isGroup) -dp(2f) else 0f
+        noGoalMarker.setTextColor(c)
+        if (r.hasGoal) {
+            scoreRing.apply {
+                setPercentage(r.score.toFloat())
+                setPrecision(1.0f / 16)
+                setColor(c)
+            }
         }
-        numberPanel.visibility = when (r.isNumerical) {
-            true -> View.VISIBLE
-            false -> View.GONE
+        // Keep the original checkmark strip visible for groups, but route its
+        // interactions to group insights instead of changing group repetitions.
+        checkmarkPanel.visibility = if (r.isNumerical) View.GONE else View.VISIBLE
+        checkmarkPanel.onReadOnlyClick = if (r.isGroup) {
+            { controller.onGroupInsights(r.id) }
+        } else {
+            null
         }
+        numberPanel.visibility = if (!r.isGroup && r.isNumerical) View.VISIBLE else View.GONE
+        groupInsightsButton.visibility = View.GONE
         checkmarkPanel.setState(CheckmarkPanelState(r.checkmarks, c, r.notes, newState.buttonCount))
         numberPanel.setState(
             NumberPanelState(
@@ -120,15 +144,26 @@ class HabitCardView(
     }
 
     init {
+        val ringSize = dp(15f).toInt()
+        val indicatorSize = dp(28f).toInt()
+        val sideMargin = dp(8f).toInt()
         scoreRing = RingView(context).apply {
-            val thickness = dp(3f)
-            val margin = dp(8f).toInt()
-            val ringSize = dp(15f).toInt()
-            layoutParams = LinearLayout.LayoutParams(ringSize, ringSize).apply {
-                setMargins(margin, 0, margin, 0)
+            setThickness(dp(3f))
+        }
+        noGoalMarker = TextView(context).apply {
+            text = "●"
+            textSize = 11f
+            gravity = Gravity.CENTER
+            includeFontPadding = false
+            visibility = View.GONE
+        }
+        scoreRingContainer = FrameLayout(context).apply {
+            layoutParams = LinearLayout.LayoutParams(indicatorSize, indicatorSize).apply {
+                setMargins(sideMargin, 0, sideMargin, 0)
                 gravity = Gravity.CENTER
             }
-            setThickness(thickness)
+            addView(scoreRing, FrameLayout.LayoutParams(ringSize, ringSize, Gravity.CENTER))
+            addView(noGoalMarker, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
         }
 
         label = TextView(context).apply {
@@ -156,10 +191,14 @@ class HabitCardView(
                 }
             }
             onEdit = { date ->
-                triggerRipple(date)
-                val location = getAbsoluteButtonLocation(date)
-                state?.record?.id?.let { habitId ->
-                    controller.onEdit(habitId, date, location.x, location.y)
+                if (state?.record?.isGroup == true) {
+                    state?.record?.id?.let(controller::onGroupInsights)
+                } else {
+                    triggerRipple(date)
+                    val location = getAbsoluteButtonLocation(date)
+                    state?.record?.id?.let { habitId ->
+                        controller.onEdit(habitId, date, location.x, location.y)
+                    }
                 }
             }
         }
@@ -173,6 +212,34 @@ class HabitCardView(
                     controller.onEdit(habitId, date, location.x, location.y)
                 }
             }
+            onIncrement = { date, value, notes ->
+                triggerRipple(date)
+                val location = getAbsoluteButtonLocation(date)
+                state?.record?.id?.let { habitId ->
+                    controller.onToggle(
+                        habitId,
+                        date,
+                        (value * 1000).roundToInt(),
+                        notes,
+                        location.x,
+                        location.y
+                    )
+                }
+            }
+        }
+
+        groupInsightsButton = TextView(context).apply {
+            text = "▤"
+            textSize = 20f
+            gravity = Gravity.CENTER
+            minWidth = dp(48f).toInt()
+            contentDescription = context.getString(R.string.group_habit_insights)
+            isClickable = true
+            isFocusable = true
+            visibility = View.GONE
+            setOnClickListener {
+                state?.record?.takeIf { it.isGroup }?.id?.let(controller::onGroupInsights)
+            }
         }
 
         innerFrame = LinearLayout(context).apply {
@@ -181,7 +248,7 @@ class HabitCardView(
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
             elevation = dp(1f)
 
-            addView(scoreRing)
+            addView(scoreRingContainer)
             addView(label)
             addView(checkmarkPanel)
             addView(numberPanel)

@@ -19,6 +19,7 @@
 package org.isoron.uhabits.activities.common.dialogs
 
 import com.android.colorpicker.ColorPickerDialog
+import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.ui.callbacks.OnColorPickedCallback
 import org.isoron.uhabits.utils.toPaletteColor
 
@@ -28,7 +29,9 @@ import org.isoron.uhabits.utils.toPaletteColor
 class ColorPickerDialog : ColorPickerDialog() {
     fun setListener(callback: OnColorPickedCallback) {
         super.setOnColorSelectedListener { c: Int ->
-            val pc = c.toPaletteColor(requireContext())
+            val pc = if (c == android.graphics.Color.MAGENTA) {
+                PaletteColor(PaletteColor.CUSTOM_PICKER_INDEX)
+            } else c.toPaletteColor(requireContext())
             callback.onColorPicked(pc)
         }
     }

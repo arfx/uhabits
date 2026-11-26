@@ -24,6 +24,8 @@ import org.isoron.uhabits.core.database.HabitData
 import org.isoron.uhabits.core.database.HabitRepository
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
+import org.isoron.uhabits.core.models.GroupHabitCalculator
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.uhabits.core.models.HabitList
 import org.isoron.uhabits.core.models.HabitMatcher
 import org.isoron.uhabits.core.models.HabitType
@@ -56,6 +58,11 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
             (h.originalEntries as SQLiteEntryList).habitId = h.id
             list.add(h)
         }
+
+        // Computed entries, scores and streaks are in-memory data. Restore
+        // them for groups from their persisted aggregate history on startup.
+        list.filter { it.isGroup }.forEach { GroupHabitCalculator.recomputeDerivedState(it) }
+
         if (shouldRebuildOrder) rebuildOrder()
     }
 
@@ -150,6 +157,7 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
         list.removeAll()
         repository.execSQL("delete from habits")
         repository.execSQL("delete from repetitions")
+        repository.execSQL("delete from HabitCustomColors")
         observable.notifyListeners()
     }
 
@@ -257,6 +265,7 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
                 freqNum = numerator,
                 freqDen = denominator,
                 color = habit.color.paletteIndex,
+                customColor = habit.color.customColor,
                 position = habit.position,
                 reminderHour = habit.reminder?.hour,
                 reminderMin = habit.reminder?.minute,
@@ -268,7 +277,13 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
                 targetType = habit.targetType.value,
                 unit = habit.unit,
                 uuid = habit.uuid,
-                category = habit.category
+                category = habit.category,
+                hasGoal = if (habit.hasGoal) 1 else 0,
+                isGroup = if (habit.isGroup) 1 else 0,
+                groupId = habit.groupId,
+                groupGoalEnabled = if (habit.groupGoalEnabled) 1 else 0,
+                groupGoalType = habit.groupGoalType.value,
+                groupGoalThreshold = habit.groupGoalThreshold
             )
         }
 
@@ -278,7 +293,7 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
             habit.description = data.description
             habit.question = data.question
             habit.frequency = Frequency(data.freqNum, data.freqDen)
-            habit.color = PaletteColor(data.color)
+            habit.color = PaletteColor(data.color, data.customColor)
             habit.isArchived = data.archived != 0
             habit.type = HabitType.fromInt(data.type)
             habit.targetType = NumericalHabitType.fromInt(data.targetType)
@@ -287,6 +302,12 @@ class SQLiteHabitList(private val modelFactory: ModelFactory) : HabitList() {
             habit.position = data.position
             habit.uuid = data.uuid
             habit.category = data.category
+            habit.hasGoal = data.hasGoal != 0
+            habit.isGroup = data.isGroup != 0
+            habit.groupId = data.groupId
+            habit.groupGoalEnabled = data.groupGoalEnabled != 0
+            habit.groupGoalType = GroupGoalType.fromInt(data.groupGoalType)
+            habit.groupGoalThreshold = data.groupGoalThreshold.coerceAtLeast(1)
             if (data.reminderHour != null && data.reminderMin != null) {
                 habit.reminder = Reminder(
                     data.reminderHour!!,

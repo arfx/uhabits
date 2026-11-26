@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS HabitCustomColors (
+    habit_uuid TEXT PRIMARY KEY NOT NULL,
+    color INTEGER NOT NULL
+);

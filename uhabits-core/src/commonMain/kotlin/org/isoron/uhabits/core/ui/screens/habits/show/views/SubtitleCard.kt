@@ -36,18 +36,21 @@ data class SubtitleCardState(
     val targetType: NumericalHabitType = NumericalHabitType.AT_LEAST,
     val unit: String = "",
     val category: String = "",
-    val theme: Theme
+    val theme: Theme,
+    val hasGoal: Boolean = true
 )
 
 class SubtitleCardPresenter {
     companion object {
         fun buildState(
             habit: Habit,
-            theme: Theme
+            theme: Theme,
+            hasGoal: Boolean = habit.hasGoal
         ): SubtitleCardState = SubtitleCardState(
             color = habit.color,
             frequency = habit.frequency,
             isNumerical = habit.isNumerical,
+            hasGoal = hasGoal,
             question = habit.question,
             reminder = habit.reminder,
             targetValue = habit.targetValue,

@@ -47,7 +47,8 @@ class HistoryChart(
     var theme: Theme,
     var today: LocalDate,
     var onDateClickedListener: OnDateClickedListener = object : OnDateClickedListener {},
-    var padding: Double = 0.0
+    var padding: Double = 0.0,
+    var seriesColors: List<List<PaletteColor>> = emptyList()
 ) : DataView {
 
     enum class Square {
@@ -236,7 +237,7 @@ class HistoryChart(
         val hasNotes = if (offset >= notesIndicators.size) false else notesIndicators[offset]
         val squareColor: Color
         val circleColor: Color
-        val color = theme.color(paletteColor.paletteIndex)
+        val color = theme.color(paletteColor)
         squareColor = when (value) {
             Square.ON -> {
                 color
@@ -252,8 +253,17 @@ class HistoryChart(
             }
         }
 
-        canvas.setColor(squareColor)
-        canvas.fillRoundRect(x, y, width, height, width * 0.15)
+        val segmentColors = if (value == Square.ON && offset < seriesColors.size) seriesColors[offset] else emptyList()
+        if (segmentColors.size > 1) {
+            val segmentHeight = height / segmentColors.size
+            segmentColors.forEachIndexed { index, palette ->
+                canvas.setColor(theme.color(palette))
+                canvas.fillRect(x, y + index * segmentHeight, width, segmentHeight)
+            }
+        } else {
+            canvas.setColor(if (segmentColors.size == 1) theme.color(segmentColors.first()) else squareColor)
+            canvas.fillRoundRect(x, y, width, height, width * 0.15)
+        }
 
         if (value == Square.HATCHED) {
             canvas.setStrokeWidth(0.75)
@@ -271,11 +281,16 @@ class HistoryChart(
             }
         }
 
+        val textBackgroundColor = if (segmentColors.isNotEmpty()) {
+            theme.color(segmentColors[segmentColors.size / 2])
+        } else {
+            squareColor
+        }
         val textColor = if (theme.cardBackgroundColor == Color.TRANSPARENT) {
             theme.highContrastTextColor
         } else {
-            val c1 = squareColor.contrast(theme.cardBackgroundColor)
-            val c2 = squareColor.contrast(theme.mediumContrastTextColor)
+            val c1 = textBackgroundColor.contrast(theme.cardBackgroundColor)
+            val c2 = textBackgroundColor.contrast(theme.mediumContrastTextColor)
             if (c1 > c2) theme.cardBackgroundColor else theme.mediumContrastTextColor
         }
 

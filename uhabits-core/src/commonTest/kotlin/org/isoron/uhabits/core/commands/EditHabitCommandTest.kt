@@ -21,7 +21,10 @@ package org.isoron.uhabits.core.commands
 import org.isoron.platform.time.LocalDate
 import org.isoron.platform.time.getToday
 import org.isoron.uhabits.core.BaseUnitTest
+import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.HabitEntryConverter
+import org.isoron.uhabits.core.models.HabitType
 import org.isoron.uhabits.core.models.Habit
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -46,6 +49,129 @@ class EditHabitCommandTest : BaseUnitTest() {
         modified.name = "modified"
         habitList.add(modified)
         today = getToday()
+    }
+
+    @Test
+    fun testExecuteWithConvertedEntriesPreservesHistoricalNotes() {
+        habit.originalEntries.clear()
+        habit.originalEntries.add(org.isoron.uhabits.core.models.Entry(today, org.isoron.uhabits.core.models.Entry.YES_MANUAL, "morning run"))
+        habit.originalEntries.add(org.isoron.uhabits.core.models.Entry(today.minus(1), org.isoron.uhabits.core.models.Entry.NO, "rest day"))
+        modified.type = HabitType.NUMERICAL
+
+        val converted = HabitEntryConverter.booleanToNumerical(
+            habit.originalEntries.getKnown(),
+            yesValue = 2500
+        )
+        EditHabitCommand(
+            habitList,
+            habit.id!!,
+            modified,
+            convertedEntries = converted
+        ).run()
+
+        assertEquals(2500, habit.originalEntries.get(today).value)
+        assertEquals("morning run", habit.originalEntries.get(today).notes)
+        assertEquals(0, habit.originalEntries.get(today.minus(1)).value)
+        assertEquals("rest day", habit.originalEntries.get(today.minus(1)).notes)
+    }
+
+
+    @Test
+    fun testTypeConversionPreservesNoGoalConfiguration() {
+        habit.hasGoal = false
+        habit.originalEntries.clear()
+        habit.originalEntries.add(org.isoron.uhabits.core.models.Entry(today, org.isoron.uhabits.core.models.Entry.YES_MANUAL, "activity"))
+        modified.copyFrom(habit)
+        modified.type = org.isoron.uhabits.core.models.HabitType.NUMERICAL
+
+        val converted = org.isoron.uhabits.core.models.HabitEntryConverter.booleanToNumerical(
+            habit.originalEntries.getKnown(),
+            yesValue = 1000
+        )
+        EditHabitCommand(
+            habitList,
+            habit.id!!,
+            modified,
+            convertedEntries = converted
+        ).run()
+
+        assertEquals(false, habit.hasGoal)
+        assertEquals(1000, habit.originalEntries.get(today).value)
+        assertEquals("activity", habit.originalEntries.get(today).notes)
+    }
+
+    @Test
+    fun testTypeConversionPersistsComputedAutomaticSuccesses() {
+        habit.originalEntries.clear()
+        habit.frequency = Frequency(1, 3)
+        habit.originalEntries.add(
+            Entry(today, Entry.YES_MANUAL, "latest")
+        )
+        habit.originalEntries.add(
+            Entry(today.minus(3), Entry.YES_MANUAL, "earlier")
+        )
+        habit.recompute()
+
+        val automaticDate = today.minus(1)
+        assertEquals(
+            Entry.YES_AUTO,
+            habit.computedEntries.get(automaticDate).value
+        )
+
+        modified.copyFrom(habit)
+        modified.type = org.isoron.uhabits.core.models.HabitType.NUMERICAL
+        val converted = org.isoron.uhabits.core.models.HabitEntryConverter.booleanToNumerical(
+            habit.originalEntries.getKnown(),
+            habit.computedEntries.getKnown(),
+            1750
+        )
+
+        EditHabitCommand(
+            habitList,
+            habit.id!!,
+            modified,
+            convertedEntries = converted
+        ).run()
+
+        assertEquals(1750, habit.originalEntries.get(automaticDate).value)
+        assertEquals(1750, habit.originalEntries.get(today).value)
+        assertEquals("latest", habit.originalEntries.get(today).notes)
+        assertEquals(1750, habit.originalEntries.get(today.minus(3)).value)
+        assertEquals("earlier", habit.originalEntries.get(today.minus(3)).notes)
+    }
+
+    @Test
+    fun testEditingGroupGoalRecomputesScoreHistory() {
+        val group = modelFactory.buildHabit().apply {
+            isGroup = true
+            hasGoal = false
+            groupGoalEnabled = true
+            frequency = Frequency(2, 7)
+            name = "Sport"
+        }
+        habitList.add(group)
+
+        val child = modelFactory.buildHabit().apply {
+            groupId = group.id
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            originalEntries.add(Entry(today.minus(1), Entry.YES_MANUAL))
+            recompute()
+        }
+        habitList.add(child)
+
+        val modifiedGroup = modelFactory.buildHabit().apply {
+            copyFrom(group)
+            frequency = Frequency(3, 7)
+            groupGoalEnabled = true
+            hasGoal = false
+        }
+
+        EditHabitCommand(habitList, group.id!!, modifiedGroup).run()
+
+        assertEquals(Frequency(3, 7), group.frequency)
+        assertEquals(true, group.groupGoalEnabled)
+        assertEquals(false, group.hasGoal)
+        assertEquals(true, group.scores[today].value > 0.0)
     }
 
     @Test

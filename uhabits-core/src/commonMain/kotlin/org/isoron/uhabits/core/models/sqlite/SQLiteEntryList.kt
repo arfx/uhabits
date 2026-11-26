@@ -72,8 +72,16 @@ class SQLiteEntryList(val repository: EntryRepository) : EntryList() {
         return super.getKnown()
     }
 
-    override fun recomputeFrom(originalEntries: EntryList, frequency: Frequency, isNumerical: Boolean) {
+    override fun recomputeFrom(originalEntries: EntryList, frequency: Frequency, isNumerical: Boolean, hasGoal: Boolean) {
         throw UnsupportedOperationException()
+    }
+
+    override fun replaceAll(entries: List<Entry>) {
+        loadRecords()
+        val id = habitId ?: throw IllegalStateException("habitId must be set")
+        repository.replaceAllForHabit(id, entries)
+        super.clear()
+        entries.forEach { super.add(it) }
     }
 
     override fun clear() {

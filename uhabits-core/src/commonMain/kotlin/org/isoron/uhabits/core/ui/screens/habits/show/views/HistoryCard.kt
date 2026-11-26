@@ -30,6 +30,7 @@ import org.isoron.uhabits.core.models.Entry.Companion.YES_AUTO
 import org.isoron.uhabits.core.models.Entry.Companion.YES_MANUAL
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.preferences.Preferences
 import org.isoron.uhabits.core.ui.callbacks.CheckMarkDialogCallback
@@ -51,7 +52,9 @@ data class HistoryCardState(
     val defaultSquare: HistoryChart.Square,
     val notesIndicators: List<Boolean>,
     val theme: Theme,
-    val today: LocalDate
+    val today: LocalDate,
+    val seriesColors: List<List<PaletteColor>> = emptyList(),
+    val isEditable: Boolean = true
 )
 
 class HistoryCardPresenter(
@@ -63,28 +66,22 @@ class HistoryCardPresenter(
 ) : OnDateClickedListener {
 
     override fun onDateLongPress(date: LocalDate) {
+        if (habit.isGroup) return
         screen.showFeedback()
         if (habit.isNumerical) {
             showNumberPopup(date)
         } else {
-            if (preferences.isShortToggleEnabled) {
-                showCheckmarkPopup(date)
-            } else {
-                toggle(date)
-            }
+            showCheckmarkPopup(date)
         }
     }
 
     override fun onDateShortPress(date: LocalDate) {
+        if (habit.isGroup) return
         screen.showFeedback()
         if (habit.isNumerical) {
             showNumberPopup(date)
         } else {
-            if (preferences.isShortToggleEnabled) {
-                toggle(date)
-            } else {
-                showCheckmarkPopup(date)
-            }
+            toggle(date)
         }
     }
 
@@ -146,6 +143,7 @@ class HistoryCardPresenter(
     }
 
     fun onClickEditButton() {
+        if (habit.isGroup) return
         screen.showHistoryEditorDialog(this)
     }
 
@@ -153,19 +151,29 @@ class HistoryCardPresenter(
         fun buildState(
             habit: Habit,
             firstWeekday: DayOfWeek,
-            theme: Theme
+            theme: Theme,
+            habitList: HabitList? = null
         ): HistoryCardState {
             val today = getToday()
             val oldest = habit.computedEntries.getKnown().lastOrNull()?.date ?: today
             val entries = habit.computedEntries.getByInterval(oldest, today)
             val series = if (habit.isNumerical) {
                 entries.map {
-                    when {
-                        it.value == SKIP -> HATCHED
-                        (it.completed && it.value > 0) -> ON
-                        it.completed -> DIMMED
-                        it.value > 0 -> GREY
-                        else -> OFF
+                    if (!habit.hasGoal) {
+                        when {
+                            it.value == SKIP -> HATCHED
+                            it.value == Entry.UNKNOWN -> OFF
+                            it.value > 0 -> ON
+                            else -> GREY
+                        }
+                    } else {
+                        when {
+                            it.value == SKIP -> HATCHED
+                            (it.completed && it.value > 0) -> ON
+                            it.completed -> DIMMED
+                            it.value > 0 -> GREY
+                            else -> OFF
+                        }
                     }
                 }
             } else {
@@ -174,9 +182,26 @@ class HistoryCardPresenter(
                         YES_MANUAL -> ON
                         YES_AUTO -> DIMMED
                         SKIP -> HATCHED
+                        Entry.NO -> if (!habit.hasGoal) GREY else OFF
                         else -> OFF
                     }
                 }
+            }
+            val children = if (habit.isGroup) {
+                habitList?.filter { it.groupId == habit.id && !it.isGroup } ?: emptyList()
+            } else {
+                emptyList()
+            }
+            val seriesColors = if (habit.isGroup) {
+                entries.map { entry ->
+                    if (entry.value == YES_MANUAL) {
+                        GroupHabitCalculator.contributingColors(habit, children, entry.date)
+                    } else {
+                        emptyList()
+                    }
+                }
+            } else {
+                emptyList()
             }
             val notesIndicators = entries.map {
                 when (it.notes) {
@@ -192,7 +217,9 @@ class HistoryCardPresenter(
                 theme = theme,
                 series = series,
                 defaultSquare = OFF,
-                notesIndicators = notesIndicators
+                notesIndicators = notesIndicators,
+                seriesColors = seriesColors,
+                isEditable = !habit.isGroup
             )
         }
     }

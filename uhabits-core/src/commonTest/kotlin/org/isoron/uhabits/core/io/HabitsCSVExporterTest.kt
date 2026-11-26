@@ -26,6 +26,7 @@ import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Frequency
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.GroupGoalType
 import org.isoron.uhabits.core.models.PaletteColor
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -42,6 +43,7 @@ class HabitsCSVExporterTest : BaseUnitTest() {
 
         val meditate = fixtures.createEmptyHabit()
         meditate.position = 1
+        meditate.hasGoal = false
 
         val short = fixtures.createShortHabit()
         short.position = 2
@@ -92,6 +94,47 @@ class HabitsCSVExporterTest : BaseUnitTest() {
         habitList.add(stretch)
         habitList.add(commaName)
         habitList.add(nonDaily)
+    }
+
+    @Test
+    fun testGroupsAreExcludedFromCsvAndWrittenToSeparateMetadata() = runTest {
+        val group = modelFactory.buildHabit()
+        group.name = "Reading and Stretching"
+        group.isGroup = true
+        group.groupGoalEnabled = true
+        group.groupGoalType = GroupGoalType.AT_LEAST
+        group.groupGoalThreshold = 2
+        group.frequency = Frequency(2, 7)
+        group.color = PaletteColor(4)
+        habitList.add(group)
+
+        val reading = habitList.toList().first { it.name == "Reading" }
+        val stretch = habitList.toList().first { it.name == "Stretch" }
+        reading.groupId = group.id
+        stretch.groupId = group.id
+        habitList.update(listOf(reading, stretch))
+
+        val exporter = HabitsCSVExporter(habitList, habitList.toList())
+        val entries = ZipReader(exporter.writeArchive()).entries()
+        val habitsCsv = entries.first { it.name == "Habits.csv" }.content
+        val groupsJson = entries.first { it.name == "Groups.json" }.content
+        val checkmarksCsv = entries.first { it.name == "Checkmarks.csv" }.content
+        val scoresCsv = entries.first { it.name == "Scores.csv" }.content
+
+        assertTrue(!habitsCsv.contains("Reading and Stretching"))
+        assertTrue(habitsCsv.contains("Reading"))
+        assertTrue(habitsCsv.contains("Stretch"))
+        assertTrue(!checkmarksCsv.contains("Reading and Stretching"))
+        assertTrue(!scoresCsv.contains("Reading and Stretching"))
+        assertTrue(groupsJson.contains("\"name\": \"Reading and Stretching\""))
+        assertTrue(groupsJson.contains("\"groupGoalEnabled\": true"))
+        assertTrue(groupsJson.contains("\"groupGoalType\": 2"))
+        assertTrue(groupsJson.contains("\"groupGoalThreshold\": 2"))
+        assertTrue(groupsJson.contains("\"frequencyNumerator\": 2"))
+        assertTrue(groupsJson.contains("\"frequencyDenominator\": 7"))
+        assertTrue(groupsJson.contains("\"uuid\": \"${reading.uuid}\""))
+        assertTrue(groupsJson.contains("\"uuid\": \"${stretch.uuid}\""))
+        assertTrue(entries.none { it.name.contains("Reading and Stretching") })
     }
 
     @Test

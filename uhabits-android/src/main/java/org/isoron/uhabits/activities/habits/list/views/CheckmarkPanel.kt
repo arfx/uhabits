@@ -56,6 +56,12 @@ class CheckmarkPanelView(
             setupButtons()
         }
 
+    var onReadOnlyClick: ((LocalDate) -> Unit)? = null
+        set(value) {
+            field = value
+            setupButtons()
+        }
+
     override fun createButton(): CheckmarkButtonView = buttonFactory.create()
 
     fun setState(newState: CheckmarkPanelState) {
@@ -92,6 +98,7 @@ class CheckmarkPanelView(
                 )
             )
             button.onToggle = { value, notes -> onToggle(date, value, notes) }
+            button.onReadOnlyClick = onReadOnlyClick?.let { callback -> { callback(date) } }
             button.onEdit = { onEdit(date) }
         }
     }

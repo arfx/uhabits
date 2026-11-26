@@ -71,6 +71,7 @@ class HabitCardListAdapter(
     private var rows: MutableList<Row> = mutableListOf()
     private val categoryIds = HashMap<String, Long>()
     private var nextCategoryId = CATEGORY_ID_BASE
+    private val expandedGroupIds = mutableSetOf<Long>()
 
     companion object {
         const val VIEW_TYPE_HABIT = 0
@@ -112,15 +113,37 @@ class HabitCardListAdapter(
         if (habits.isEmpty()) return emptyList()
         val built = mutableListOf<Row>()
         var lastHeader: String? = null
-        habits.forEach { card ->
+
+        fun addHabit(card: HabitCardState, showCategory: Boolean = true) {
             val cat = card.category
-            if (cat.isNotBlank() && cat != lastHeader) {
+            if (showCategory && cat.isNotBlank() && cat != lastHeader) {
                 built.add(Row.Category(categoryIdFor(cat), cat))
                 lastHeader = cat
             }
-            built.add(Row.Habit(card))
+            built.add(Row.Habit(card.copy(isExpanded = card.isGroup && card.id in expandedGroupIds)))
+        }
+
+        val groupIds = habits.filter { it.isGroup }.mapTo(mutableSetOf()) { it.id }
+        val groupsById = habits.filter { it.groupId != null }.groupBy { it.groupId }
+        habits.forEach { card ->
+            if (card.groupId != null && card.groupId in groupIds) return@forEach
+            addHabit(card)
+            if (card.isGroup && card.id in expandedGroupIds) {
+                groupsById[card.id].orEmpty().forEach { child ->
+                    addHabit(child.copy(isGroupChild = true), showCategory = false)
+                }
+            }
         }
         return built
+    }
+
+    fun toggleGroup(position: Int) {
+        val card = habitAt(position) ?: return
+        if (!card.isGroup) return
+        if (!expandedGroupIds.add(card.id)) expandedGroupIds.remove(card.id)
+        rows = buildRows(items).toMutableList()
+        notifyDataSetChanged()
+        observable.notifyListeners()
     }
 
     private fun categoryIdFor(category: String): Long {
@@ -182,6 +205,8 @@ class HabitCardListAdapter(
     val isSelectionEmpty: Boolean
         get() = selected.isEmpty()
 
+    // Group rows are part of the same manually ordered list. Dragging remains
+    // enabled; onDragEnd determines whether a dropped habit changes group.
     val isSortable: Boolean
         get() = state?.isSortable == true
 
@@ -321,6 +346,8 @@ class HabitCardListAdapter(
         if (habitCount < 2) return null
         val k = rows.indexOfFirst { it is Row.Habit && it.card.id == id }
         if (k < 0) return null
+        val draggedCard = (rows[k] as? Row.Habit)?.card ?: return null
+
         var targetCategory = ""
         for (i in (k - 1) downTo 0) {
             val row = rows[i]
@@ -329,13 +356,37 @@ class HabitCardListAdapter(
                 break
             }
         }
+
+        // The row sequence already represents the user's drop location. A group
+        // header starts a group section, its child rows stay in that section,
+        // and the next top-level habit ends it.
+        var targetGroupId: Long? = null
+        if (!draggedCard.isGroup) {
+            for (i in 0 until k) {
+                when (val row = rows[i]) {
+                    is Row.Category -> targetGroupId = null
+                    is Row.Habit -> when {
+                        row.card.isGroup -> targetGroupId = row.card.id
+                        row.card.isGroupChild -> Unit
+                        else -> targetGroupId = null
+                    }
+                }
+            }
+        }
+
         val above = rows.getOrNull(k - 1)
         val below = rows.getOrNull(k + 1)
-        return when {
-            above is Row.Habit -> ReorderDragResult(id, above.card.id, false, targetCategory)
-            below is Row.Habit -> ReorderDragResult(id, below.card.id, true, targetCategory)
-            else -> ReorderDragResult(id, null, false, targetCategory)
+        // Dropping directly onto a collapsed group places the dragged row
+        // immediately before its header; treat that as a drop into the group.
+        if (!draggedCard.isGroup && below is Row.Habit && below.card.isGroup) {
+            targetGroupId = below.card.id
         }
+        val reorder = when {
+            above is Row.Habit -> ReorderDragResult(id, above.card.id, false, targetCategory, targetGroupId)
+            below is Row.Habit -> ReorderDragResult(id, below.card.id, true, targetCategory, targetGroupId)
+            else -> ReorderDragResult(id, null, false, targetCategory, targetGroupId)
+        }
+        return reorder
     }
 
     fun flushPending() {
@@ -354,7 +405,8 @@ data class ReorderDragResult(
     val habitId: Long,
     val refId: Long?,
     val placeBefore: Boolean,
-    val targetCategory: String
+    val targetCategory: String,
+    val targetGroupId: Long?
 )
 
 class CategoryViewHolder(itemView: CategoryView) : RecyclerView.ViewHolder(itemView)

@@ -4,6 +4,7 @@ import org.isoron.platform.io.Database
 import org.isoron.platform.io.StepResult
 import org.isoron.platform.io.queryLong
 import org.isoron.platform.io.run
+import org.isoron.uhabits.core.models.Entry
 
 data class EntryData(
     var id: Long? = null,
@@ -73,6 +74,27 @@ class EntryRepository(private val db: Database) {
         deleteByHabitStmt.reset()
         deleteByHabitStmt.bindLong(1, habitId)
         deleteByHabitStmt.step()
+    }
+
+    fun replaceAllForHabit(habitId: Long, entries: List<Entry>) {
+        db.run("BEGIN")
+        try {
+            deleteByHabitId(habitId)
+            entries.forEach { entry ->
+                insert(
+                    EntryData(
+                        habitId = habitId,
+                        timestamp = entry.date.unixTime,
+                        value = entry.value,
+                        notes = entry.notes
+                    )
+                )
+            }
+            db.run("COMMIT")
+        } catch (error: Throwable) {
+            db.run("ROLLBACK")
+            throw error
+        }
     }
 
     fun execSQL(sql: String) = db.run(sql)

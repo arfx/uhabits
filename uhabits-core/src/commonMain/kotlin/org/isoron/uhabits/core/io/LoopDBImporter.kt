@@ -24,6 +24,7 @@ import org.isoron.platform.io.DatabaseOpener
 import org.isoron.platform.io.FileOpener
 import org.isoron.platform.io.UserFile
 import org.isoron.platform.io.getVersion
+import org.isoron.platform.io.setVersion
 import org.isoron.platform.io.migrateTo
 import org.isoron.platform.io.query
 import org.isoron.platform.io.querySingle
@@ -32,6 +33,10 @@ import org.isoron.uhabits.core.AppScope
 import org.isoron.uhabits.core.DATABASE_VERSION
 import org.isoron.uhabits.core.commands.CommandRunner
 import org.isoron.uhabits.core.commands.CreateHabitCommand
+import org.isoron.uhabits.core.models.Frequency
+import org.isoron.uhabits.core.models.GroupHabitCalculator
+import org.isoron.uhabits.core.models.HabitType
+import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.core.commands.EditHabitCommand
 import org.isoron.uhabits.core.database.HabitData
 import org.isoron.uhabits.core.models.Entry
@@ -76,6 +81,7 @@ class LoopDBImporter(
 
     override suspend fun importHabitsFromFile(file: UserFile) {
         val db = opener.open(file.pathString)
+        reconcileSchemaVersion(db)
         db.migrateTo(DATABASE_VERSION) { version ->
             val filename = org.isoron.platform.io.format("%02d.sql", version)
             fileOpener.openResourceFile("migrations/$filename").lines().joinToString("\n")
@@ -114,16 +120,163 @@ class LoopDBImporter(
             }
             habit.recompute()
         }
+        restoreGroups(db)
         habitList.resort()
         db.close()
     }
 
+    /**
+     * Some backups are created from a newer schema but retain an older
+     * PRAGMA user_version. Reconcile the known post-v25 columns before
+     * running migrations, otherwise ALTER TABLE fails with duplicate columns.
+     */
+    private fun reconcileSchemaVersion(db: Database) {
+        val columns = mutableSetOf<String>()
+        db.query("PRAGMA table_info(Habits)") { stmt ->
+            columns.add(stmt.getText(1))
+        }
+
+        if (db.getVersion() < 26 && "category" in columns) db.setVersion(26)
+        if (db.getVersion() < 27 && "has_goal" in columns) db.setVersion(27)
+        if (db.getVersion() < 28 && "is_group" in columns && "group_id" in columns) {
+            db.setVersion(28)
+        }
+        if (db.getVersion() < 29 && "group_goal_enabled" in columns) db.setVersion(29)
+        if (db.getVersion() < 30 && "group_goal_type" in columns && "group_goal_threshold" in columns) db.setVersion(30)
+        val hasCustomColors = db.querySingle("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='HabitCustomColors'") { it.getInt(0) } ?: 0
+        if (db.getVersion() < 31 && hasCustomColors > 0) db.setVersion(31)
+    }
+
+    /**
+     * Restores group metadata from backups created by this fork. Older Loop
+     * versions simply ignore these additional tables and import ordinary habits.
+     */
+    private fun restoreGroups(db: Database) {
+        val hasGroupBackup = db.querySingle(
+            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='GroupBackup'"
+        ) { it.getInt(0) } ?: 0
+        if (hasGroupBackup == 0) return
+
+        // Read the backup metadata completely before changing the destination
+        // HabitList. Keeping a cursor open while issuing nested queries on the
+        // same SQLiteDatabase is fragile on Android and can interrupt iteration.
+        data class GroupBackupData(
+            val uuid: String,
+            val name: String,
+            val description: String,
+            val question: String,
+            val freqNum: Int,
+            val freqDen: Int,
+            val color: Int,
+            val archived: Boolean,
+            val category: String,
+            val hasGoal: Boolean,
+            val groupGoalEnabled: Boolean,
+            val groupGoalType: Int,
+            val groupGoalThreshold: Int
+        )
+
+        val groupBackupColumns = mutableSetOf<String>()
+        db.query("PRAGMA table_info(GroupBackup)") { stmt ->
+            groupBackupColumns.add(stmt.getText(1))
+        }
+        val hasRuleColumns = "group_goal_type" in groupBackupColumns &&
+            "group_goal_threshold" in groupBackupColumns
+        val groups = mutableListOf<GroupBackupData>()
+        val groupSelect = if (hasRuleColumns) {
+            """SELECT uuid, name, description, question, freq_num, freq_den,
+                      color, position, archived, type, target_value, target_type,
+                      unit, category, has_goal, group_goal_enabled, group_goal_type, group_goal_threshold
+               FROM GroupBackup ORDER BY position"""
+        } else {
+            """SELECT uuid, name, description, question, freq_num, freq_den,
+                      color, position, archived, type, target_value, target_type,
+                      unit, category, has_goal, group_goal_enabled
+               FROM GroupBackup ORDER BY position"""
+        }
+        db.query(groupSelect) { stmt ->
+            val uuid = stmt.getTextOrNull(0) ?: return@query
+            groups.add(
+                GroupBackupData(
+                    uuid = uuid,
+                    name = stmt.getText(1),
+                    description = stmt.getText(2),
+                    question = stmt.getText(3),
+                    freqNum = stmt.getInt(4),
+                    freqDen = stmt.getInt(5),
+                    color = stmt.getInt(6),
+                    archived = stmt.getInt(8) != 0,
+                    category = stmt.getText(13),
+                    hasGoal = stmt.getInt(14) != 0,
+                    groupGoalEnabled = stmt.getInt(15) != 0,
+                    groupGoalType = if (hasRuleColumns) stmt.getInt(16) else 0,
+                    groupGoalThreshold = if (hasRuleColumns) stmt.getInt(17) else 1
+                )
+            )
+        }
+
+        val membersByGroup = mutableMapOf<String, MutableList<String>>()
+        db.query(
+            """SELECT group_uuid, habit_uuid FROM GroupBackupMembers
+               ORDER BY group_uuid, position"""
+        ) { stmt ->
+            val groupUuid = stmt.getTextOrNull(0) ?: return@query
+            val habitUuid = stmt.getTextOrNull(1) ?: return@query
+            membersByGroup.getOrPut(groupUuid) { mutableListOf() }.add(habitUuid)
+        }
+
+        for (backupGroup in groups) {
+            val group = habitList.getByUUID(backupGroup.uuid) ?: modelFactory.buildHabit()
+            group.uuid = backupGroup.uuid
+            group.name = backupGroup.name
+            group.description = backupGroup.description
+            group.question = backupGroup.question
+            group.frequency = Frequency(backupGroup.freqNum, backupGroup.freqDen)
+            group.color = PaletteColor(backupGroup.color)
+            group.isArchived = backupGroup.archived
+            group.type = HabitType.YES_NO
+            group.targetValue = 0.0
+            group.unit = ""
+            group.category = backupGroup.category
+            group.hasGoal = backupGroup.hasGoal
+            group.isGroup = true
+            group.groupId = null
+            group.groupGoalEnabled = backupGroup.groupGoalEnabled
+            group.groupGoalType = org.isoron.uhabits.core.models.GroupGoalType.fromInt(backupGroup.groupGoalType)
+            group.groupGoalThreshold = backupGroup.groupGoalThreshold.coerceAtLeast(1)
+
+            if (group.id == null) habitList.add(group) else habitList.update(listOf(group))
+
+            // Remove stale links before applying the membership from this backup.
+            habitList.filter { it.groupId == group.id && !it.isGroup }.forEach { oldChild ->
+                oldChild.groupId = null
+                habitList.update(listOf(oldChild))
+            }
+
+            for (childUuid in membersByGroup[backupGroup.uuid].orEmpty()) {
+                val child = habitList.getByUUID(childUuid) ?: continue
+                child.groupId = group.id
+                habitList.update(listOf(child))
+            }
+
+            val children = habitList.filter { it.groupId == group.id && !it.isGroup }
+            GroupHabitCalculator.recompute(group, children)
+            habitList.update(listOf(group))
+        }
+    }
+
     private fun loadHabits(db: Database): List<HabitData> {
         val result = mutableListOf<HabitData>()
+        val customColors = mutableMapOf<String, Int>()
+        val hasCustomColors = db.querySingle("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='HabitCustomColors'") { it.getInt(0) } ?: 0
+        if (hasCustomColors > 0) db.query("SELECT habit_uuid, color FROM HabitCustomColors") { stmt ->
+            val uuid = stmt.getTextOrNull(0) ?: return@query
+            customColors[uuid] = stmt.getInt(1)
+        }
         db.query(
             "SELECT id, name, description, question, freq_num, freq_den, color, " +
                 "position, reminder_hour, reminder_min, reminder_days, highlight, " +
-                "archived, type, target_value, target_type, unit, uuid, category " +
+                "archived, type, target_value, target_type, unit, uuid, category, has_goal " +
                 "FROM Habits ORDER BY position"
         ) { stmt ->
             result.add(
@@ -146,7 +299,9 @@ class LoopDBImporter(
                     targetType = stmt.getIntOrNull(15) ?: 0,
                     unit = stmt.getTextOrNull(16) ?: "",
                     uuid = stmt.getTextOrNull(17),
-                    category = stmt.getText(18)
+                    category = stmt.getText(18),
+                    hasGoal = stmt.getInt(19),
+                    customColor = customColors[stmt.getTextOrNull(17)]
                 )
             )
         }

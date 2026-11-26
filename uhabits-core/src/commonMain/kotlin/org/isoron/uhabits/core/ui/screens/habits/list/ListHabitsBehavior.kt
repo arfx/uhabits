@@ -98,7 +98,13 @@ open class ListHabitsBehavior(
         screen.showIntroScreen()
     }
 
-    open fun reorderHabit(habitId: Long, refId: Long?, placeBefore: Boolean, targetCategory: String) {
+    open fun reorderHabit(
+        habitId: Long,
+        refId: Long?,
+        placeBefore: Boolean,
+        targetCategory: String,
+        targetGroupId: Long? = habitList.getById(habitId)?.groupId
+    ) {
         val habit = habitList.getById(habitId) ?: return
         val ref = refId?.let { habitList.getById(it) }
         val target = if (ref != null) {
@@ -106,7 +112,7 @@ open class ListHabitsBehavior(
         } else {
             null
         }
-        commandRunner.run(ReorderHabitCommand(habitList, habit, target, targetCategory))
+        commandRunner.run(ReorderHabitCommand(habitList, habit, target, targetCategory, targetGroupId))
     }
 
     open fun onRenameCategory(category: String) {

@@ -48,10 +48,16 @@ object ListHabitsPresenter {
         view.primaryOrder = primaryOrder
         view.secondaryOrder = secondaryOrder
 
+        val visibleIds = view.mapNotNull { it.id }.toSet()
+        val allGroupIds = allHabits.filter { it.isGroup }.mapNotNull { it.id }.toSet()
         val today = getToday()
         val dateFrom = today.minus(checkmarkCount - 1)
         val items = mutableListOf<HabitCardState>()
         for (habit in view) {
+            if (habit.groupId != null &&
+                habit.groupId in allGroupIds &&
+                habit.groupId !in visibleIds
+            ) continue
             val id = habit.id ?: continue
             val score = habit.scores[today].value
             val entries = habit.computedEntries.getByInterval(dateFrom, today)
@@ -67,7 +73,15 @@ object ListHabitsPresenter {
                     checkmarks = entries.map { it.value },
                     completed = entries.map { it.completed },
                     notes = entries.map { it.notes },
-                    category = habit.category
+                    category = habit.category,
+                    hasGoal = habit.hasGoal,
+                    isGroup = habit.isGroup,
+                    groupId = habit.groupId,
+                    groupGoalEnabled = habit.groupGoalEnabled,
+                    groupGoalProgress = if (habit.isGroup && habit.groupGoalEnabled) {
+                        org.isoron.uhabits.core.models.GroupHabitCalculator.goalProgress(habit).first
+                    } else 0,
+                    groupGoalTarget = if (habit.isGroup && habit.groupGoalEnabled) habit.frequency.numerator else 0
                 )
             )
         }
@@ -94,5 +108,13 @@ data class HabitCardState(
     val checkmarks: List<Int>,
     val completed: List<Boolean>,
     val notes: List<String>,
-    val category: String
+    val category: String,
+    val hasGoal: Boolean = true,
+    val isGroup: Boolean = false,
+    val groupId: Long? = null,
+    val isExpanded: Boolean = false,
+    val isGroupChild: Boolean = false,
+    val groupGoalEnabled: Boolean = false,
+    val groupGoalProgress: Int = 0,
+    val groupGoalTarget: Int = 0
 )

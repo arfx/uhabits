@@ -23,6 +23,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.view.View
 import org.isoron.platform.gui.AndroidDataView
+import org.isoron.uhabits.HabitsApplication
 import org.isoron.platform.time.JavaLocalDateFormatter
 import org.isoron.platform.time.getToday
 import org.isoron.uhabits.core.models.Habit
@@ -50,14 +51,17 @@ class HistoryWidget(
         val widgetView = view as GraphWidgetView
         widgetView.setBackgroundAlpha(preferedBackgroundAlpha)
         if (preferedBackgroundAlpha >= 255) widgetView.setShadowAlpha(0x4f)
+        val habitList = (context.applicationContext as HabitsApplication).component.habitList
         val model = HistoryCardPresenter.buildState(
             habit = habit,
             firstWeekday = prefs.firstWeekday,
-            theme = WidgetTheme()
+            theme = WidgetTheme(),
+            habitList = habitList
         )
         (widgetView.dataView as AndroidDataView).apply {
             val historyChart = (this.view as HistoryChart)
             historyChart.series = model.series
+            historyChart.seriesColors = model.seriesColors
             historyChart.defaultSquare = model.defaultSquare
             historyChart.notesIndicators = model.notesIndicators
         }

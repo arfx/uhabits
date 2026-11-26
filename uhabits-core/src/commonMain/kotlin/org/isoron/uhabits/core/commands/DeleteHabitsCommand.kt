@@ -20,12 +20,22 @@ package org.isoron.uhabits.core.commands
 
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 
 data class DeleteHabitsCommand(
     val habitList: HabitList,
     val selected: List<Habit>
 ) : Command {
     override fun run() {
-        for (h in selected) habitList.remove(h)
+        val affectedGroups = selected.mapNotNull { it.groupId }.toMutableSet()
+        for (h in selected) {
+            if (h.isGroup && h.id != null) {
+                val children = habitList.filter { it.groupId == h.id }
+                children.forEach { it.groupId = null }
+                if (children.isNotEmpty()) habitList.update(children)
+            }
+            habitList.remove(h)
+        }
+        GroupHabitCalculator.recomputeAffectedGroups(habitList, affectedGroups)
     }
 }

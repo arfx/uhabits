@@ -18,7 +18,7 @@
   ~ with this program. If not, see <http://www.gnu.org/licenses/>.
   -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
-    <string name="app_name">Loop - Gewohnheiten Tracking</string>
+    <string name="app_name">Habit Tracker</string>
     <string name="main_activity_title">Gewohnheiten</string>
     <string name="action_settings">Einstellungen</string>
     <string name="edit">Bearbeiten</string>
@@ -104,11 +104,13 @@
     <string name="clear_label">Löschen</string>
     <string name="select_hours">Stunden auswählen</string>
     <string name="select_minutes">Minuten auswählen</string>
-    <string name="about">Über Loop</string>
+    <string name="about">Über Habit Tracker</string>
     <string name="translators">Übersetzer</string>
     <string name="developers">Entwickler</string>
     <string name="version_n">Version %s</string>
     <string name="frequency">Häufigkeit</string>
+    <string name="goal_enabled">Ein Ziel festlegen</string>
+    <string name="no_goal">Ohne Ziel</string>
     <string name="checkmark">Häkchen</string>
     <string name="best_streaks">Beste Serien</string>
     <string name="every_day">Jeden Tag</string>
@@ -220,4 +222,29 @@
     <string name="pref_midnight_delay_description">Bis 3:00 Uhr warten, bevor ein neuer Tag angezeigt wird. Nützlich, wenn du normalerweise nach Mitternacht schlafen gehst. Benötigt einen Neustart der App.</string>
     <string name="select_public_backup_folder">Öffentlichen Backup-Ordner auswählen</string>
     <string name="no_public_backup_folder_selected">Kein Ordner ausgewählt</string>
+    <string name="validation_goal_frequency_required">Bitte wähle eine Frequenz für diesen Habit aus.</string>
+<string name="habit_type">Habittype</string>
+    <string name="convert">Umwandeln</string>
+    <string name="convert_to_numerical">In numerischen Habit umwandeln</string>
+    <string name="convert_to_yes_no">In Ja/Nein-Habit umwandeln</string>
+    <string name="conversion_boolean_to_numerical_message">Bisherige JA-Einträge werden in den unten eingegebenen Wert umgewandelt. NEIN-Einträge werden zu 0. Übersprungene und unbekannte Einträge sowie alle Notizen bleiben erhalten.</string>
+    <string name="conversion_numerical_to_boolean_message">Werte über 0 werden zu JA. 0 und negative Werte werden zu NEIN. Übersprungene und unbekannte Einträge sowie alle Notizen bleiben erhalten.</string>
+    <string name="conversion_yes_value_hint">Wert für bisherige JA-Einträge</string>
+    <string name="validation_conversion_value_required">Bitte gib einen Wert zwischen 0,001 und 2.147.483,647 ein.</string>
+    <string name="validation_invalid_number">Bitte gib eine gültige Zahl ein.</string>
+
+    <string name="group_habit_create_title">Gruppe erstellen</string>
+    <string name="group_habit_name_hint">Gruppenname</string>
+    <string name="group_habit_goal_enabled">Gruppenziel festlegen</string>
+    <string name="group_goal_rule">Gruppenregel</string>
+    <string name="group_goal_rule_or">OR – mindestens ein Mitglied</string>
+    <string name="group_goal_rule_and">AND – alle Mitglieder</string>
+    <string name="group_goal_rule_at_least">N aus M – Mindestanzahl</string>
+    <string name="group_goal_threshold_hint">Benötigte erfolgreiche Mitglieder</string>
+    <string name="group_goal_threshold_invalid">Bitte eine Zahl zwischen 1 und %1$d eingeben.</string>
+    <string name="group_habit_weekly_goal">%1$d Tage pro Woche</string>
+    <string name="group_habit_choose_frequency">Zielfrequenz ändern</string>
+    <string name="group_habit_name_required">Bitte einen Gruppennamen eingeben</string>
+    <string name="group_habit_edit_title">Gruppe bearbeiten</string>
+    <string name="group_habit_insights">Gruppen-Auswertung</string>
 </resources>

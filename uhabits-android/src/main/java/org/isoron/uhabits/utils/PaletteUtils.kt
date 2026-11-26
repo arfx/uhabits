@@ -29,6 +29,7 @@ object PaletteUtils {
 }
 
 fun PaletteColor.toFixedAndroidColor(): Int {
+    customColor?.let { return it }
     return intArrayOf(
         Color.parseColor("#D32F2F"), //  0 red
         Color.parseColor("#E64A19"), //  1 deep orange

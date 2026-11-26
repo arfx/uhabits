@@ -173,7 +173,7 @@ abstract class HabitList : Iterable<Habit> {
      * habit, containing the fields name, description, frequency numerator,
      * frequency denominator and color.
      */
-    open fun writeCSV(): String {
+    open fun writeCSV(habits: List<Habit> = this.toList()): String {
         val sb = StringBuilder()
         val header = arrayOf(
             "Position",
@@ -188,13 +188,14 @@ abstract class HabitList : Iterable<Habit> {
             "Target Type",
             "Target Value",
             "Archived?",
-            "Category"
+            "Category",
+            "Has Goal?"
         )
         sb.append(csvLine(header))
-        for (habit in this) {
+        for (habit in habits) {
             val (numerator, denominator) = habit.frequency
             val cols = arrayOf(
-                format("%03d", indexOf(habit) + 1),
+                format("%03d", habits.indexOf(habit) + 1),
                 habit.name,
                 habit.type.name,
                 habit.question,
@@ -206,7 +207,8 @@ abstract class HabitList : Iterable<Habit> {
                 if (habit.isNumerical) habit.targetType.name else "",
                 if (habit.isNumerical) format("%.1f", habit.targetValue) else "",
                 habit.isArchived.toString(),
-                habit.category
+                habit.category,
+                habit.hasGoal.toString()
             )
             sb.append(csvLine(cols))
         }

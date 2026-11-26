@@ -23,6 +23,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.view.View
 import org.isoron.platform.gui.toInt
+import org.isoron.uhabits.R
 import org.isoron.uhabits.activities.common.views.ScoreChart
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.ui.screens.habits.show.views.ScoreCardPresenter
@@ -49,6 +50,10 @@ class ScoreWidget(
             theme = WidgetTheme()
         )
         val widgetView = view as GraphWidgetView
+        widgetView.dataView.visibility = if (habit.hasGoal) View.VISIBLE else View.GONE
+        widgetView.setTitle(
+            if (habit.hasGoal) habit.name else "${habit.name} (${context.getString(R.string.no_goal)})"
+        )
         widgetView.setBackgroundAlpha(preferedBackgroundAlpha)
         if (preferedBackgroundAlpha >= 255) widgetView.setShadowAlpha(0x4f)
         (widgetView.dataView as ScoreChart).apply {

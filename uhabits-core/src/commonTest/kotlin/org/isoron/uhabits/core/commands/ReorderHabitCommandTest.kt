@@ -19,11 +19,52 @@
 package org.isoron.uhabits.core.commands
 
 import org.isoron.uhabits.core.BaseUnitTest
+import org.isoron.platform.time.getToday
+import org.isoron.uhabits.core.models.Entry
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 import org.isoron.uhabits.core.models.PaletteColor
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ReorderHabitCommandTest : BaseUnitTest() {
+
+    @Test
+    fun testDraggingHabitIntoAnotherGroupRecomputesBothGroups() {
+        val today = getToday()
+        val oldGroup = modelFactory.buildHabit().apply {
+            name = "Old group"
+            isGroup = true
+            hasGoal = false
+        }
+        val newGroup = modelFactory.buildHabit().apply {
+            name = "New group"
+            isGroup = true
+            hasGoal = false
+        }
+        habitList.add(oldGroup)
+        habitList.add(newGroup)
+        val child = fixtures.createShortHabit().apply {
+            name = "Child"
+            originalEntries.add(Entry(today, Entry.YES_MANUAL))
+            recompute()
+            groupId = oldGroup.id
+        }
+        habitList.add(child)
+        GroupHabitCalculator.recompute(oldGroup, listOf(child))
+        habitList.update(oldGroup)
+
+        ReorderHabitCommand(
+            habitList = habitList,
+            habit = child,
+            target = ReorderTarget.After(newGroup),
+            category = "",
+            targetGroupId = newGroup.id
+        ).run()
+
+        assertEquals(newGroup.id, child.groupId)
+        assertEquals(Entry.UNKNOWN, oldGroup.originalEntries.get(today).value)
+        assertEquals(Entry.YES_MANUAL, newGroup.originalEntries.get(today).value)
+    }
 
     @Test
     fun testExecute() {

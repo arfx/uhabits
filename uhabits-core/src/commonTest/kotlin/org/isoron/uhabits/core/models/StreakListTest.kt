@@ -54,6 +54,26 @@ class StreakListTest : BaseUnitTest() {
         assertEquals(6, best[1].length)
     }
 
+
+    @Test
+    fun testNoGoalNumericalStreakCountsRecordedZeroAndExcludesSkippedDays() {
+        habit = fixtures.createEmptyNumericalHabit(NumericalHabitType.AT_LEAST)
+        habit.hasGoal = false
+        with(habit.originalEntries) {
+            add(Entry(today, 0))
+            add(Entry(today.minus(1), 1500))
+            add(Entry(today.minus(2), Entry.SKIP))
+            add(Entry(today.minus(3), 0))
+        }
+
+        habit.recompute()
+
+        val best = habit.streaks.getBest(10)
+        assertEquals(2, best.size)
+        assertEquals(2, best[0].length)
+        assertEquals(1, best[1].length)
+    }
+
     @Test
     fun testGetBest_withUnknowns() {
         habit.originalEntries.clear()

@@ -22,6 +22,7 @@ import org.isoron.platform.time.LocalDate
 import org.isoron.uhabits.core.models.Entry
 import org.isoron.uhabits.core.models.Habit
 import org.isoron.uhabits.core.models.HabitList
+import org.isoron.uhabits.core.models.GroupHabitCalculator
 
 data class CreateRepetitionCommand(
     val habitList: HabitList,
@@ -34,6 +35,7 @@ data class CreateRepetitionCommand(
         val entries = habit.originalEntries
         entries.add(Entry(date, value, notes))
         habit.recompute()
+        GroupHabitCalculator.recomputeAffectedGroups(habitList, setOf(habit.groupId))
         habitList.resort()
     }
 }

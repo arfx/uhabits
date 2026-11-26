@@ -29,6 +29,12 @@ data class Habit(
     var color: PaletteColor = PaletteColor(8),
     var description: String = "",
     var frequency: Frequency = Frequency.DAILY,
+    var hasGoal: Boolean = true,
+    var groupGoalEnabled: Boolean = false,
+    var groupGoalType: GroupGoalType = GroupGoalType.OR,
+    var groupGoalThreshold: Int = 1,
+    var isGroup: Boolean = false,
+    var groupId: Long? = null,
     var id: Long? = null,
     var isArchived: Boolean = false,
     var name: String = "",
@@ -55,7 +61,7 @@ data class Habit(
         get() = type == HabitType.NUMERICAL
 
     val uriString: String
-        get() = "content://org.isoron.uhabits/habit/$id"
+        get() = "content://org.arfx.habittracker/habit/$id"
 
     fun hasReminder(): Boolean = reminder != null
 
@@ -67,6 +73,18 @@ data class Habit(
         return isCompletedOn(getToday())
     }
 
+    fun isActiveOn(date: LocalDate): Boolean {
+        if (hasGoal) return isCompletedOn(date)
+        val value = computedEntries.get(date).value
+        return if (isNumerical) {
+            value != Entry.UNKNOWN && value != Entry.SKIP
+        } else {
+            value == Entry.YES_MANUAL
+        }
+    }
+
+    fun isActiveToday(): Boolean = isActiveOn(getToday())
+
     fun isEnteredToday(): Boolean {
         val today = getToday()
         val value = computedEntries.get(today).value
@@ -77,14 +95,16 @@ data class Habit(
         computedEntries.recomputeFrom(
             originalEntries = originalEntries,
             frequency = frequency,
-            isNumerical = isNumerical
+            isNumerical = isNumerical,
+            hasGoal = hasGoal
         )
 
         computedEntries.recomputeCompletion(
             frequency = frequency,
             isNumerical = isNumerical,
             targetType = targetType,
-            targetValue = targetValue
+            targetValue = targetValue,
+            hasGoal = hasGoal
         )
 
         val today = getToday()
@@ -93,15 +113,19 @@ data class Habit(
         var from = entries.lastOrNull()?.date ?: today
         if (from.isNewerThan(to)) from = to
 
-        scores.recompute(
-            frequency = frequency,
-            isNumerical = isNumerical,
-            numericalHabitType = targetType,
-            targetValue = targetValue,
-            computedEntries = computedEntries,
-            from = from,
-            to = to
-        )
+        if (hasGoal) {
+            scores.recompute(
+                frequency = frequency,
+                isNumerical = isNumerical,
+                numericalHabitType = targetType,
+                targetValue = targetValue,
+                computedEntries = computedEntries,
+                from = from,
+                to = to
+            )
+        } else {
+            scores.clear()
+        }
 
         streaks.recompute(
             computedEntries,
@@ -109,7 +133,8 @@ data class Habit(
             to,
             isNumerical,
             targetValue,
-            targetType
+            targetType,
+            hasGoal
         )
     }
 
@@ -118,6 +143,12 @@ data class Habit(
         this.color = other.color
         this.description = other.description
         this.frequency = other.frequency
+        this.hasGoal = other.hasGoal
+        this.groupGoalEnabled = other.groupGoalEnabled
+        this.groupGoalType = other.groupGoalType
+        this.groupGoalThreshold = other.groupGoalThreshold
+        this.isGroup = other.isGroup
+        this.groupId = other.groupId
         // this.id should not be copied
         this.isArchived = other.isArchived
         this.name = other.name
@@ -139,6 +170,12 @@ data class Habit(
         if (color != other.color) return false
         if (description != other.description) return false
         if (frequency != other.frequency) return false
+        if (hasGoal != other.hasGoal) return false
+        if (groupGoalEnabled != other.groupGoalEnabled) return false
+        if (groupGoalType != other.groupGoalType) return false
+        if (groupGoalThreshold != other.groupGoalThreshold) return false
+        if (isGroup != other.isGroup) return false
+        if (groupId != other.groupId) return false
         if (id != other.id) return false
         if (isArchived != other.isArchived) return false
         if (name != other.name) return false
@@ -159,6 +196,12 @@ data class Habit(
         result = 31 * result + color.hashCode()
         result = 31 * result + description.hashCode()
         result = 31 * result + frequency.hashCode()
+        result = 31 * result + hasGoal.hashCode()
+        result = 31 * result + groupGoalEnabled.hashCode()
+        result = 31 * result + groupGoalType.hashCode()
+        result = 31 * result + groupGoalThreshold
+        result = 31 * result + isGroup.hashCode()
+        result = 31 * result + (groupId?.hashCode() ?: 0)
         result = 31 * result + (id?.hashCode() ?: 0)
         result = 31 * result + isArchived.hashCode()
         result = 31 * result + name.hashCode()
