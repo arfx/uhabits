@@ -140,8 +140,8 @@ class AutoBackupTest : BaseAndroidTest() {
 
         // Simulate restoring onto a clean installation.
         fixtures.purgeHabits(habitList)
-        val backupFile = AndroidFileOpener(targetContext.assets, targetContext.filesDir)
-            .openUserFile("Backups/${File(backupPath).name}")
+        val backupFile = AndroidFileOpener(targetContext.assets, basedir)
+            .openUserFile(File(backupPath).name)
         assertTrue(component.parent.genericImporter.canHandle(backupFile))
         component.parent.genericImporter.importHabitsFromFile(backupFile)
 
