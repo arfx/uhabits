@@ -52,10 +52,10 @@ android {
 
     defaultConfig {
         versionCode = 20302
-        versionName = "2.3.2-dev"
+        versionName = "2.3.2"
         minSdk = 28
         targetSdk = 36
-        applicationId = "org.isoron.uhabits"
+        applicationId = "org.arfx.habittracker"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -81,7 +81,7 @@ android {
 
         debug {
             enableUnitTestCoverage = true
-            // Keep debug/test installs separate from the official Loop app.
+            // Keep debug/test installs separate from the fork's release app.
             applicationIdSuffix = ".testing"
             versionNameSuffix = "-testing"
         }
