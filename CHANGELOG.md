@@ -4,15 +4,6 @@
 
 ### Added (arfx fork)
 
-- Add custom habit colors through the color picker, including a rainbow custom-color
-  action; persist custom color values and include their hexadecimal values in CSV
-  exports.
-- Allow numerical habit values to be incremented by tapping the displayed value.
-  Long-pressing the value continues to open the existing manual number-entry dialog.
-
-
-### Added (arfx fork)
-
 - Add **No-Goal Habits** to track habits without a numerical or frequency target.
 - Allow converting habits between yes/no and numerical tracking while preserving
   historical entries, including skipped and unknown states.
