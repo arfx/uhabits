@@ -2,8 +2,6 @@ package org.isoron.uhabits.intents
 
 import org.isoron.uhabits.BaseAndroidTest
 import org.junit.Test
-import kotlin.test.assertEquals
-
 class IntentFactoryTest : BaseAndroidTest() {
     @Test
     fun testShowHabitIntentUsesForkContentUriAuthority() {
