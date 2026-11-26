@@ -237,7 +237,7 @@ class HistoryChart(
         val hasNotes = if (offset >= notesIndicators.size) false else notesIndicators[offset]
         val squareColor: Color
         val circleColor: Color
-        val color = theme.color(paletteColor.paletteIndex)
+        val color = theme.color(paletteColor)
         squareColor = when (value) {
             Square.ON -> {
                 color
@@ -257,11 +257,11 @@ class HistoryChart(
         if (segmentColors.size > 1) {
             val segmentHeight = height / segmentColors.size
             segmentColors.forEachIndexed { index, palette ->
-                canvas.setColor(theme.color(palette.paletteIndex))
+                canvas.setColor(theme.color(palette))
                 canvas.fillRect(x, y + index * segmentHeight, width, segmentHeight)
             }
         } else {
-            canvas.setColor(if (segmentColors.size == 1) theme.color(segmentColors.first().paletteIndex) else squareColor)
+            canvas.setColor(if (segmentColors.size == 1) theme.color(segmentColors.first()) else squareColor)
             canvas.fillRoundRect(x, y, width, height, width * 0.15)
         }
 
@@ -282,7 +282,7 @@ class HistoryChart(
         }
 
         val textBackgroundColor = if (segmentColors.isNotEmpty()) {
-            theme.color(segmentColors[segmentColors.size / 2].paletteIndex)
+            theme.color(segmentColors[segmentColors.size / 2])
         } else {
             squareColor
         }
