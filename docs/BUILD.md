@@ -101,24 +101,24 @@ The repository includes a manual-only workflow named **Android Debug APK**. It d
 
 Artifacts are retained for 14 days. Each run is tied to the selected branch and commit.
 
-The Android application ID is configured by build type:
+The fork uses a separate Android application ID for both build types:
 
-- **Debug / test build:** `org.isoron.uhabits.testing`. The `debug` build type adds the suffix `.testing` automatically. This build is installed separately from the official Loop app and has its own app data and database.
-- **Release build:** `org.isoron.uhabits`. The release build uses the original Loop application ID.
+- **Debug / test build:** `org.arfx.habittracker.testing`. The `debug` build type adds the suffix `.testing` automatically.
+- **Release build:** `org.arfx.habittracker`.
 
-No source or manifest package strings need to be edited when switching between testing and release builds. Build the debug APK with:
+Both variants are separate from the official upstream app (`org.isoron.uhabits`) and use their own app data and database. No source or namespace strings need to be edited when switching between testing and release builds. Build the debug APK with:
 
 ```bash
 ./gradlew :uhabits-android:assembleDebug
 ```
 
-Build the release APK with:
+Build the signed release APK with the configured arfx release keystore using:
 
 ```bash
 ./gradlew :uhabits-android:assembleRelease
 ```
 
-The debug APK can coexist with an installed official Loop app because its application ID is different. The release APK has the same application ID as the official app, but Android will only accept it as an update if it is signed with the same signing certificate. Otherwise it cannot replace the official installation.
+The release APK can update previous installations of this fork only when signed with the same arfx release key. It cannot update the official upstream app.
 
 
 ## Build and publish a fork release
