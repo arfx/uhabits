@@ -144,7 +144,7 @@ class HabitCardListAdapterTest : BaseAndroidTest() {
 
         adapter.onDragStart(1)
         adapter.onDragMove(1, 2)
-        assertThat(adapter.onDragEnd(), equalTo(ReorderDragResult(1L, 2L, false, "Health")))
+        assertThat(adapter.onDragEnd(), equalTo(ReorderDragResult(1L, 2L, false, "Health", null)))
 
         adapter.onDragStart(2)
         adapter.onDragMove(2, 3)
@@ -154,10 +154,10 @@ class HabitCardListAdapterTest : BaseAndroidTest() {
         assertThat(adapter.getItemViewType(2), equalTo(HabitCardListAdapter.VIEW_TYPE_CATEGORY))
         assertThat(adapter.getItemId(2), equalTo((1L shl 62) + 1))
         assertThat(adapter.getItemId(3), equalTo(1L))
-        assertThat(adapter.onDragEnd(), equalTo(ReorderDragResult(1L, 3L, true, "Work")))
+        assertThat(adapter.onDragEnd(), equalTo(ReorderDragResult(1L, 3L, true, "Work", null)))
 
         adapter.onDragStart(3)
         adapter.onDragMove(3, 4)
-        assertThat(adapter.onDragEnd(), equalTo(ReorderDragResult(1L, 3L, false, "Work")))
+        assertThat(adapter.onDragEnd(), equalTo(ReorderDragResult(1L, 3L, false, "Work", null)))
     }
 }
