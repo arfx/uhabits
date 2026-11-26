@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2016-2025 Álinson Santos Xavier <git@axavier.org>
+ *
+ * This file is part of Loop Habit Tracker.
+ *
+ * Loop Habit Tracker is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ *
+ * Loop Habit Tracker is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.isoron.uhabits.core.database
 
 import kotlinx.coroutines.test.runTest
@@ -48,9 +66,15 @@ class HabitCustomColorRepositoryTest {
         val quotedUuid = "habit'with-quote"
         val quotedColor = 0xFF778899.toInt()
 
-        repo.insert(HabitData(name = "First", position = 0, uuid = "first-uuid", customColor = firstColor))
-        repo.insert(HabitData(name = "Second", position = 1, uuid = "second-uuid", customColor = secondColor))
-        repo.insert(HabitData(name = "Quoted UUID", position = 2, uuid = quotedUuid, customColor = quotedColor))
+        repo.insert(
+            HabitData(name = "First", position = 0, uuid = "first-uuid", customColor = firstColor)
+        )
+        repo.insert(
+            HabitData(name = "Second", position = 1, uuid = "second-uuid", customColor = secondColor)
+        )
+        repo.insert(
+            HabitData(name = "Quoted UUID", position = 2, uuid = quotedUuid, customColor = quotedColor)
+        )
 
         val colors = repo.findAll().associate { it.uuid to it.customColor }
         assertEquals(firstColor, colors["first-uuid"])
