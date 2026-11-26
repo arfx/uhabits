@@ -40,6 +40,9 @@ jobs:
       - name: Run core unit tests
         run: ./gradlew :uhabits-core:jvmTest --stacktrace --no-daemon
 
+      - name: Compile Android instrumentation tests
+        run: ./gradlew :uhabits-android:assembleDebugAndroidTest --stacktrace --no-daemon
+
       - name: Build debug APK
         run: ./gradlew :uhabits-android:assembleDebug --stacktrace --no-daemon
 
