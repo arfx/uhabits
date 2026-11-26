@@ -19,7 +19,7 @@
 
 package org.isoron.uhabits.database
 
-import org.isoron.platform.io.UserFile
+import org.isoron.platform.io.AndroidFileOpener
 import org.isoron.platform.time.DateUtils
 import android.database.sqlite.SQLiteDatabase
 import org.isoron.uhabits.AndroidDirFinder
@@ -140,7 +140,8 @@ class AutoBackupTest : BaseAndroidTest() {
 
         // Simulate restoring onto a clean installation.
         fixtures.purgeHabits(habitList)
-        val backupFile = UserFile(backupPath)
+        val backupFile = AndroidFileOpener(targetContext.assets, targetContext.filesDir)
+            .openUserFile("Backups/${File(backupPath).name}")
         assertTrue(component.parent.genericImporter.canHandle(backupFile))
         component.parent.genericImporter.importHabitsFromFile(backupFile)
 
