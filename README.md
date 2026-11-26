@@ -69,8 +69,8 @@ branch, not an upstream Loop release.
 
 APK builds are started manually through GitHub Actions. See
 [`docs/BUILD.md`](docs/BUILD.md) for Android Studio, command-line and GitHub Actions
-build instructions. The workflow runs the core JVM unit tests before building the
-debug APK; generated artifacts are retained for 14 days.
+build instructions. The workflow runs the core JVM unit tests, compiles the Android instrumentation
+tests, and then builds the debug APK; generated artifacts are retained for 14 days.
 
 The development APK uses application ID `org.arfx.habittracker` and can be installed
 alongside the official Loop Habit Tracker, which uses `org.isoron.uhabits`. Each app
