@@ -8,7 +8,6 @@ import org.isoron.platform.io.query
 import org.isoron.uhabits.core.BaseUnitTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class Version31Test : BaseUnitTest() {
     private lateinit var db: Database
@@ -42,8 +41,10 @@ class Version31Test : BaseUnitTest() {
         db.query("SELECT COUNT(*) FROM Habits") { habitsAfter = it.getInt(0) }
         assertEquals(habitsBefore, habitsAfter)
 
+        val columns = mutableSetOf<String>()
         db.query("PRAGMA table_info(HabitCustomColors)") { stmt ->
-            assertTrue(stmt.getText(1) in setOf("habit_uuid", "color"))
+            columns.add(stmt.getText(1))
         }
+        assertEquals(setOf("habit_uuid", "color"), columns)
     }
 }
