@@ -84,7 +84,7 @@ jobs:
         run: ./gradlew :uhabits-core:jvmTest --stacktrace --no-daemon
 
       - name: Compile Android instrumentation tests
-        run: ./gradlew :uhabits-android:assembleReleaseAndroidTest --stacktrace --no-daemon
+        run: ./gradlew :uhabits-android:assembleDebugAndroidTest --stacktrace --no-daemon
 
       - name: Build signed release APK
         run: ./gradlew :uhabits-android:assembleRelease --stacktrace --no-daemon
