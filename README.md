@@ -6,7 +6,7 @@ guidelines and upstream documentation, see the
 [original Loop Habit Tracker README](https://github.com/iSoron/uhabits#readme).
 
 This fork keeps the upstream project as its foundation and adds the features listed
-below. The completed Android feature work is integrated into `dev`. Android test builds are kept installable alongside the official Loop app through a dedicated debug application ID suffix.
+below. The completed Android feature work is integrated into `dev`. Android test builds use a dedicated debug application ID and can be installed alongside the official Loop app.
 
 ## Fork features
 
@@ -70,36 +70,27 @@ APK builds are started manually through GitHub Actions. See
 build instructions. The workflow runs the core JVM unit tests, compiles the Android instrumentation
 tests, and then builds the debug APK; generated artifacts are retained for 14 days.
 
-The debug APK uses application ID `org.isoron.uhabits.testing` and can be installed
-alongside the official Loop Habit Tracker, which uses `org.isoron.uhabits`. Each app
-has its own app data and database.
+The fork release uses application ID `org.arfx.habittracker`; debug/test builds use
+`org.arfx.habittracker.testing`. Both are separate from the official Loop app
+(`org.isoron.uhabits`) and keep their own app data and database.
 
 ### Package identity — release decision
 
-- **Debug/testing:** The base application ID is `org.isoron.uhabits`. The Gradle
-  `debug` build type automatically appends `.testing`, producing
-  `org.isoron.uhabits.testing`. This lets the debug APK coexist with the official
-  Loop app without replacing its installation or app data.
-- **Release:** The `release` build type uses the base ID unchanged:
-  `org.isoron.uhabits`.
-- **How to switch:** No manual package edits or branch switching are needed. Use
-  `./gradlew :uhabits-android:assembleDebug` for the parallel-install test build
-  and `./gradlew :uhabits-android:assembleRelease` for the original-ID release
-  build. GitHub Actions' Android Debug APK workflow builds the debug variant.
-- **Namespace:** The Kotlin namespace remains `org.isoron.uhabits`; it is
-  independent of the application ID. The FileProvider authority uses the Gradle
-  `${applicationId}` placeholder and therefore follows the selected build variant.
-- **Signing limitation:** Matching the original application ID does not by itself
-  allow an APK to update the official Loop installation. Android also requires the
-  same signing certificate. Without the official signing key, the release APK
-  cannot replace the official app in place.
-- **Release checklist:** Before publishing, verify the release variant's manifest,
-  provider/URI authorities, intent actions, widgets, shortcuts and external intents.
-  Test installation and data migration separately. Do not blindly replace every
-  occurrence of either package string.
+- **Debug/testing:** `org.arfx.habittracker.testing` (automatically adds `.testing`).
+- **Release:** `org.arfx.habittracker` (the fork's own application identity).
+- **Upstream:** The official Loop app remains `org.isoron.uhabits`; the fork does not
+  attempt to replace or impersonate that installation.
+- **Namespace:** The Kotlin namespace remains `org.isoron.uhabits` and is independent
+  of the application ID. Widget actions and habit content URIs intentionally use the
+  fork identifier `org.arfx.habittracker`; the FileProvider authority follows the
+  selected variant through `${applicationId}`.
+- **Signing:** Releases are signed with a dedicated arfx keystore. Keep the keystore
+  and passwords private and backed up. Every future release must use the same key
+  to update an existing fork installation.
 
-Before integrating the feature branch into `dev`, changes receive further testing
-and an explicit review.
+For the first release, create the signing keystore and configure the repository
+secrets documented in [`docs/BUILD.md`](docs/BUILD.md). Then push a version tag such
+as `v2.3.2`; the Android Release workflow tests, builds and publishes the signed APK.
 
 ## License
 
