@@ -120,8 +120,16 @@ class HabitRepository(private val db: Database) {
 
     private fun saveCustomColor(data: HabitData) {
         val uuid = data.uuid ?: return
-        if (data.customColor == null) db.run("DELETE FROM HabitCustomColors WHERE habit_uuid = '$uuid'")
-        else db.run("INSERT OR REPLACE INTO HabitCustomColors(habit_uuid, color) VALUES ('$uuid', ${data.customColor})")
+        if (data.customColor == null) {
+            db.run("DELETE FROM HabitCustomColors WHERE habit_uuid = ?") {
+                bindText(1, uuid)
+            }
+        } else {
+            db.run("INSERT OR REPLACE INTO HabitCustomColors(habit_uuid, color) VALUES (?, ?)") {
+                bindText(1, uuid)
+                bindInt(2, data.customColor!!)
+            }
+        }
     }
 
     fun execSQL(sql: String) = db.run(sql)
