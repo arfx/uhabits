@@ -101,4 +101,21 @@ The repository includes a manual-only workflow named **Android Debug APK**. It d
 
 Artifacts are retained for 14 days. Each run is tied to the selected branch and commit.
 
-The development APK is installed as **Habit Tracker** with application ID `org.arfx.habittracker`. It is a separate app with its own Android app data and database; it can be installed alongside the official Loop Habit Tracker without replacing it.
+The Android application ID is configured by build type:
+
+- **Debug / test build:** `org.isoron.uhabits.testing`. The `debug` build type adds the suffix `.testing` automatically. This build is installed separately from the official Loop app and has its own app data and database.
+- **Release build:** `org.isoron.uhabits`. The release build uses the original Loop application ID.
+
+No source or manifest package strings need to be edited when switching between testing and release builds. Build the debug APK with:
+
+```bash
+./gradlew :uhabits-android:assembleDebug
+```
+
+Build the release APK with:
+
+```bash
+./gradlew :uhabits-android:assembleRelease
+```
+
+The debug APK can coexist with an installed official Loop app because its application ID is different. The release APK has the same application ID as the official app, but Android will only accept it as an update if it is signed with the same signing certificate. Otherwise it cannot replace the official installation.
