@@ -76,6 +76,26 @@ The development APK uses application ID `org.arfx.habittracker` and can be insta
 alongside the official Loop Habit Tracker, which uses `org.isoron.uhabits`. Each app
 has its own app data and database.
 
+### Package identity — release decision
+
+- **Development/testing:** Keep the fork application ID as
+  `org.arfx.habittracker`. This allows the development APK to coexist with the
+  official Loop app without overwriting its installation or app data.
+- **Potential compatibility release:** If we decide to publish a release intended
+  to replace or update the official Loop app, use `org.isoron.uhabits` as the
+  Android application ID. This is a deliberate release-time decision; do not change
+  the development branch just for this purpose.
+- **No blanket package rename:** The Kotlin namespace can remain
+  `org.isoron.uhabits`; it is separate from the Android application ID. Before a
+  compatibility release, audit and align all externally visible identifiers that
+  depend on the app identity, including ContentProvider authorities, content URI
+  authorities, intent action strings, widget references and manifest declarations.
+  Do not blindly replace every occurrence of either package string.
+- **Release checklist:** Resolve any mixed fork/upstream identifiers (including
+  mismatched URI authorities), then test installation as an update over the official
+  app, data preservation, widgets, shortcuts and external intents. Until that
+  verification is complete, keep using the fork application ID for test builds.
+
 Before integrating the feature branch into `dev`, changes receive further testing
 and an explicit review.
 
