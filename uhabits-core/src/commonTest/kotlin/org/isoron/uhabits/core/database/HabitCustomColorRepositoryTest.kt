@@ -45,13 +45,17 @@ class HabitCustomColorRepositoryTest {
         val repo = HabitRepository(db)
         val firstColor = 0xFF112233.toInt()
         val secondColor = 0xFF445566.toInt()
+        val quotedUuid = "habit'with-quote"
+        val quotedColor = 0xFF778899.toInt()
 
         repo.insert(HabitData(name = "First", position = 0, uuid = "first-uuid", customColor = firstColor))
         repo.insert(HabitData(name = "Second", position = 1, uuid = "second-uuid", customColor = secondColor))
+        repo.insert(HabitData(name = "Quoted UUID", position = 2, uuid = quotedUuid, customColor = quotedColor))
 
         val colors = repo.findAll().associate { it.uuid to it.customColor }
         assertEquals(firstColor, colors["first-uuid"])
         assertEquals(secondColor, colors["second-uuid"])
+        assertEquals(quotedColor, colors[quotedUuid])
 
         db.close()
     }
