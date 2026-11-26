@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added (arfx fork)
+
+- Add custom habit colors through the color picker, including a rainbow custom-color
+  action; persist custom color values and include their hexadecimal values in CSV
+  exports.
+- Allow numerical habit values to be incremented by tapping the displayed value.
+  Long-pressing the value continues to open the existing manual number-entry dialog.
+
+
 ### Added
 
 - Allow user to organize habits into categories (@iSoron)
