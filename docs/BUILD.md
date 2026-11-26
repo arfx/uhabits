@@ -147,19 +147,24 @@ Do not commit or upload the keystore to the repository. In the repository's
 - `ARFX_RELEASE_KEY_PASSWORD`: the key password.
 - `ARFX_RELEASE_STORE_PASSWORD`: the keystore password.
 
-After the secrets are configured, create and push the release tag:
+After the secrets are configured, start a release directly from GitHub:
 
-```bash
-git checkout dev
-git pull
-git tag -a v2.3.2 -m "Habit Tracker v2.3.2"
-git push origin v2.3.2
-```
+1. Open the repository's **Actions** tab.
+2. Select **Android Release**.
+3. Click **Run workflow** and select the `dev` branch.
+4. Click **Run workflow** to confirm.
 
-The **Android Release** workflow runs the core JVM unit tests, compiles Android
-instrumentation tests, builds a signed release APK, and creates a GitHub Release
-with the notes from `docs/RELEASE_NOTES_v2.3.2.md`. It intentionally fails before
-building if any signing secret is missing; it never publishes an unsigned APK.
+The workflow checks that it is running from `dev`, verifies that tag `v2.3.2`
+does not already exist, and checks that all signing secrets are available. It
+then runs the core JVM unit tests, compiles Android instrumentation tests, and
+builds the signed release APK. Only after the build succeeds does it create tag
+`v2.3.2` and publish the GitHub Release with the notes from
+`docs/RELEASE_NOTES_v2.3.2.md`, attaching the APK. A failed build therefore
+does not create a tag or publish a partial release. The workflow refuses to
+overwrite an existing tag or release.
+
+The release workflow is intentionally manual; pushing commits or tags does not
+start it.
 
 Keep the keystore and passwords safe. Losing the key means future APKs cannot
 update installations signed with it. Do not reuse the official upstream signing
