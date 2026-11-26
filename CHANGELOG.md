@@ -2,7 +2,12 @@
 
 ## [Unreleased]
 
-### Added (arfx fork)
+### arfx fork
+
+The following changes are specific to this fork and are not part of the upstream
+Loop Habit Tracker project.
+
+#### Added
 
 - Add **No-Goal Habits** to track habits without a numerical or frequency target.
 - Allow converting habits between yes/no and numerical tracking while preserving
@@ -16,7 +21,7 @@
 - Allow numerical habit values to be incremented by tapping the displayed value.
   Long-pressing the value continues to open the existing manual number-entry dialog.
 
-### Changed (arfx fork)
+#### Changed
 
 - Add group expand/collapse and group editing, including changing completion rules
   and thresholds after creation.
@@ -24,19 +29,23 @@
   member habits.
 - Keep group metadata separate from ordinary habit rows in CSV exports.
 
-### Data and compatibility (arfx fork)
+#### Data and compatibility
 
 - Store group definitions, members and completion-rule settings in fork backup
   metadata so groups can be restored by this fork.
 - Keep ordinary habit data exportable in a format compatible with the official
   Loop 2.3.1 importer. The official app does not preserve this fork's group metadata.
 
-### Development (arfx fork)
+#### Development
 
 - Use a separate development application ID (`org.arfx.habittracker`) so the
   development build can be installed alongside the official Loop app.
 - Add a manual GitHub Actions debug-APK workflow that runs core JVM tests before
   building the Android debug APK.
+
+### Upstream Loop
+
+The following entries are inherited from the original Loop Habit Tracker project.
 
 ### Added
 
