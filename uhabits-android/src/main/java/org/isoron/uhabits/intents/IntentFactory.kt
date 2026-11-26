@@ -62,7 +62,7 @@ class IntentFactory() {
 
     fun startShowHabitActivity(context: Context, habitId: Long): Intent =
         Intent(context, ShowHabitActivity::class.java).apply {
-            data = Uri.parse("content://org.isoron.uhabits/habit/$habitId")
+            data = Uri.parse("content://org.arfx.habittracker/habit/$habitId")
         }
 
     fun viewFAQ(context: Context) =
