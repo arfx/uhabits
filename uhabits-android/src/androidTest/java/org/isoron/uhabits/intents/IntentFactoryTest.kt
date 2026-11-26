@@ -20,6 +20,7 @@ package org.isoron.uhabits.intents
 
 import org.isoron.uhabits.BaseAndroidTest
 import org.junit.Test
+
 class IntentFactoryTest : BaseAndroidTest() {
     @Test
     fun testShowHabitIntentUsesForkContentUriAuthority() {
