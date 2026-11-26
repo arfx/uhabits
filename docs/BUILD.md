@@ -119,3 +119,48 @@ Build the release APK with:
 ```
 
 The debug APK can coexist with an installed official Loop app because its application ID is different. The release APK has the same application ID as the official app, but Android will only accept it as an update if it is signed with the same signing certificate. Otherwise it cannot replace the official installation.
+
+
+## Build and publish a fork release
+
+The fork's release APK uses application ID `org.arfx.habittracker`. Debug builds
+use `org.arfx.habittracker.testing`, so both variants can be installed alongside
+the official upstream app (`org.isoron.uhabits`).
+
+Releases are signed with a dedicated arfx keystore. Generate one locally and keep
+a secure backup:
+
+```bash
+keytool -genkeypair -v \
+  -keystore arfx-release.jks \
+  -alias arfx-release \
+  -keyalg RSA -keysize 4096 -validity 10000
+```
+
+Do not commit or upload the keystore to the repository. In the repository's
+**Settings → Secrets and variables → Actions**, add these four repository secrets:
+
+- `ARFX_RELEASE_KEYSTORE_BASE64`: Base64-encoded contents of `arfx-release.jks`
+  (on Linux: `base64 -w 0 arfx-release.jks`; on PowerShell:
+  `[Convert]::ToBase64String([IO.File]::ReadAllBytes("arfx-release.jks"))`).
+- `ARFX_RELEASE_KEY_ALIAS`: the alias used above.
+- `ARFX_RELEASE_KEY_PASSWORD`: the key password.
+- `ARFX_RELEASE_STORE_PASSWORD`: the keystore password.
+
+After the secrets are configured, create and push the release tag:
+
+```bash
+git checkout dev
+git pull
+git tag -a v2.3.2 -m "Habit Tracker v2.3.2"
+git push origin v2.3.2
+```
+
+The **Android Release** workflow runs the core JVM unit tests, compiles Android
+instrumentation tests, builds a signed release APK, and creates a GitHub Release
+with the notes from `docs/RELEASE_NOTES_v2.3.2.md`. It intentionally fails before
+building if any signing secret is missing; it never publishes an unsigned APK.
+
+Keep the keystore and passwords safe. Losing the key means future APKs cannot
+update installations signed with it. Do not reuse the official upstream signing
+key or publish the private keystore.
