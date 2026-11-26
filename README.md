@@ -6,8 +6,8 @@ guidelines and upstream documentation, see the
 [original Loop Habit Tracker README](https://github.com/iSoron/uhabits#readme).
 
 This fork keeps the upstream project as its foundation and adds the features listed
-below. The active development branch is
-[`feature/habit-conversion-integration`](https://github.com/arfx/uhabits/tree/feature/habit-conversion-integration).
+below. The current feature candidate is
+[`feature/numeric-tap-increment`](https://github.com/arfx/uhabits/tree/feature/numeric-tap-increment).
 Changes are tested in Android APK builds before any integration into `dev`.
 
 ## Fork features
@@ -21,6 +21,18 @@ Changes are tested in Android APK builds before any integration into `dev`.
   when converting to yes/no; their former value and unit are retained in the entry
   note. Zero and negative values become unchecked entries. Skipped and unknown
   entries retain their states.
+- **Numeric tap-to-increment:** Tap the displayed value of a numerical habit to
+  increase it by one. Long-press the value to open the existing manual number-entry
+  dialog. This keeps quick daily updates simple while retaining precise editing.
+
+### Custom habit colors
+
+- **Custom colors:** Choose a custom color for a habit using the color picker,
+  including colors beyond the built-in palette.
+- **Color selection shortcut:** The custom-color action is represented by a
+  rainbow button in the color palette.
+- **Color persistence and export:** Custom color values are stored with the habit
+  and their hexadecimal color value is included in CSV export.
 
 ### Group Habits
 
@@ -39,7 +51,8 @@ Changes are tested in Android APK builds before any integration into `dev`.
 ### Data and compatibility
 
 - **CSV export:** Exports ordinary habits; group metadata is kept separately rather
-  than represented as ordinary habit rows.
+  than represented as ordinary habit rows. Custom habit colors are exported as
+  hexadecimal values.
 - **Database backups:** Group definitions, members and completion-rule settings are
   stored in the fork's backup metadata.
 - **Upstream compatibility:** The exported database is structured so that the
@@ -48,17 +61,25 @@ Changes are tested in Android APK builds before any integration into `dev`.
   official app is therefore not a way to preserve groups. Use this fork to restore
   group data.
 
-## Development status
+## Development and testing
 
-The features above are implemented on the active feature branch and have been
-partially verified with Android testing. They should not be considered an upstream
-Loop release. APK builds are started manually through GitHub Actions; no build is
-triggered automatically by documentation or branch changes.
+The feature candidate includes the no-goal, habit-conversion, group-habit,
+custom-color and numeric tap-to-increment work described above. It is a development
+branch, not an upstream Loop release.
 
-Before integrating the feature branch into `dev`, the changes will receive further
-testing and an explicit review.
+APK builds are started manually through GitHub Actions. See
+[`docs/BUILD.md`](docs/BUILD.md) for Android Studio, command-line and GitHub Actions
+build instructions. The workflow runs the core JVM unit tests before building the
+debug APK; generated artifacts are retained for 14 days.
+
+The development APK uses application ID `org.arfx.habittracker` and can be installed
+alongside the official Loop Habit Tracker, which uses `org.isoron.uhabits`. Each app
+has its own app data and database.
+
+Before integrating the feature branch into `dev`, changes receive further testing
+and an explicit review.
 
 ## License
 
 This fork retains the upstream project's license. See
-[LICENSE.txt](LICENSE.txt) and the [upstream repository](https://github.com/iSoron/uhabits).
+[`LICENSE.txt`](LICENSE.txt) and the [upstream repository](https://github.com/iSoron/uhabits).
