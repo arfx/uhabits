@@ -7,11 +7,7 @@ import org.isoron.uhabits.AndroidDirFinder
 import org.isoron.uhabits.BaseAndroidTest
 import org.isoron.uhabits.core.models.PaletteColor
 import org.isoron.uhabits.utils.DatabaseUtils
-import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
-
+import org.junit.Testimport kotlin.test.assertNotNull
 class CustomColorBackupTest : BaseAndroidTest() {
     @Test
     fun testCustomColorSurvivesCompatibleBackupAndRestore() = runBlocking {
